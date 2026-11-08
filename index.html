@@ -1620,17 +1620,26 @@ document.addEventListener('visibilitychange', () => {
 let speechRec = null;
 let isSpeakingTTS = false;
 let speechBlocked = false;
-let micKeepAliveStream = null;
+let interimTimer = null;
+let lastInterimText = '';
+let lastProcessedAt = 0;
+let lastProcessedCmd = '';
 
 function isInAppWebView() {
   return /Instagram|FBAN|FBAV|Line\/|MicroMessenger/i.test(navigator.userAgent || '');
 }
 
-function stopKeepAliveStream() {
-  if (micKeepAliveStream) {
-    try { micKeepAliveStream.getTracks().forEach(t => t.stop()); } catch {}
-    micKeepAliveStream = null;
-  }
+function dispatchRecognizedSpeech(text) {
+  const clean = normVoiceStr(text);
+  if (!clean) return;
+  const now = Date.now();
+  // Deduplicate if both interim fallback and isFinal fire for the same phrase within 1.4s
+  if (clean === lastProcessedCmd && (now - lastProcessedAt) < 1400) return;
+  lastProcessedCmd = clean;
+  lastProcessedAt = now;
+  clearTimeout(interimTimer);
+  lastInterimText = '';
+  handleVoiceCommand(text);
 }
 
 function startSpeechSession() {
@@ -1639,44 +1648,57 @@ function startSpeechSession() {
   try {
     if (!speechRec) {
       speechRec = new SR();
-      speechRec.lang = 'es-ES';
+      speechRec.lang = 'es-AR';
       speechRec.continuous = true;
-      speechRec.interimResults = false;
+      speechRec.interimResults = true;
       speechRec.maxAlternatives = 3;
 
       speechRec.onresult = (ev) => {
         if (!activeMatch || ui.route !== 'board' || isSpeakingTTS) return;
         const last = ev.results[ev.results.length - 1];
-        if (!last || !last.isFinal) return;
-        const combined = Array.from(last).map(a => a.transcript).join(' ');
-        handleVoiceCommand(combined);
+        if (!last) return;
+        const combined = Array.from(last).map(a => a.transcript).join(' ').trim();
+        if (!combined) return;
+
+        if (last.isFinal) {
+          dispatchRecognizedSpeech(combined);
+        } else {
+          lastInterimText = combined;
+          clearTimeout(interimTimer);
+          interimTimer = setTimeout(() => {
+            if (lastInterimText) {
+              const txt = lastInterimText;
+              lastInterimText = '';
+              dispatchRecognizedSpeech(txt);
+            }
+          }, 700);
+        }
       };
 
       speechRec.onerror = (ev) => {
         const err = ev && ev.error ? ev.error : '';
-        if (err === 'not-allowed' || err === 'service-not-allowed' || err === 'audio-capture') {
+        if (err === 'not-allowed' || err === 'service-not-allowed') {
           speechBlocked = true;
           ui.voiceListening = false;
-          stopKeepAliveStream();
           render();
-          if (location.protocol === 'content:' || location.protocol === 'file:') {
-            showToast('Abrí el link en Google Chrome para usar el micrófono.');
-          } else {
-            showToast('Permiso de micrófono bloqueado en el navegador');
-          }
+          showToast('Permiso de micrófono bloqueado en el navegador');
         }
       };
 
       speechRec.onend = () => {
+        if (lastInterimText && !isSpeakingTTS) {
+          const txt = lastInterimText;
+          lastInterimText = '';
+          dispatchRecognizedSpeech(txt);
+        }
         if (ui.voiceListening && !speechBlocked && ui.route === 'board') {
           setTimeout(() => {
             if (ui.voiceListening && !speechBlocked && ui.route === 'board') {
               try { speechRec.start(); } catch {}
             }
-          }, 120);
+          }, 350);
         } else if (!ui.voiceListening || speechBlocked) {
           ui.voiceListening = false;
-          stopKeepAliveStream();
           render();
         }
       };
@@ -1685,13 +1707,12 @@ function startSpeechSession() {
     try { speechRec.start(); } catch {}
   } catch {
     ui.voiceListening = false;
-    stopKeepAliveStream();
     render();
     showToast('No se pudo iniciar el micrófono');
   }
 }
 
-async function toggleVoiceControl() {
+function toggleVoiceControl() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
     showToast('Tu navegador no soporta control por voz');
@@ -1700,25 +1721,18 @@ async function toggleVoiceControl() {
   if (ui.voiceListening) {
     ui.voiceListening = false;
     speechBlocked = false;
+    clearTimeout(interimTimer);
+    lastInterimText = '';
     if (speechRec) {
       try { speechRec.stop(); } catch {}
     }
-    stopKeepAliveStream();
     showToast('Control por voz desactivado');
     render();
     return;
   }
 
-  // If opened inside Instagram / Facebook in-app browser on Android, offer/open in Chrome so permission is saved once
   if (isInAppWebView() && /Android/i.test(navigator.userAgent || '')) {
-    showToast('Tip: en Instagram tocá ••• → "Abrir en Chrome" para no pedir permiso cada vez');
-  }
-
-  // Keep a persistent audio stream alive while voice mode is active so mobile browsers don't drop permission between phrases
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !micKeepAliveStream) {
-    try {
-      micKeepAliveStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {}
+    showToast('Tip: tocá ••• → "Abrir en Chrome" para mejor reconocimiento de voz');
   }
 
   speechBlocked = false;
@@ -1735,15 +1749,22 @@ function normVoiceStr(s) {
 function findPlayerInCommand(cmd, m) {
   const c = normVoiceStr(cmd);
   if (!c) return null;
+
+  // 0. Explicit "jugador 1..4" / "jugador uno..cuatro"
+  if (/\bjugador\s*(1|uno)\b/.test(c)) return { team: 0, playerIdx: 0, name: playerLabel(m, 0, 0) };
+  if (/\bjugador\s*(2|dos)\b/.test(c)) return { team: 0, playerIdx: 1, name: playerLabel(m, 0, 1) };
+  if (/\bjugador\s*(3|tres)\b/.test(c)) return { team: 1, playerIdx: 0, name: playerLabel(m, 1, 0) };
+  if (/\bjugador\s*(4|cuatro)\b/.test(c)) return { team: 1, playerIdx: 1, name: playerLabel(m, 1, 1) };
+
   const words = c.split(/\s+/);
-  // 1. Exact full name or exact token match (3+ chars)
+  // 1. Exact full name or exact token match (3+ chars, excluding generic "jugador")
   for (let t = 0; t < 2; t++) {
     for (let pi = 0; pi < 2; pi++) {
       const raw = m.teams[t].players[pi] || '';
       const fn = normVoiceStr(raw);
       if (!fn) continue;
       if (c.includes(fn)) return { team: t, playerIdx: pi, name: playerLabel(m, t, pi) };
-      const parts = fn.split(/\s+/).filter(w => w.length >= 3);
+      const parts = fn.split(/\s+/).filter(w => w.length >= 3 && w !== 'jugador');
       for (const part of parts) {
         if (words.includes(part) || c.includes(part)) {
           return { team: t, playerIdx: pi, name: playerLabel(m, t, pi) };
@@ -1751,12 +1772,12 @@ function findPlayerInCommand(cmd, m) {
       }
     }
   }
-  // 2. Prefix match (4+ chars, e.g., "mati" in "matias")
+  // 2. Prefix match (4+ chars, e.g., "mati" in "matias", excluding "jugador")
   for (let t = 0; t < 2; t++) {
     for (let pi = 0; pi < 2; pi++) {
       const raw = m.teams[t].players[pi] || '';
       const first = normVoiceStr(raw).split(/\s+/)[0] || '';
-      if (first.length >= 4) {
+      if (first.length >= 4 && first !== 'jugador') {
         const pref = first.slice(0, 4);
         if (words.some(w => w.startsWith(pref))) {
           return { team: t, playerIdx: pi, name: playerLabel(m, t, pi) };
@@ -1769,10 +1790,12 @@ function findPlayerInCommand(cmd, m) {
 
 function findTeamInCommand(cmd, m) {
   const c = normVoiceStr(cmd);
-  const c0 = normVoiceStr(COLORS.find(x => x.c === m.teams[0].color)?.n || 'azul');
-  const c1 = normVoiceStr(COLORS.find(x => x.c === m.teams[1].color)?.n || 'rojo');
-  if (c.includes(c0) || c.includes('pareja 1') || c.includes('pareja uno') || c.includes('equipo 1') || c.includes('equipo uno') || c.includes('izquierda') || c.includes('arriba')) return 0;
-  if (c.includes(c1) || c.includes('pareja 2') || c.includes('pareja dos') || c.includes('equipo 2') || c.includes('equipo dos') || c.includes('derecha') || c.includes('abajo')) return 1;
+  const c0 = normVoiceStr(COLORS.find(x => x.c === m.teams[0].color)?.n || 'dorado');
+  const c1 = normVoiceStr(COLORS.find(x => x.c === m.teams[1].color)?.n || 'azul');
+  const isGold0 = m.teams[0].color === '#d4af37' && (c.includes('oro') || c.includes('amarillo'));
+  const isGold1 = m.teams[1].color === '#d4af37' && (c.includes('oro') || c.includes('amarillo'));
+  if (c.includes(c0) || isGold0 || c.includes('pareja 1') || c.includes('pareja uno') || c.includes('equipo 1') || c.includes('equipo uno') || c.includes('izquierda') || c.includes('arriba') || c.includes('nosotros')) return 0;
+  if (c.includes(c1) || isGold1 || c.includes('pareja 2') || c.includes('pareja dos') || c.includes('equipo 2') || c.includes('equipo dos') || c.includes('derecha') || c.includes('abajo') || c.includes('ellos')) return 1;
   return null;
 }
 
@@ -1991,6 +2014,7 @@ function handleVoiceCommand(rawCmd) {
   }
   if (cmd.includes('uno')) { scorePoint(0, 'pt', null); return; }
   if (cmd.includes('dos')) { scorePoint(1, 'pt', null); return; }
+  showToast(`🎤 Escuché: "${rawCmd.trim()}"`);
 }
 
 // ==================== TIMERS (MATCH CLOCK & CHANGEOVER) ====================
