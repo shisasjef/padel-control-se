@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Pádel Control SÉ">
 <meta name="description" content="Pádel Control SÉ · By Sairaf Engel. Marcador de pádel con estadísticas avanzadas, voz y exportación a PDF.">
 <title>Pádel Control SÉ · By Sairaf Engel</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2307070a' stroke='%23d4af37' stroke-width='2'/%3E%3Cg transform='rotate(-35 32 32)'%3E%3Cellipse cx='32' cy='24' rx='13' ry='15' fill='%23d4af37'/%3E%3Crect x='29' y='38' width='6' height='16' rx='3' fill='%23f5d061'/%3E%3C/g%3E%3Ccircle cx='47' cy='46' r='7' fill='%23ffe58f'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23fff3bd'/%3E%3Cstop offset='45%25' stop-color='%23d4af37'/%3E%3Cstop offset='100%25' stop-color='%238a6208'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='120' height='120' rx='28' fill='%23060609' stroke='url(%23g)' stroke-width='5'/%3E%3Cpath d='M60 14 L98 28 V62 C98 86 80 102 60 108 C40 102 22 86 22 62 V28 Z' fill='%230d0b07' stroke='url(%23g)' stroke-width='2.5'/%3E%3Cg transform='rotate(-26 60 56)'%3E%3Cpath d='M60 22 C76 22 84 34 82 52 C80 65 70 73 64 78 L63 96 H57 L56 78 C50 73 40 65 38 52 C36 34 44 22 60 22 Z' fill='url(%23g)'/%3E%3Cellipse cx='60' cy='48' rx='16' ry='19' fill='%23080705'/%3E%3Cg fill='%23d4af37'%3E%3Ccircle cx='53' cy='40' r='2.2'/%3E%3Ccircle cx='60' cy='40' r='2.2'/%3E%3Ccircle cx='67' cy='40' r='2.2'/%3E%3Ccircle cx='50' cy='48' r='2.2'/%3E%3Ccircle cx='57' cy='48' r='2.2'/%3E%3Ccircle cx='63' cy='48' r='2.2'/%3E%3Ccircle cx='70' cy='48' r='2.2'/%3E%3Ccircle cx='53' cy='56' r='2.2'/%3E%3Ccircle cx='60' cy='56' r='2.2'/%3E%3Ccircle cx='67' cy='56' r='2.2'/%3E%3C/g%3E%3C/g%3E%3Ccircle cx='80' cy='76' r='14' fill='url(%23g)' stroke='%23060609' stroke-width='2'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,700;1,800&family=Great+Vibes&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -169,7 +169,7 @@ a{color:inherit}
   content:'';position:absolute;right:-30px;top:-40px;width:190px;height:190px;border-radius:50%;
   background:radial-gradient(circle, rgba(212,175,55,.28), transparent 70%);pointer-events:none;
 }
-.hero svg.logo-ic{width:62px;height:62px;border-radius:18px;display:block;flex:none;box-shadow:0 12px 26px rgba(0,0,0,.6)}
+.hero svg.logo-ic{width:76px;height:76px;border-radius:22px;display:block;flex:none;box-shadow:0 14px 32px rgba(0,0,0,.75), 0 0 24px rgba(212,175,55,.22)}
 .hero h1{
   font-family:var(--cond);font-size:clamp(30px,6vw,42px);font-weight:800;font-style:italic;text-transform:uppercase;line-height:1.12;letter-spacing:1px;
   padding:2px 8px 2px 0;
@@ -762,7 +762,91 @@ const ICONS = {
   ball:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6c3.5 3.5 3.5 9.3 0 12.8M18.4 5.6c-3.5 3.5-3.5 9.3 0 12.8"/></svg>'
 };
 
-const LOGO_SVG = `<svg class="logo-ic" viewBox="0 0 64 64"><defs><linearGradient id="lg_bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1a170c"/><stop offset="50%" stop-color="#0d0b06"/><stop offset="100%" stop-color="#050507"/></linearGradient><linearGradient id="lg_pad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff0b3"/><stop offset="45%" stop-color="#d4af37"/><stop offset="100%" stop-color="#9a6f0b"/></linearGradient><linearGradient id="lg_ball" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#e5c158"/></linearGradient></defs><rect width="64" height="64" rx="18" fill="url(#lg_bg)" stroke="rgba(212,175,55,0.45)" stroke-width="1.5"/><g transform="rotate(-32 32 32)"><ellipse cx="32" cy="23" rx="13" ry="15" fill="url(#lg_pad)" stroke="rgba(255,240,179,0.5)" stroke-width="1"/><g fill="#080704" opacity=".78"><circle cx="28" cy="18" r="1.5"/><circle cx="36" cy="18" r="1.5"/><circle cx="25" cy="23" r="1.5"/><circle cx="32" cy="23" r="1.5"/><circle cx="39" cy="23" r="1.5"/><circle cx="28" cy="28" r="1.5"/><circle cx="36" cy="28" r="1.5"/></g><rect x="29" y="37" width="6" height="16" rx="3" fill="#241c09" stroke="rgba(212,175,55,0.55)" stroke-width=".9"/></g><circle cx="48" cy="46" r="8.5" fill="url(#lg_ball)" stroke="#9a6f0b" stroke-width="1"/><path d="M43 41c3 3 3 7 0 10M53 41c-3 3-3 7 0 10" stroke="#080704" stroke-width="1.4" fill="none"/></svg>`;
+const LOGO_SVG = `<svg class="logo-ic" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="se_bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#19160d"/>
+      <stop offset="50%" stop-color="#0a090c"/>
+      <stop offset="100%" stop-color="#040406"/>
+    </linearGradient>
+    <linearGradient id="se_gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff6cc"/>
+      <stop offset="28%" stop-color="#f3d266"/>
+      <stop offset="55%" stop-color="#d4af37"/>
+      <stop offset="80%" stop-color="#8f680a"/>
+      <stop offset="100%" stop-color="#f7df8b"/>
+    </linearGradient>
+    <linearGradient id="se_gold_soft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe89e"/>
+      <stop offset="100%" stop-color="#9e740f"/>
+    </linearGradient>
+    <radialGradient id="se_glow" cx="50%" cy="42%" r="50%">
+      <stop offset="0%" stop-color="#d4af37" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="se_ball" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#fff1b8"/>
+      <stop offset="75%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#7c5806"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Outer luxury obsidian squircle with double 24K gold bezel -->
+  <rect x="2" y="2" width="116" height="116" rx="28" fill="url(#se_bg)" stroke="url(#se_gold)" stroke-width="2.5"/>
+  <rect x="7" y="7" width="106" height="106" rx="23" fill="none" stroke="url(#se_gold)" stroke-opacity="0.28" stroke-width="1"/>
+  <circle cx="60" cy="54" r="46" fill="url(#se_glow)"/>
+
+  <!-- Inner Royal Crest Shield -->
+  <path d="M60 13 L97 26 V59 C97 83 80 99 60 107 C40 99 23 83 23 59 V26 Z" fill="#08080b" fill-opacity="0.85" stroke="url(#se_gold)" stroke-width="1.6" stroke-opacity="0.65"/>
+  <path d="M60 17 L93 29 V58 C93 79 78 94 60 102 C42 94 27 79 27 58 V29 Z" fill="none" stroke="url(#se_gold)" stroke-width="0.7" stroke-opacity="0.3" stroke-dasharray="2 2"/>
+
+  <!-- Top Crown Star -->
+  <polygon points="60,18 62.2,22.6 67.2,23.2 63.5,26.6 64.5,31.5 60,29 55.5,31.5 56.5,26.6 52.8,23.2 57.8,22.6" fill="url(#se_gold)"/>
+
+  <!-- Back Crossed Padel Racket (Subtle Brushed Gold, tilted right) -->
+  <g transform="rotate(26 60 58)" opacity="0.48">
+    <path d="M60 22 C76 22 84 35 81 53 C79 65 71 72 65 78 L63.5 97 C63.5 99 62 100 60 100 C58 100 56.5 99 56.5 97 L55 78 C49 72 41 65 39 53 C36 35 44 22 60 22 Z" fill="none" stroke="url(#se_gold)" stroke-width="2.2"/>
+    <ellipse cx="60" cy="48" rx="16" ry="19.5" fill="#0c0b0e" stroke="url(#se_gold)" stroke-width="1.4"/>
+  </g>
+
+  <!-- Main Pro Diamond Padel Racket (24K Gold & Carbon, tilted left) -->
+  <g transform="rotate(-24 58 57)">
+    <!-- Racket outer frame -->
+    <path d="M60 20 C77 20 86 33 83 52 C81 64 72 72 65.5 78 L64 98 C64 100.5 62.2 102 60 102 C57.8 102 56 100.5 56 98 L54.5 78 C48 72 39 64 37 52 C34 33 43 20 60 20 Z" fill="url(#se_gold)" stroke="#050507" stroke-width="1.2"/>
+    <!-- Carbon fiber hitting surface -->
+    <path d="M60 24.5 C73.5 24.5 80.5 35 78 50.5 C76.2 60.5 68.5 66.8 60 67.5 C51.5 66.8 43.8 60.5 42 50.5 C39.5 35 46.5 24.5 60 24.5 Z" fill="#09090d" stroke="url(#se_gold_soft)" stroke-width="1"/>
+    <!-- V-Bridge Throat -->
+    <polygon points="55,69.5 60,76.5 65,69.5" fill="#09090d"/>
+    <!-- Handle Grip Tapes -->
+    <rect x="56" y="79" width="8" height="19" rx="2.5" fill="#141210" stroke="url(#se_gold)" stroke-width="0.9"/>
+    <line x1="56.5" y1="84" x2="63.5" y2="82.5" stroke="url(#se_gold)" stroke-width="1"/>
+    <line x1="56.5" y1="89" x2="63.5" y2="87.5" stroke="url(#se_gold)" stroke-width="1"/>
+    <line x1="56.5" y1="94" x2="63.5" y2="92.5" stroke="url(#se_gold)" stroke-width="1"/>
+    <!-- Precision Drilled Holes (Pro 3-4-4-3 pattern) -->
+    <g fill="url(#se_gold)">
+      <circle cx="53" cy="35.5" r="1.9"/><circle cx="60" cy="34.5" r="1.9"/><circle cx="67" cy="35.5" r="1.9"/>
+      <circle cx="49.5" cy="42.5" r="2"/><circle cx="56.5" cy="42.5" r="2"/><circle cx="63.5" cy="42.5" r="2"/><circle cx="70.5" cy="42.5" r="2"/>
+      <circle cx="50.5" cy="50" r="2"/><circle cx="57" cy="50" r="2"/><circle cx="63" cy="50" r="2"/><circle cx="69.5" cy="50" r="2"/>
+      <circle cx="54" cy="57" r="1.8"/><circle cx="60" cy="57.5" r="1.8"/><circle cx="66" cy="57" r="1.8"/>
+    </g>
+  </g>
+
+  <!-- Golden Motion Arc -->
+  <path d="M26 74 C38 92, 68 96, 86 76" fill="none" stroke="url(#se_gold)" stroke-width="2.2" stroke-linecap="round" opacity="0.85"/>
+
+  <!-- 3D Golden Padel Ball -->
+  <g transform="translate(79, 73)">
+    <circle cx="0" cy="0" r="14.5" fill="url(#se_ball)" stroke="#070709" stroke-width="1.8"/>
+    <path d="M-9.5 -8.5 C-2 -2, -2 6, -8.5 10.5" fill="none" stroke="#181305" stroke-width="1.8" stroke-linecap="round" opacity="0.75"/>
+    <path d="M9.5 -8.5 C2 -2, 2 6, 8.5 10.5" fill="none" stroke="#181305" stroke-width="1.8" stroke-linecap="round" opacity="0.75"/>
+    <circle cx="-4.5" cy="-5" r="2.2" fill="#ffffff" opacity="0.7"/>
+  </g>
+
+  <!-- Bottom Monogram Pill SÉ -->
+  <rect x="42" y="95" width="36" height="16" rx="8" fill="#090806" stroke="url(#se_gold)" stroke-width="1.4"/>
+  <text x="60" y="106.5" text-anchor="middle" font-family="'Barlow Condensed', sans-serif" font-weight="800" font-style="italic" font-size="12.5" letter-spacing="1" fill="url(#se_gold)">SÉ</text>
+</svg>`;
 
 const SIGNATURE_PEN_SVG = `<svg class="sig-flourish" viewBox="0 0 120 18" fill="none"><path d="M2 13 C 32 3, 76 16, 118 5" stroke="url(#sig_g)" stroke-width="1.6" stroke-linecap="round"/><defs><linearGradient id="sig_g" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#d4af37" stop-opacity="0.15"/><stop offset="50%" stop-color="#ffe58f" stop-opacity="0.95"/><stop offset="100%" stop-color="#d4af37" stop-opacity="0.2"/></linearGradient></defs></svg>`;
 
