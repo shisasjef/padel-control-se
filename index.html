@@ -2,6 +2,9 @@
 <html lang="es" data-theme="dark">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#050507">
 <meta name="mobile-web-app-capable" content="yes">
@@ -3084,17 +3087,25 @@ function renderHome() {
       <button class="icon-btn" data-act="open-qr-modal" title="Compartir App / Código QR" style="margin-left:auto">${ICONS.qr}</button>
     </div>
 
-    <!-- QR Share Card -->
-    <div class="card" style="margin-top:-6px;margin-bottom:18px;background:linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(16,16,22,0.95) 55%, rgba(245,208,97,0.08) 100%);border:1px solid rgba(212,175,55,0.35)">
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <div style="width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#ffe58f,#d4af37);color:#080600;display:grid;place-items:center;flex:none;box-shadow:0 8px 20px -4px rgba(212,175,55,.5)">
-          ${ICONS.qr}
+    <!-- QR Share Card directly showing the QR -->
+    <div class="card" style="margin-top:-6px;margin-bottom:20px;background:linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(16,16,22,0.96) 60%, rgba(245,208,97,0.08) 100%);border:1px solid rgba(212,175,55,0.38);text-align:center">
+      <h3 style="justify-content:center;margin-bottom:12px;font-size:15px;letter-spacing:1.4px">${ICONS.qr} Código QR para Compartir la App</h3>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+        <div style="background:#ffffff;padding:12px;border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,0.65), 0 0 22px rgba(212,175,55,0.25);display:inline-block">
+          <canvas id="qr-home-canvas" style="display:block;width:180px;height:180px;border-radius:8px"></canvas>
         </div>
-        <div style="flex:1;min-width:180px">
-          <div style="font-family:var(--cond);font-size:18px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--tx)">¿Querés que tus amigos tengan la app?</div>
-          <div style="color:var(--tx2);font-size:12.5px;line-height:1.4;margin-top:2px">Mostrales el código QR para que lo escaneen con su celular y tengan Pádel Control SÉ al instante.</div>
+        <div style="max-width:380px">
+          <b style="font-size:15px;color:var(--tx);display:block">Escaneá con la cámara de tu celular</b>
+          <small style="color:var(--tx2);font-size:12.5px;display:block;margin-top:3px;line-height:1.4">Cualquier persona puede apuntar a este código con la cámara de su celular para abrir o guardar la app gratis y al instante.</small>
+          <div style="margin:8px 0 10px;background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-family:monospace;font-size:11.5px;color:var(--acc-ink);word-break:break-all">
+            ${esc(getAppShareUrl())}
+          </div>
         </div>
-        <button class="btn primary" data-act="open-qr-modal" style="flex:none">${ICONS.qr} Ver QR</button>
+        <div class="btn-row" style="width:100%;max-width:440px">
+          <button class="btn primary" data-act="share-app-wa" style="flex:1 1 130px">${ICONS.share} WhatsApp</button>
+          <button class="btn" data-act="copy-app-link" style="flex:1 1 130px">${ICONS.share} Copiar Enlace</button>
+          <button class="btn" data-act="dl-app-qr" style="flex:1 1 130px">${ICONS.dl} Descargar QR</button>
+        </div>
       </div>
     </div>
 
@@ -3330,6 +3341,8 @@ function drawAppQR(canvas, size = 200) {
 }
 
 function afterRenderQR() {
+  const homeCanvas = document.getElementById('qr-home-canvas');
+  if (homeCanvas) drawAppQR(homeCanvas, 180);
   const modalCanvas = document.getElementById('app-qr-modal-canvas');
   if (modalCanvas) drawAppQR(modalCanvas, 220);
   const settingsCanvas = document.getElementById('qr-settings-canvas');
