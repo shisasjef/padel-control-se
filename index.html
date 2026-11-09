@@ -1003,7 +1003,7 @@ function createMatchFromPreset(p) {
   const totalSets = Math.max(1, Number(p.totalSets) || (p.setsToWin ? (Number(p.setsToWin) * 2 - 1) : 3));
   const setsToWin = Math.floor(totalSets / 2) + 1;
   return {
-    id: 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    id: Math.random().toString(36).slice(2, 5) + Date.now().toString(36).slice(-3),
     createdAt: Date.now(),
     durationMs: 0,
     status: 'playing', // 'playing' | 'paused' | 'finished' | 'abandoned'
@@ -2435,8 +2435,13 @@ let livePollTimer = null;
 let lastPublishedB64 = '';
 let lastAppliedSig = '';
 
+function shortMatchCode(id) {
+  const clean = String(id || 'default').replace(/^m_/, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  return clean.slice(-6) || 'padel1';
+}
+
 function cleanLiveTopic(id) {
-  return 'padel_se_live_' + String(id || 'default').replace(/[^a-zA-Z0-9_-]/g, '');
+  return 'padel_se_live_' + shortMatchCode(id);
 }
 
 function matchStateSignature(m) {
@@ -2479,29 +2484,33 @@ function publishLiveMatchState(m, immediate = false) {
 async function shareLiveMatchLink(m) {
   if (!m) return;
   publishLiveMatchState(m, true);
-  const snap = encodeMatchShare(m);
+  const code = shortMatchCode(m.id);
   const baseUrl = location.href.split('#')[0];
-  const url = `${baseUrl}#live=${encodeURIComponent(m.id)}.${snap}`;
-  const title = `🔴 EN VIVO: ${teamLabel(m,0)} vs ${teamLabel(m,1)} · Pádel Control SÉ`;
-  const text = `Seguí el marcador y las estadísticas punto a punto en tiempo real de ${teamLabel(m,0)} vs ${teamLabel(m,1)}:`;
+  const url = `${baseUrl}#v=${code}`;
+  const playersLine = `${teamLabel(m,0)} vs ${teamLabel(m,1)}`;
+  const waText = `🎾 *Seguí mi partido en vivo:*\n*${playersLine}*\n${url}`;
   if (navigator.share) {
     try {
-      await navigator.share({ title, text, url });
+      await navigator.share({
+        title: `🎾 Seguí mi partido en vivo · ${playersLine}`,
+        text: `🎾 Seguí mi partido en vivo: ${playersLine}`,
+        url
+      });
       return;
     } catch {}
   }
   try {
-    await navigator.clipboard.writeText(url);
-    showToast('📡 Link EN VIVO copiado al portapapeles');
+    await navigator.clipboard.writeText(waText);
+    showToast('📡 Invitación corta EN VIVO copiada para pegar en WhatsApp');
   } catch {
-    prompt('Copiá este link para compartir el partido en vivo:', url);
+    prompt('Copiá este mensaje para compartir el partido en vivo:', waText);
   }
 }
 
 function applyIncomingLiveSnapshot(b64, isInitial = false) {
   const incoming = decodeMatchShare(b64);
   if (!incoming || !incoming.teams) return;
-  if (ui.liveId && incoming.id && incoming.id !== ui.liveId) return;
+  if (ui.liveId && incoming.id && shortMatchCode(incoming.id) !== shortMatchCode(ui.liveId)) return;
 
   const sig = matchStateSignature(incoming);
   const prev = ui.liveMatch;
@@ -2657,30 +2666,64 @@ function disconnectLiveSpectator() {
   disconnectLiveStreamOnly();
   ui.liveId = null;
   ui.liveMatch = null;
-  if (location.hash.startsWith('#live=')) {
+  if (location.hash.startsWith('#live=') || location.hash.startsWith('#v=')) {
     history.replaceState(null, '', location.pathname + location.search);
   }
 }
 
+async function openShortSharedMatch(rawCode) {
+  const code = shortMatchCode(rawCode);
+  const topic = cleanLiveTopic(code);
+  try {
+    const res = await fetch(`https://ntfy.sh/${topic}/json?poll=1&since=12h`, { cache: 'no-store' });
+    if (res.ok) {
+      const txt = await res.text();
+      const lines = txt.trim().split('\n').filter(Boolean);
+      let latestMsg = null;
+      for (const line of lines) {
+        try {
+          const obj = JSON.parse(line);
+          if (obj && obj.event === 'message' && obj.message) latestMsg = obj.message;
+        } catch {}
+      }
+      if (latestMsg) {
+        const m = decodeMatchShare(latestMsg);
+        if (m) {
+          ui.sharedMatch = m;
+          ui.statsId = 'shared';
+          ui.route = 'stats';
+          render();
+          return;
+        }
+      }
+    }
+  } catch {}
+  showToast('No se encontró el partido compartido o expiró');
+}
+
 async function shareMatchLink(m) {
-  const code = encodeMatchShare(m);
+  if (!m) return;
+  publishLiveMatchState(m, true);
+  const code = shortMatchCode(m.id);
   const baseUrl = location.href.split('#')[0];
-  const url = `${baseUrl}#share=${code}`;
+  const url = `${baseUrl}#s=${code}`;
+  const playersLine = `${teamLabel(m,0)} vs ${teamLabel(m,1)}`;
+  const waText = `🏆 *Resultado y estadísticas del partido:*\n*${playersLine}*\n${url}`;
   if (navigator.share) {
     try {
       await navigator.share({
-        title: `Pádel: ${teamLabel(m,0)} vs ${teamLabel(m,1)}`,
-        text: `Estadísticas del partido ${teamLabel(m,0)} vs ${teamLabel(m,1)}`,
+        title: `🏆 Estadísticas: ${playersLine}`,
+        text: `🏆 Resultado y estadísticas del partido: ${playersLine}`,
         url
       });
       return;
     } catch {}
   }
   try {
-    await navigator.clipboard.writeText(url);
-    showToast('Enlace del partido copiado al portapapeles');
+    await navigator.clipboard.writeText(waText);
+    showToast('Enlace corto del partido copiado al portapapeles');
   } catch {
-    prompt('Copiá este enlace para compartir el partido:', url);
+    prompt('Copiá este enlace para compartir el partido:', waText);
   }
 }
 
@@ -4389,8 +4432,16 @@ document.addEventListener('keydown', (ev) => {
 // Hash routing & shared links
 function checkHashRoute() {
   const h = location.hash.slice(1);
+  if (h.startsWith('v=')) {
+    connectLiveSpectator(h.slice(2));
+    return;
+  }
   if (h.startsWith('live=')) {
     connectLiveSpectator(h.slice(5));
+    return;
+  }
+  if (h.startsWith('s=')) {
+    openShortSharedMatch(h.slice(2));
     return;
   }
   if (h.startsWith('share=')) {
