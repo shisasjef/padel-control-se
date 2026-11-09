@@ -301,6 +301,8 @@ a{color:inherit}
   color:var(--acc-tx);border-color:transparent;font-weight:800;
   box-shadow:0 6px 20px rgba(212,175,55,.45), inset 0 1px 0 rgba(255,255,255,.75);
 }
+.pill.sm{padding:5px 11px;font-size:12px;min-height:30px;min-width:auto;border-radius:999px;cursor:pointer}
+.pill.sm:hover{background:rgba(212,175,55,.18);border-color:var(--gold);color:#fff}
 .row{display:flex;gap:12px;margin-bottom:16px}
 .row:last-child{margin-bottom:0}
 .row>.field{margin-bottom:0}
@@ -1178,6 +1180,7 @@ function computeMatch(m) {
       firstServeIn: ev.fs !== false,
       doubleFault: ev.type === 'df',
       shotType: ev.type || 'pt', // 'winner' | 'ue' | 'fe' | 'df' | 'pt'
+      subType: ev.sub || null,   // 'smash' | 'volea' | 'bandeja' | 'bajada' | 'dejada' | 'passing' | 'globo' | 'winner'
       byPlayer: ev.by || null,   // [team, playerIdx]
       scoreBefore,
       scoreAfter,
@@ -1366,6 +1369,7 @@ function computeStats(m, setFilter = 'all') {
     winners: 0,
     ue: 0,
     fe: 0,
+    shots: { smash: 0, volea: 0, bandeja: 0, bajada: 0, dejada: 0, passing: 0, globo: 0, otro: 0 },
     srvPtsWon: 0,
     srvPtsTotal: 0,
     retPtsWon: 0,
@@ -1403,6 +1407,7 @@ function computeStats(m, setFilter = 'all') {
         winners: 0,
         ue: 0,
         fe: 0,
+        shots: { smash: 0, volea: 0, bandeja: 0, bajada: 0, dejada: 0, passing: 0, globo: 0, otro: 0 },
         srvPtsTotal: 0,
         srvPtsWon: 0,
         firstServeIn: 0,
@@ -1463,7 +1468,14 @@ function computeStats(m, setFilter = 'all') {
       const bp = pt.byPlayer ? pt.byPlayer[1] : 0;
       T[bt].winners++;
       const pk = `${bt}_${bp}`;
-      if (P[pk]) P[pk].winners++;
+      const sub = (pt.subType && ['smash','volea','bandeja','bajada','dejada','passing','globo'].includes(pt.subType))
+        ? pt.subType
+        : (pt.subType === 'winner' ? 'otro' : (pt.subType || 'otro'));
+      T[bt].shots[sub] = (T[bt].shots[sub] || 0) + 1;
+      if (P[pk]) {
+        P[pk].winners++;
+        P[pk].shots[sub] = (P[pk].shots[sub] || 0) + 1;
+      }
     } else if (pt.shotType === 'ue') {
       const bt = pt.byPlayer ? pt.byPlayer[0] : l;
       const bp = pt.byPlayer ? pt.byPlayer[1] : 0;
@@ -1566,12 +1578,21 @@ function computeStats(m, setFilter = 'all') {
       const lbl = m.rules.deuceRule === 'star' ? 'Star Points (tras 2 ventajas)' : 'Puntos decisivos con 40-40';
       insights.push(`${lbl}: ${gpLeader === 0 ? name0 : name1} ganó ${T[gpLeader].gpWon} de ${T[gpLeader].gpTotal}.`);
     }
-    // 5. Most winners individual
+    // 5. Most winners individual & specific shot highlights
     const pArr = Object.values(P);
     pArr.sort((a,b) => b.winners - a.winners);
     if (pArr[0] && pArr[0].winners > 0) {
       insights.push(`${pArr[0].name} hizo más ganadores que nadie: ${pArr[0].winners}.`);
     }
+    pArr.forEach(pl => {
+      const best = Object.entries(pl.shots || {})
+        .filter(([k, v]) => v >= 2 && k !== 'otro')
+        .sort((a, b) => b[1] - a[1])[0];
+      if (best) {
+        const labels = { smash: 'smash / remates', volea: 'voleas ganadoras', bandeja: 'bandejas', bajada: 'bajadas de pared', dejada: 'dejadas', passing: 'passings', globo: 'globos ganadores' };
+        insights.push(`${pl.name} se destacó en ataque con ${best[1]} ${labels[best[0]] || best[0]}.`);
+      }
+    });
     // 6. Best streak
     const strkLeader = T[1].maxPtStreak >= T[0].maxPtStreak ? 1 : 0;
     if (T[strkLeader].maxPtStreak >= 3) {
@@ -2007,7 +2028,19 @@ function handleVoiceCommand(rawCmd) {
   // 4. Detect detailed shot type: Unforced Error (ue), Forced Error (fe), or Winner (winner)
   const isUE = cmd.includes('no forzado') || cmd.includes('error no') || cmd.includes('fallo') || cmd.includes('afuera') || cmd.includes('a la red') || cmd.includes('en la red') || cmd.includes('al cristal') || cmd.includes('a la reja') || (cmd.includes('error') && !cmd.includes('forzado'));
   const isFE = !isUE && cmd.includes('forzado');
-  const isWinner = !isUE && !isFE && (cmd.includes('winner') || cmd.includes('ganador') || cmd.includes('smash') || cmd.includes('remate') || cmd.includes('por tres') || cmd.includes('por 3') || cmd.includes('por cuatro') || cmd.includes('por 4') || cmd.includes('bajada') || cmd.includes('volea') || cmd.includes('bandeja') || cmd.includes('vibora') || cmd.includes('dejada') || cmd.includes('chiquita') || cmd.includes('passing'));
+  const isWinner = !isUE && !isFE && (cmd.includes('winner') || cmd.includes('ganador') || cmd.includes('smash') || cmd.includes('remate') || cmd.includes('por tres') || cmd.includes('por 3') || cmd.includes('por cuatro') || cmd.includes('por 4') || cmd.includes('bajada') || cmd.includes('volea') || cmd.includes('bandeja') || cmd.includes('vibora') || cmd.includes('dejada') || cmd.includes('chiquita') || cmd.includes('passing') || cmd.includes('globo'));
+
+  function detectSpecificWinnerShot(str) {
+    if (str.includes('smash') || str.includes('remate') || str.includes('por tres') || str.includes('por 3') || str.includes('por cuatro') || str.includes('por 4')) return 'smash';
+    if (str.includes('volea')) return 'volea';
+    if (str.includes('bandeja') || str.includes('vibora') || str.includes('víbora')) return 'bandeja';
+    if (str.includes('bajada')) return 'bajada';
+    if (str.includes('dejada') || str.includes('chiquita')) return 'dejada';
+    if (str.includes('passing') || str.includes('paralelo')) return 'passing';
+    if (str.includes('globo')) return 'globo';
+    return 'winner';
+  }
+  const SHOT_NAMES = { smash:'Smash', volea:'Volea', bandeja:'Bandeja', bajada:'Bajada de pared', dejada:'Dejada', passing:'Passing', globo:'Globo', winner:'Winner' };
 
   if (isUE || isFE) {
     const sType = isUE ? 'ue' : 'fe';
@@ -2044,26 +2077,28 @@ function handleVoiceCommand(rawCmd) {
   }
 
   if (isWinner) {
-    const winMatch = cmd.match(/(?:winner|ganador|smash|remate|volea|bandeja|vibora|bajada|dejada|chiquita|passing)(.*)$/);
+    const subShot = detectSpecificWinnerShot(cmd);
+    const subLabel = SHOT_NAMES[subShot] || 'Winner';
+    const winMatch = cmd.match(/(?:winner|ganador|smash|remate|volea|bandeja|vibora|bajada|dejada|chiquita|passing|globo)(.*)$/);
     const plAfter = winMatch && winMatch[1] ? findPlayerInCommand(winMatch[1], activeMatch) : null;
     const pl = plAfter || findPlayerInCommand(cmd, activeMatch);
     if (pl) {
-      showToast(`🎤 Winner de ${pl.name}`);
-      scorePoint(pl.team, 'winner', [pl.team, pl.playerIdx]);
+      showToast(`🎤 ${subLabel} de ${pl.name}`);
+      scorePoint(pl.team, 'winner', [pl.team, pl.playerIdx], subShot);
       return;
     }
     if (ui.shotSheet) {
       const w = ui.shotSheet.team;
       const pi = (cmd.includes('dos') || cmd.includes('segund')) ? 1 : 0;
       const wName = playerLabel(activeMatch, w, pi);
-      showToast(`🎤 Winner de ${wName}`);
-      scorePoint(w, 'winner', [w, pi]);
+      showToast(`🎤 ${subLabel} de ${wName}`);
+      scorePoint(w, 'winner', [w, pi], subShot);
       return;
     }
     const tmWin = findTeamInCommand(cmd, activeMatch);
     if (tmWin !== null) {
-      showToast(`🎤 Winner de ${teamLabel(activeMatch, tmWin)}`);
-      scorePoint(tmWin, 'winner', [tmWin, 0]);
+      showToast(`🎤 ${subLabel} de ${teamLabel(activeMatch, tmWin)}`);
+      scorePoint(tmWin, 'winner', [tmWin, 0], subShot);
       return;
     }
   }
@@ -2078,8 +2113,10 @@ function handleVoiceCommand(rawCmd) {
     const pl = findPlayerInCommand(cmd, activeMatch);
     if (pl) {
       if (pl.team === w) {
-        showToast(`🎤 Winner de ${pl.name}`);
-        scorePoint(w, 'winner', [w, pl.playerIdx]);
+        const subShot = detectSpecificWinnerShot(cmd);
+        const subLabel = SHOT_NAMES[subShot] || 'Winner';
+        showToast(`🎤 ${subLabel} de ${pl.name}`);
+        scorePoint(w, 'winner', [w, pl.playerIdx], subShot);
       } else {
         showToast(`🎤 Error no forzado de ${pl.name}`);
         scorePoint(w, 'ue', [pl.team, pl.playerIdx]);
@@ -2186,7 +2223,7 @@ function onTapTeam(team) {
   }
 }
 
-function scorePoint(team, shotType = 'pt', byPlayer = null) {
+function scorePoint(team, shotType = 'pt', byPlayer = null, subType = null) {
   if (!activeMatch) return;
   const stBefore = computeMatch(activeMatch);
   if (stBefore.matchWinner !== null) return;
@@ -2198,7 +2235,8 @@ function scorePoint(team, shotType = 'pt', byPlayer = null) {
     w: team,
     type: shotType,
     by: byPlayer,
-    fs
+    fs,
+    sub: subType || null
   });
   ui.shotSheet = null;
 
@@ -2365,6 +2403,8 @@ function startNewMatch() {
 }
 
 // ==================== URL SHARING, LIVE BROADCAST & EXPORT (PDF / PNG / LINK) ====================
+const SUB_TYPES = ['winner', 'smash', 'volea', 'bandeja', 'bajada', 'dejada', 'passing', 'globo'];
+
 function encodeMatchShare(m) {
   try {
     // Compact payload for URL sharing & real-time live broadcast
@@ -2381,14 +2421,18 @@ function encodeMatchShare(m) {
       ss: m.secondServerIdx,
       fl: m.flipped ? 1 : 0,
       pf: m.pendingFault ? 1 : 0,
-      // Pack events into compact array: [w, typeCode, byTeam, byPlayer, fsBit]
-      e: m.events.map(ev => [
-        ev.w,
-        {pt:0, winner:1, ue:2, fe:3, df:4}[ev.type || 'pt'] || 0,
-        ev.by ? ev.by[0] : -1,
-        ev.by ? ev.by[1] : -1,
-        ev.fs === false ? 0 : 1
-      ])
+      // Pack events into compact array: [w, typeCode, byTeam, byPlayer, fsBit, subCode]
+      e: m.events.map(ev => {
+        const subIdx = ev.sub ? SUB_TYPES.indexOf(ev.sub) : 0;
+        return [
+          ev.w,
+          {pt:0, winner:1, ue:2, fe:3, df:4}[ev.type || 'pt'] || 0,
+          ev.by ? ev.by[0] : -1,
+          ev.by ? ev.by[1] : -1,
+          ev.fs === false ? 0 : 1,
+          subIdx > 0 ? subIdx : 0
+        ];
+      })
     };
     const json = JSON.stringify(compact);
     const b64 = btoa(unescape(encodeURIComponent(json))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -2421,7 +2465,8 @@ function decodeMatchShare(b64) {
         w: a[0],
         type: TMAP[a[1]] || 'pt',
         by: a[2] >= 0 ? [a[2], a[3]] : null,
-        fs: a[4] !== 0
+        fs: a[4] !== 0,
+        sub: (a[5] && a[5] > 0 && SUB_TYPES[a[5]]) ? SUB_TYPES[a[5]] : null
       })),
       redoStack: []
     };
@@ -3330,11 +3375,25 @@ function renderBoardOverlays(m, st) {
         <div class="opt-sec">Golpe ganador (Winner) de ${esc(teamLabel(m, w))}</div>
         <div class="opt-grid">
           ${wPlayers.map(([pi, nm], i) => `
-            <button class="opt" style="--c:${esc(wCol)}" data-shot="winner,${w},${pi}">
+            <button class="opt" style="--c:${esc(wCol)}" data-shot="winner,${w},${pi},winner">
               <span class="k">${i+1}</span>
               ${esc(nm)}
-              <small>Winner</small>
+              <small>Winner general</small>
             </button>`).join('')}
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px">
+          ${wPlayers.map(([pi, nm]) => `
+            <div style="flex:1;min-width:140px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.22);border-radius:12px;padding:8px 10px">
+              <div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:6px">GOLPE DE ${esc(nm).toUpperCase()}:</div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap">
+                <button type="button" class="pill sm" data-shot="winner,${w},${pi},smash">💥 Smash</button>
+                <button type="button" class="pill sm" data-shot="winner,${w},${pi},volea">🎾 Volea</button>
+                <button type="button" class="pill sm" data-shot="winner,${w},${pi},bandeja">🌀 Bandeja</button>
+                <button type="button" class="pill sm" data-shot="winner,${w},${pi},bajada">⚡ Bajada</button>
+                <button type="button" class="pill sm" data-shot="winner,${w},${pi},dejada">🎯 Dejada</button>
+              </div>
+            </div>`).join('')}
         </div>
 
         <div class="opt-sec">Error no forzado de ${esc(teamLabel(m, l))}</div>
@@ -3753,6 +3812,39 @@ function renderStats() {
       </div>
     </div>
 
+    <div class="sec-t">Desglose de Golpes Ganadores (Winners)</div>
+    <div class="card">
+      <h3>Tipos de Golpe por Pareja</h3>
+      ${renderComparisonBar('💥 Smash / Remate', T[0].shots.smash, T[1].shots.smash, T[0].shots.smash, T[1].shots.smash, c0, c1)}
+      ${renderComparisonBar('🎾 Volea ganadora', T[0].shots.volea, T[1].shots.volea, T[0].shots.volea, T[1].shots.volea, c0, c1)}
+      ${renderComparisonBar('🌀 Bandeja / Víbora', T[0].shots.bandeja, T[1].shots.bandeja, T[0].shots.bandeja, T[1].shots.bandeja, c0, c1)}
+      ${renderComparisonBar('⚡ Bajada de pared', T[0].shots.bajada, T[1].shots.bajada, T[0].shots.bajada, T[1].shots.bajada, c0, c1)}
+      ${renderComparisonBar('🎯 Dejada / Chiquita', T[0].shots.dejada, T[1].shots.dejada, T[0].shots.dejada, T[1].shots.dejada, c0, c1)}
+      ${renderComparisonBar('🏹 Passing shot', T[0].shots.passing, T[1].shots.passing, T[0].shots.passing, T[1].shots.passing, c0, c1)}
+      ${(T[0].shots.globo > 0 || T[1].shots.globo > 0) ? renderComparisonBar('🎈 Globo ganador', T[0].shots.globo, T[1].shots.globo, T[0].shots.globo, T[1].shots.globo, c0, c1) : ''}
+      ${(T[0].shots.otro > 0 || T[1].shots.otro > 0) ? renderComparisonBar('Otros winners directos', T[0].shots.otro, T[1].shots.otro, T[0].shots.otro, T[1].shots.otro, c0, c1) : ''}
+
+      <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);margin-bottom:8px">Winners registrados por Jugador</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px">
+          ${S.P.map(pl => {
+            const shotList = Object.entries(pl.shots || {})
+              .filter(([k,v]) => v > 0)
+              .map(([k,v]) => {
+                const icon = { smash:'💥', volea:'🎾', bandeja:'🌀', bajada:'⚡', dejada:'🎯', passing:'🏹', globo:'🎈', otro:'✨' }[k] || '';
+                const name = { smash:'Smash', volea:'Volea', bandeja:'Bandeja', bajada:'Bajada', dejada:'Dejada', passing:'Passing', globo:'Globo', otro:'Directo' }[k] || k;
+                return `<span class="tag-s" style="margin:2px;display:inline-flex;align-items:center;gap:3px;font-size:11px">${icon} ${v} ${name}</span>`;
+              });
+            return `
+              <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-left:3px solid ${esc(pl.color)};border-radius:8px;padding:8px 10px">
+                <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px">${esc(pl.name)} <span style="font-weight:400;color:var(--muted);font-size:12px">(${pl.winners} winners)</span></div>
+                <div style="display:flex;flex-wrap:wrap">${shotList.length ? shotList.join('') : '<span class="muted" style="font-size:11px">Sin detalle de golpe</span>'}</div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
     <div class="sec-t">Evolución</div>
     <div class="card">
       ${evoHtml}
@@ -3832,6 +3924,7 @@ function renderPlayers() {
           winners: 0,
           ue: 0,
           fe: 0,
+          shots: { smash: 0, volea: 0, bandeja: 0, bajada: 0, dejada: 0, passing: 0, globo: 0 },
           srvPtsWon: 0,
           srvPtsTotal: 0,
           firstServeIn: 0,
@@ -3844,6 +3937,12 @@ function renderPlayers() {
       rec.winners += p.winners;
       rec.ue += p.ue;
       rec.fe += p.fe;
+      rec.shots = rec.shots || { smash: 0, volea: 0, bandeja: 0, bajada: 0, dejada: 0, passing: 0, globo: 0 };
+      if (p.shots) {
+        Object.entries(p.shots).forEach(([k, v]) => {
+          rec.shots[k] = (rec.shots[k] || 0) + v;
+        });
+      }
       rec.srvPtsWon += p.srvPtsWon;
       rec.srvPtsTotal += p.srvPtsTotal;
       rec.firstServeIn += p.firstServeIn;
@@ -3863,6 +3962,15 @@ function renderPlayers() {
     ${players.length ? players.map(p => {
       const winPct = pct(p.wins, p.matches);
       const initials = p.name.split(/\s+/).map(x => x[0]).join('').slice(0,2).toUpperCase();
+      const shotBadges = [];
+      if (p.shots) {
+        if (p.shots.smash) shotBadges.push(`💥 ${p.shots.smash} Smash`);
+        if (p.shots.volea) shotBadges.push(`🎾 ${p.shots.volea} Volea`);
+        if (p.shots.bandeja) shotBadges.push(`🌀 ${p.shots.bandeja} Bandeja`);
+        if (p.shots.bajada) shotBadges.push(`⚡ ${p.shots.bajada} Bajada`);
+        if (p.shots.dejada) shotBadges.push(`🎯 ${p.shots.dejada} Dejada`);
+        if (p.shots.passing) shotBadges.push(`🏹 ${p.shots.passing} Passing`);
+      }
       return `
       <div class="pcard">
         <div class="avatar" style="--c:${esc(p.color)};--f:${fgFor(p.color)}">${esc(initials)}</div>
@@ -3875,6 +3983,10 @@ function renderPlayers() {
             <span>1º Saque: <b>${pct(p.firstServeIn, p.srvPtsTotal)}%</b></span>
             <span> Gan. al saque: <b>${pct(p.srvPtsWon, p.srvPtsTotal)}%</b></span>
           </div>
+          ${shotBadges.length ? `
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+            ${shotBadges.map(b => `<span class="tag-s" style="font-size:10px">${esc(b)}</span>`).join('')}
+          </div>` : ''}
         </div>
         <div class="pct">
           ${winPct}%
@@ -4086,10 +4198,10 @@ document.addEventListener('click', (ev) => {
   // Shot sheet selection
   const shotEl = t.closest('[data-shot]');
   if (shotEl && ui.shotSheet) {
-    const [sType, bTeam, bPlayer] = shotEl.getAttribute('data-shot').split(',');
+    const [sType, bTeam, bPlayer, subType] = shotEl.getAttribute('data-shot').split(',');
     const w = ui.shotSheet.team;
     const by = Number(bPlayer) >= 0 ? [Number(bTeam), Number(bPlayer)] : null;
-    scorePoint(w, sType, by);
+    scorePoint(w, sType, by, subType || null);
     return;
   }
 
