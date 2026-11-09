@@ -759,7 +759,8 @@ const ICONS = {
   up:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
   flag:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
   edit:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
-  ball:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6c3.5 3.5 3.5 9.3 0 12.8M18.4 5.6c-3.5 3.5-3.5 9.3 0 12.8"/></svg>'
+  ball:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6c3.5 3.5 3.5 9.3 0 12.8M18.4 5.6c-3.5 3.5-3.5 9.3 0 12.8"/></svg>',
+  live:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>'
 };
 
 const LOGO_SVG = `<svg class="logo-ic" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
@@ -907,9 +908,12 @@ preset.setsToWin = Math.floor(preset.totalSets / 2) + 1;
 let activeMatch = loadJSON(LS_ACTIVE, null);
 
 const ui = {
-  route: 'home',       // 'home' | 'new' | 'board' | 'display' | 'stats' | 'history' | 'players' | 'settings'
-  statsId: null,       // match id or 'active' or 'shared'
+  route: 'home',       // 'home' | 'new' | 'board' | 'display' | 'live' | 'stats' | 'history' | 'players' | 'settings'
+  statsId: null,       // match id or 'active' or 'shared' or 'live'
   sharedMatch: null,
+  liveId: null,
+  liveMatch: null,
+  liveConnected: false,
   statsSetFilter: 'all',
   histQuery: '',
   shotSheet: null,     // {team}
@@ -975,6 +979,7 @@ function persistActive() {
     // Also update in history if already finished/saved
     const idx = historyList.findIndex(x => x.id === activeMatch.id);
     if (idx >= 0) { historyList[idx] = clone(activeMatch); saveJSON(LS_HIST, historyList); }
+    publishLiveMatchState(activeMatch);
   } else {
     localStorage.removeItem(LS_ACTIVE);
   }
@@ -1684,7 +1689,9 @@ function speakScore(m, st) {
 // Wake Lock
 let wakeLockSentinel = null;
 async function updateWakeLock() {
-  const want = prefs.wakeLock && (ui.route === 'board' || ui.route === 'display') && activeMatch && activeMatch.status === 'playing';
+  const isPlayingLocal = (ui.route === 'board' || ui.route === 'display') && activeMatch && activeMatch.status === 'playing';
+  const isPlayingRemote = (ui.route === 'live') && ui.liveMatch && ui.liveMatch.status === 'playing';
+  const want = prefs.wakeLock && (isPlayingLocal || isPlayingRemote);
   if (!('wakeLock' in navigator)) return;
   try {
     if (want && !wakeLockSentinel) {
@@ -2112,6 +2119,10 @@ setInterval(() => {
     activeMatch.durationMs = (activeMatch.durationMs || 0) + dt;
     const clkEl = document.getElementById('sb-clock-val');
     if (clkEl) clkEl.textContent = fmtClock(activeMatch.durationMs);
+  } else if (ui.route === 'live' && ui.liveMatch && ui.liveMatch.status === 'playing') {
+    ui.liveMatch.durationMs = (ui.liveMatch.durationMs || 0) + dt;
+    const clkEl = document.getElementById('sb-clock-val');
+    if (clkEl) clkEl.textContent = fmtClock(ui.liveMatch.durationMs);
   }
 
   if (ui.changeoverOverlay && ui.changeoverOverlay.secondsLeft > 0) {
@@ -2331,6 +2342,7 @@ function finishMatchEarly() {
   const st = computeMatch(activeMatch);
   activeMatch.status = st.matchWinner !== null ? 'finished' : 'abandoned';
   archiveMatchToHistory(activeMatch);
+  publishLiveMatchState(activeMatch, true);
   const finishedId = activeMatch.id;
   activeMatch = null;
   persistActive();
@@ -2352,11 +2364,13 @@ function startNewMatch() {
   navigate('board');
 }
 
-// ==================== URL SHARING & EXPORT (PDF / PNG / LINK) ====================
+// ==================== URL SHARING, LIVE BROADCAST & EXPORT (PDF / PNG / LINK) ====================
 function encodeMatchShare(m) {
   try {
-    // Compact payload for URL sharing
+    // Compact payload for URL sharing & real-time live broadcast
     const compact = {
+      id: m.id,
+      ts: Date.now(),
       c: m.createdAt,
       d: m.durationMs,
       s: m.status,
@@ -2365,6 +2379,8 @@ function encodeMatchShare(m) {
       r: m.rules,
       fs: m.firstServer,
       ss: m.secondServerIdx,
+      fl: m.flipped ? 1 : 0,
+      pf: m.pendingFault ? 1 : 0,
       // Pack events into compact array: [w, typeCode, byTeam, byPlayer, fsBit]
       e: m.events.map(ev => [
         ev.w,
@@ -2382,12 +2398,14 @@ function encodeMatchShare(m) {
 
 function decodeMatchShare(b64) {
   try {
-    const norm = b64.replace(/-/g,'+').replace(/_/g,'/');
+    const norm = String(b64 || '').trim().replace(/-/g,'+').replace(/_/g,'/');
+    if (!norm) return null;
     const json = decodeURIComponent(escape(atob(norm)));
     const c = JSON.parse(json);
     const TMAP = ['pt','winner','ue','fe','df'];
     return {
-      id: 'shared_' + (c.c || Date.now()),
+      id: c.id || ('shared_' + (c.c || Date.now())),
+      _ts: c.ts || 0,
       createdAt: c.c || Date.now(),
       durationMs: c.d || 0,
       status: c.s || 'finished',
@@ -2397,8 +2415,8 @@ function decodeMatchShare(b64) {
       firstServer: c.fs || [0,0],
       secondServerIdx: c.ss ?? 0,
       shotPrompt: true,
-      flipped: false,
-      pendingFault: false,
+      flipped: !!c.fl,
+      pendingFault: !!c.pf,
       events: (c.e || []).map(a => ({
         w: a[0],
         type: TMAP[a[1]] || 'pt',
@@ -2408,6 +2426,240 @@ function decodeMatchShare(b64) {
       redoStack: []
     };
   } catch { return null; }
+}
+
+// Serverless Real-Time Live Broadcast (Pub/Sub via ntfy.sh SSE + JSON cache)
+let livePubTimer = null;
+let liveEvtSource = null;
+let livePollTimer = null;
+let lastPublishedB64 = '';
+let lastAppliedSig = '';
+
+function cleanLiveTopic(id) {
+  return 'padel_se_live_' + String(id || 'default').replace(/[^a-zA-Z0-9_-]/g, '');
+}
+
+function matchStateSignature(m) {
+  if (!m) return '';
+  const lastEv = m.events && m.events.length ? m.events[m.events.length - 1] : null;
+  return [
+    m.id,
+    m.status,
+    m.events ? m.events.length : 0,
+    lastEv ? `${lastEv.w}:${lastEv.type}:${lastEv.fs}` : '',
+    m.pendingFault ? 1 : 0,
+    m.flipped ? 1 : 0,
+    m.firstServer ? m.firstServer.join(',') : '',
+    m.secondServerIdx ?? '',
+    m.teams ? m.teams.map(t => t.players.join(',') + ':' + t.color).join('|') : ''
+  ].join('#');
+}
+
+function publishLiveMatchState(m, immediate = false) {
+  if (!m || !m.id) return;
+  const sendNow = () => {
+    const b64 = encodeMatchShare(m);
+    if (!b64 || (!immediate && b64 === lastPublishedB64)) return;
+    lastPublishedB64 = b64;
+    const topic = cleanLiveTopic(m.id);
+    fetch(`https://ntfy.sh/${topic}`, {
+      method: 'POST',
+      body: b64,
+      headers: { 'Title': 'Padel Control SE Live', 'Cache': 'yes' }
+    }).catch(() => {});
+  };
+  clearTimeout(livePubTimer);
+  if (immediate) {
+    sendNow();
+  } else {
+    livePubTimer = setTimeout(sendNow, 120);
+  }
+}
+
+async function shareLiveMatchLink(m) {
+  if (!m) return;
+  publishLiveMatchState(m, true);
+  const snap = encodeMatchShare(m);
+  const baseUrl = location.href.split('#')[0];
+  const url = `${baseUrl}#live=${encodeURIComponent(m.id)}.${snap}`;
+  const title = `🔴 EN VIVO: ${teamLabel(m,0)} vs ${teamLabel(m,1)} · Pádel Control SÉ`;
+  const text = `Seguí el marcador y las estadísticas punto a punto en tiempo real de ${teamLabel(m,0)} vs ${teamLabel(m,1)}:`;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text, url });
+      return;
+    } catch {}
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast('📡 Link EN VIVO copiado al portapapeles');
+  } catch {
+    prompt('Copiá este link para compartir el partido en vivo:', url);
+  }
+}
+
+function applyIncomingLiveSnapshot(b64, isInitial = false) {
+  const incoming = decodeMatchShare(b64);
+  if (!incoming || !incoming.teams) return;
+  if (ui.liveId && incoming.id && incoming.id !== ui.liveId) return;
+
+  const sig = matchStateSignature(incoming);
+  const prev = ui.liveMatch;
+  const prevSig = matchStateSignature(prev);
+
+  if (prev && sig === prevSig) {
+    // Sync clock if incoming timestamp is newer
+    if (incoming.durationMs > (prev.durationMs || 0)) {
+      prev.durationMs = incoming.durationMs;
+    }
+    return;
+  }
+
+  // Detect what changed to trigger live sound, voice & court flash for spectator
+  const prevLen = prev && prev.events ? prev.events.length : null;
+  const newLen = incoming.events ? incoming.events.length : 0;
+  const prevFault = prev ? !!prev.pendingFault : false;
+
+  ui.liveMatch = incoming;
+  lastAppliedSig = sig;
+
+  if (!isInitial && prev !== null) {
+    if (prevLen !== null && newLen > prevLen) {
+      const stAfter = computeMatch(incoming);
+      const lastEv = incoming.events[newLen - 1];
+      const tr = stAfter.lastTransition;
+      if (tr) {
+        if (tr.type === 'match') {
+          ui.matchEndDismissed = false;
+          playTone('match');
+          vibrate([100, 60, 100, 60, 220]);
+        } else if (tr.type === 'set') {
+          playTone('set');
+          vibrate([90, 50, 140]);
+        } else if (tr.type === 'game' || tr.type === 'tb_changeover') {
+          playTone('game');
+          vibrate([80, 50, 80]);
+        }
+      } else {
+        playTone('point');
+        vibrate(35);
+      }
+      speakScore(incoming, stAfter);
+      if (lastEv && (lastEv.w === 0 || lastEv.w === 1)) {
+        requestAnimationFrame(() => {
+          const halfEl = document.querySelector(`.half[data-team="${lastEv.w}"]`);
+          if (halfEl) {
+            halfEl.classList.add('flash');
+            setTimeout(() => halfEl.classList.remove('flash'), 550);
+          }
+        });
+      }
+    } else if (prevLen !== null && newLen < prevLen) {
+      playTone('undo');
+    } else if (incoming.pendingFault && !prevFault) {
+      playTone('fault');
+    }
+  }
+
+  if (ui.route === 'live' || (ui.route === 'stats' && ui.statsId === 'live')) {
+    render();
+  }
+}
+
+async function pollLiveChannelOnce(topic) {
+  try {
+    const res = await fetch(`https://ntfy.sh/${topic}/json?poll=1&since=12h`, { cache: 'no-store' });
+    if (!res.ok) return;
+    const txt = await res.text();
+    const lines = txt.trim().split('\n').filter(Boolean);
+    let latestMsg = null;
+    for (const line of lines) {
+      try {
+        const obj = JSON.parse(line);
+        if (obj && obj.event === 'message' && obj.message) {
+          latestMsg = obj.message;
+        }
+      } catch {}
+    }
+    if (latestMsg) {
+      applyIncomingLiveSnapshot(latestMsg, false);
+    }
+  } catch {}
+}
+
+function connectLiveSpectator(rawParam) {
+  const cleanRaw = String(rawParam || '').trim();
+  if (!cleanRaw) return;
+  const dotIdx = cleanRaw.indexOf('.');
+  const matchId = decodeURIComponent(dotIdx >= 0 ? cleanRaw.slice(0, dotIdx) : cleanRaw);
+  const initialSnap = dotIdx >= 0 ? cleanRaw.slice(dotIdx + 1) : '';
+
+  const isSameChannel = (ui.liveId === matchId && liveEvtSource);
+  ui.liveId = matchId;
+  ui.route = 'live';
+
+  if (initialSnap && !ui.liveMatch) {
+    applyIncomingLiveSnapshot(initialSnap, true);
+  }
+  render();
+  updateWakeLock();
+
+  if (isSameChannel) return;
+
+  disconnectLiveStreamOnly();
+  const topic = cleanLiveTopic(matchId);
+
+  // 1. Immediate fetch of latest cached message from channel
+  pollLiveChannelOnce(topic);
+
+  // 2. Real-time Server-Sent Events (SSE) stream
+  if ('EventSource' in window) {
+    try {
+      liveEvtSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
+      liveEvtSource.onopen = () => {
+        ui.liveConnected = true;
+      };
+      liveEvtSource.onmessage = (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          if (data && (data.event === 'message' || !data.event) && data.message) {
+            ui.liveConnected = true;
+            applyIncomingLiveSnapshot(data.message, false);
+          }
+        } catch {}
+      };
+      liveEvtSource.onerror = () => {
+        ui.liveConnected = false;
+      };
+    } catch {}
+  }
+
+  // 3. Fallback polling every 3.5s for strict mobile networks/firewalls
+  livePollTimer = setInterval(() => {
+    if (!ui.liveId) return;
+    pollLiveChannelOnce(topic);
+  }, 3500);
+}
+
+function disconnectLiveStreamOnly() {
+  if (liveEvtSource) {
+    try { liveEvtSource.close(); } catch {}
+    liveEvtSource = null;
+  }
+  if (livePollTimer) {
+    clearInterval(livePollTimer);
+    livePollTimer = null;
+  }
+  ui.liveConnected = false;
+}
+
+function disconnectLiveSpectator() {
+  disconnectLiveStreamOnly();
+  ui.liveId = null;
+  ui.liveMatch = null;
+  if (location.hash.startsWith('#live=')) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
 }
 
 async function shareMatchLink(m) {
@@ -2637,7 +2889,8 @@ function renderHome() {
       `).join('')}
       <div class="btn-row" style="margin-top:12px">
         <button class="btn primary" data-act="resume-match">${ICONS.play} Continuar marcador</button>
-        <button class="btn" data-open-stats="active">${ICONS.chart} Estadísticas en vivo</button>
+        <button class="btn" data-act="share-live">${ICONS.live} Compartir en vivo</button>
+        <button class="btn" data-open-stats="active">${ICONS.chart} Estadísticas</button>
       </div>
     </div>`;
   }
@@ -2663,8 +2916,8 @@ function renderHome() {
 
     <div class="sec-t">Experiencia Pádel Control SÉ</div>
     <div class="feat">
+      <div>${ICONS.live}<b>Transmisión de Cancha En Vivo</b><p>Compartí un link al empezar el partido para que tus amigos sigan cada punto y estadística en tiempo real desde cualquier lugar.</p></div>
       <div>${ICONS.chart}<b>Análisis y PDF Profesional</b><p>Puntos de oro, Star Point FIP, breaks, bajo presión, tabla por jugador, evolución y punto a punto imprimible.</p></div>
-      <div>${ICONS.tv}<b>Modo TV / Segunda pantalla</b><p>Abrí una ventana sincronizada en tiempo real para espectadores o monitor mientras anotás desde el móvil.</p></div>
       <div>${ICONS.vol}<b>Voz de árbitro y manos libres</b><p>Cantado automático del marcador en español y control por micrófono o pulsador Bluetooth.</p></div>
       <div>${ICONS.share}<b>Compartir link o imagen</b><p>Generá una tarjeta resumen Black & Gold lista para redes o compartí el partido completo por enlace.</p></div>
     </div>
@@ -2850,10 +3103,23 @@ function renderNewMatch() {
 
 // ==================== SCOREBOARD & MODALS RENDERER ====================
 function renderBoard(isDisplayOnly = false) {
-  if (!activeMatch) {
+  const isRemoteLive = (ui.route === 'live');
+  const m = isRemoteLive ? ui.liveMatch : activeMatch;
+
+  if (!m) {
+    if (isRemoteLive) {
+      return `
+      <div class="page">
+        <div class="empty">
+          ${ICONS.live}<br>
+          <b>Conectando con la cancha en vivo...</b><br>
+          <span class="muted">Esperando señal en tiempo real del partido.</span><br><br>
+          <button class="btn" data-act="exit-live">Salir al inicio</button>
+        </div>
+      </div>`;
+    }
     return `<div class="page"><div class="empty">No hay ningún partido activo.<br><br><button class="btn primary" data-nav="new">Crear Partido</button></div></div>`;
   }
-  const m = activeMatch;
   const st = computeMatch(m);
   const order = m.flipped ? [1, 0] : [0, 1];
 
@@ -2933,7 +3199,16 @@ function renderBoard(isDisplayOnly = false) {
   return `
   <div class="board ${isDisplayOnly?'display':''}">
     <header class="sb-top">
-      ${isDisplayOnly ? `
+      ${isRemoteLive ? `
+        <button class="icon-btn" data-act="exit-live" title="Salir de la transmisión">${ICONS.back}</button>
+        <div class="sb-clock">
+          <span id="sb-clock-val">${esc(fmtClock(m.durationMs))}</span>
+          <small><b class="red">● EN VIVO</b> · ${st.matchWinner !== null ? 'FINALIZADO' : `SET ${st.curSetIdx + 1} · SACA ${esc(playerLabel(m, st.srvTeam, st.srvPlayer))}`}</small>
+        </div>
+        <button class="icon-btn ${prefs.voice?'on':''}" data-act="toggle-voice-tts" title="Activar voz de árbitro en vivo">${prefs.voice ? ICONS.vol : ICONS.mute}</button>
+        <button class="icon-btn" data-open-stats="live" title="Estadísticas en tiempo real">${ICONS.chart}</button>
+        <button class="icon-btn" data-act="fullscreen" title="Pantalla completa">${ICONS.full}</button>
+      ` : isDisplayOnly ? `
         <button class="icon-btn" data-nav="board" title="Salir de modo TV">${ICONS.back}</button>
         <div class="sb-clock">
           <span id="sb-clock-val">${esc(fmtClock(m.durationMs))}</span>
@@ -2942,7 +3217,7 @@ function renderBoard(isDisplayOnly = false) {
         <button class="icon-btn" data-act="fullscreen" title="Pantalla completa">${ICONS.full}</button>
       ` : `
         <button class="icon-btn" data-nav="home" title="Inicio">${ICONS.back}</button>
-        <button class="icon-btn ${m.shotPrompt?'on':''}" data-act="toggle-shot-prompt" title="Activar/desactivar pregunta de golpe">${ICONS.edit}</button>
+        <button class="icon-btn" data-act="share-live" title="Compartir partido en vivo por link">${ICONS.live}</button>
         <div class="sb-clock" data-act="toggle-pause" style="cursor:pointer" title="Tocar para pausar/reanudar reloj">
           <span id="sb-clock-val">${esc(fmtClock(m.durationMs))}</span>
           <small>${m.status==='paused' ? '<b class="red">PAUSADO</b>' : `SET ${st.curSetIdx + 1} · SACA ${esc(playerLabel(m, st.srvTeam, st.srvPlayer))}`}</small>
@@ -2970,7 +3245,24 @@ function renderBoard(isDisplayOnly = false) {
       <button data-open-stats="active" title="Ver estadísticas en vivo">${ICONS.chart}<span class="lbl">Stats</span></button>
     </footer>`}
 
-    ${!isDisplayOnly ? renderBoardOverlays(m, st) : ''}
+    ${!isDisplayOnly ? renderBoardOverlays(m, st) : (isRemoteLive && st.matchWinner !== null && !ui.matchEndDismissed ? `
+    <div class="overlay">
+      <div class="big-ic">${ICONS.trophy}</div>
+      <p>¡PARTIDO FINALIZADO EN VIVO!</p>
+      <h2>${esc(teamLabel(m, st.matchWinner))}</h2>
+      <div class="ov-score">
+        ${[0,1].map(t => `
+          <div class="mrow">
+            <span class="bar" style="--c:${esc(m.teams[t].color)}"></span>
+            <span class="nm">${esc(teamLabel(m, t))}</span>
+            ${st.sets.map(s => `<span class="s ${s.winner===t?'w':''}">${s.games[t]}</span>`).join('')}
+          </div>`).join('')}
+      </div>
+      <div class="btn-row">
+        <button class="btn primary big" data-open-stats="live">${ICONS.chart} Ver Estadísticas del Partido</button>
+        <button class="btn big" data-act="save-live">Guardar en mi historial</button>
+      </div>
+    </div>` : '')}
   </div>`;
 }
 
@@ -3105,6 +3397,8 @@ function renderBoardOverlays(m, st) {
       <div class="sheet">
         <h2>Opciones del marcador</h2>
         <div class="menu-list">
+          <button data-act="share-live">${ICONS.live}<div><b>Compartir partido EN VIVO (Link)</b><small>Enviá un enlace por WhatsApp para que sigan el marcador en tiempo real desde cualquier lugar</small></div></button>
+          <button data-act="toggle-shot-prompt">${ICONS.edit}<div><b>${m.shotPrompt ? 'Desactivar' : 'Activar'} pregunta de golpe</b><small>${m.shotPrompt ? 'Actualmente pregunta Winner / Error al anotar' : 'Actualmente anota punto directo con un toque'}</small></div></button>
           <button data-act="open-tv">${ICONS.tv}<div><b>Abrir Modo TV / Espectador</b><small>Segunda ventana sincronizada en vivo para proyector o monitor</small></div></button>
           <button data-act="fullscreen">${ICONS.full}<div><b>Pantalla completa</b><small>Ocultar barras del navegador</small></div></button>
           <button data-act="rotate-server">${ICONS.ball}<div><b>Cambiar sacador actual</b><small>Alternar quién saca si hubo un ajuste manual</small></div></button>
@@ -3147,12 +3441,14 @@ function renderBoardOverlays(m, st) {
 
 // ==================== STATS & PDF REPORT RENDERER ====================
 function getStatsTargetMatch() {
+  if (ui.statsId === 'live' && ui.liveMatch) return ui.liveMatch;
   if (ui.statsId === 'shared' && ui.sharedMatch) return ui.sharedMatch;
   if (ui.statsId === 'active' && activeMatch) return activeMatch;
   const found = historyList.find(x => x.id === ui.statsId);
   if (found) return found;
   if (activeMatch && activeMatch.id === ui.statsId) return activeMatch;
-  return historyList[0] || activeMatch || null;
+  if (ui.liveMatch && ui.liveMatch.id === ui.statsId) return ui.liveMatch;
+  return historyList[0] || activeMatch || ui.liveMatch || null;
 }
 
 function renderComparisonBar(label, val0, val1, num0, num1, c0, c1) {
@@ -3238,7 +3534,9 @@ function renderStats() {
   const st = S.st;
   const T = S.T;
   const c0 = m.teams[0].color, c1 = m.teams[1].color;
-  const isLive = activeMatch && activeMatch.id === m.id && activeMatch.status === 'playing';
+  const isRemoteLiveStats = (ui.statsId === 'live' && ui.liveMatch);
+  const isLive = (activeMatch && activeMatch.id === m.id && activeMatch.status === 'playing') || (isRemoteLiveStats && m.status === 'playing');
+  const backRoute = isRemoteLiveStats ? 'live' : (activeMatch && activeMatch.id === m.id && activeMatch.status === 'playing' ? 'board' : 'history');
   const isStarRule = m.rules.deuceRule === 'star';
   const gpLabel = isStarRule ? 'Star Points ganados' : 'Puntos de oro ganados';
   const gpSrvLabel = isStarRule ? 'Star Points ganados al saque' : 'Puntos de oro ganados al saque';
@@ -3292,9 +3590,10 @@ function renderStats() {
     <div class="print-only print-title">DETALLES DEL PARTIDO · PÁDEL CONTROL SÉ · BY SAIRAF ENGEL</div>
 
     <div class="page-h no-print">
-      <button class="icon-btn" data-nav="${isLive ? 'board' : 'history'}" title="Volver">${ICONS.back}</button>
+      <button class="icon-btn" data-nav="${backRoute}" title="Volver">${ICONS.back}</button>
       <h1>Detalles del Partido</h1>
-      ${isLive ? `<button class="btn primary sm" data-nav="board">${ICONS.play} Volver al marcador</button>` : ''}
+      ${isLive ? `<button class="btn primary sm" data-nav="${isRemoteLiveStats ? 'live' : 'board'}">${ICONS.play} Volver al marcador</button>` : ''}
+      ${!isRemoteLiveStats && isLive ? `<button class="icon-btn" data-act="share-live" title="Compartir en vivo">${ICONS.live}</button>` : ''}
       <button class="icon-btn" data-act="print-pdf" title="Imprimir / Guardar PDF">${ICONS.pdf}</button>
       <button class="icon-btn" data-act="export-png" title="Descargar imagen resumen">${ICONS.img}</button>
       <button class="icon-btn" data-act="share-link" title="Compartir enlace">${ICONS.share}</button>
@@ -3432,7 +3731,8 @@ function renderStats() {
       <button class="btn" data-act="export-png">${ICONS.img} Descargar Imagen</button>
       <button class="btn" data-act="share-link">${ICONS.share} Compartir Enlace</button>
       ${ui.statsId === 'shared' ? `<button class="btn primary" data-act="save-shared">Guardar en mi historial</button>` : ''}
-      ${!isLive && ui.statsId !== 'shared' ? `<button class="btn danger" data-del-match="${esc(m.id)}">${ICONS.trash} Eliminar partido</button>` : ''}
+      ${isRemoteLiveStats ? `<button class="btn primary" data-act="save-live">Guardar en mi historial</button>` : ''}
+      ${!isLive && ui.statsId !== 'shared' && !isRemoteLiveStats ? `<button class="btn danger" data-del-match="${esc(m.id)}">${ICONS.trash} Eliminar partido</button>` : ''}
     </div>
     ${renderSignatureFooter()}
   </div>
@@ -3623,6 +3923,7 @@ function render() {
     case 'new': html = renderNewMatch(); break;
     case 'board': html = renderBoard(false); break;
     case 'display': html = renderBoard(true); break;
+    case 'live': html = renderBoard(true); break;
     case 'stats': html = renderStats(); break;
     case 'history': html = renderHistory(); break;
     case 'players': html = renderPlayers(); break;
@@ -3856,6 +4157,21 @@ document.addEventListener('click', (ev) => {
         break;
       case 'open-menu': ui.menuOpen = true; render(); break;
       case 'dismiss-co': ui.changeoverOverlay = null; render(); break;
+      case 'share-live':
+        ui.menuOpen = false;
+        if (activeMatch) shareLiveMatchLink(activeMatch);
+        break;
+      case 'exit-live':
+        disconnectLiveSpectator();
+        navigate('home');
+        break;
+      case 'save-live':
+        if (ui.liveMatch) {
+          archiveMatchToHistory(ui.liveMatch);
+          showToast('Partido en vivo guardado en tu historial');
+          render();
+        }
+        break;
       case 'open-tv': {
         ui.menuOpen = false;
         const tvUrl = `${location.href.split('#')[0]}#display`;
@@ -4073,6 +4389,10 @@ document.addEventListener('keydown', (ev) => {
 // Hash routing & shared links
 function checkHashRoute() {
   const h = location.hash.slice(1);
+  if (h.startsWith('live=')) {
+    connectLiveSpectator(h.slice(5));
+    return;
+  }
   if (h.startsWith('share=')) {
     const m = decodeMatchShare(h.slice(6));
     if (m) {
@@ -4089,6 +4409,7 @@ function checkHashRoute() {
     return;
   }
   if (['home','new','board','stats','history','players','settings'].includes(h)) {
+    if (h === 'home' || h === 'new') disconnectLiveSpectator();
     ui.route = h;
     render();
   }
