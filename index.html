@@ -503,6 +503,36 @@ table.keys td{padding:10px 4px;border-bottom:1px solid var(--line);vertical-alig
   transition:all .22s var(--ease);
 }
 .pn .nm{overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 10px rgba(0,0,0,.28)}
+
+.pn .srv-side-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--cond);
+  font-weight: 900;
+  font-size: .48em;
+  line-height: 1;
+  padding: .2em .45em;
+  border-radius: 6px;
+  flex: none;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+.pn .srv-side-badge.srv-side-d {
+  background: linear-gradient(135deg, #ffe58f 0%, #d4af37 100%);
+  color: #080600;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 229, 143, 0.5);
+}
+.pn .srv-side-badge.srv-side-r {
+  background: linear-gradient(135deg, #7dd3fc 0%, #0284c7 100%);
+  color: #04131f;
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(125, 211, 252, 0.5);
+}
+
 .pn .ball{width:.55em;height:.55em;border-radius:50%;flex:none;background:rgba(255,255,255,.22);transition:all .25s var(--ease)}
 .pn.srv{
   opacity:1;
@@ -794,6 +824,374 @@ details.pbp[open] summary:after{content:'–'}
   .mom{height:140px}
   @page{margin:14mm}
 }
+
+/* ---------- OBS & Live Stream Overlay Mode ---------- */
+html.obs-mode, body.obs-mode {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  -webkit-font-smoothing: antialiased;
+}
+html.obs-mode #app, body.obs-mode #app {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  overflow: hidden !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  position: relative !important;
+}
+
+.obs-overlay {
+  position: fixed;
+  z-index: 9999;
+  font-family: var(--font);
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+  animation: obsFadeIn .3s var(--ease) both;
+}
+@keyframes obsFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Positions */
+.obs-overlay.obs-pos-tl { top: 32px; left: 36px; }
+.obs-overlay.obs-pos-tr { top: 32px; right: 36px; }
+.obs-overlay.obs-pos-bl { bottom: 32px; left: 36px; }
+.obs-overlay.obs-pos-br { bottom: 32px; right: 36px; }
+.obs-overlay.obs-pos-bar {
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(920px, calc(100vw - 48px));
+}
+
+/* Scorebug Card */
+.obs-scorebug {
+  background: rgba(10, 10, 15, 0.94);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1.5px solid rgba(212, 175, 55, 0.45);
+  border-radius: 18px;
+  box-shadow: 0 18px 40px -10px rgba(0, 0, 0, 0.9), 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 0 rgba(255, 229, 143, 0.25);
+  padding: 8px 12px 10px;
+  min-width: 410px;
+  max-width: 480px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.obs-overlay.obs-pos-bar .obs-scorebug {
+  min-width: unset;
+  max-width: none;
+  width: 100%;
+}
+
+/* Header */
+.obs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 6px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  font-size: 11px;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--tx2);
+  font-weight: 700;
+}
+.obs-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gold);
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 12.5px;
+  letter-spacing: 1px;
+}
+.obs-brand svg {
+  width: 14px;
+  height: 14px;
+}
+.obs-status-pill {
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: var(--gold);
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 11.5px;
+  letter-spacing: .6px;
+}
+.obs-clock {
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 13px;
+  color: #fff;
+  letter-spacing: .6px;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.obs-clock-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: obsPulse 1.8s infinite;
+}
+@keyframes obsPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+/* Team Rows */
+.obs-team-row {
+  display: grid;
+  grid-template-columns: 5px 1fr auto auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: background .2s ease;
+}
+.obs-team-row.serving {
+  background: rgba(212, 175, 55, 0.08);
+}
+.obs-team-bar {
+  width: 5px;
+  height: 28px;
+  border-radius: 4px;
+  background: var(--tc, #d4af37);
+  box-shadow: 0 0 10px var(--tc, #d4af37);
+}
+.obs-team-names {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: .3px;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+.obs-team-names .obs-ball {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  font-size: 12px;
+  line-height: 1;
+  filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.9));
+  animation: obsServeBounce 1.2s infinite ease-in-out;
+  flex: none;
+}
+@keyframes obsServeBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.obs-p.srv {
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+.obs-srv-side {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--cond);
+  font-weight: 900;
+  font-size: 11px;
+  line-height: 1;
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  flex: none;
+  letter-spacing: 0;
+  margin-left: 2px;
+}
+.obs-srv-side.srv-d {
+  background: linear-gradient(135deg, #ffe58f 0%, #d4af37 100%);
+  color: #080600;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.65);
+}
+.obs-srv-side.srv-r {
+  background: linear-gradient(135deg, #7dd3fc 0%, #0284c7 100%);
+  color: #04131f;
+  box-shadow: 0 0 8px rgba(2, 132, 199, 0.65);
+}
+
+.obs-team-names .obs-fault {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: #f59e0b;
+  color: #000;
+  font-weight: 800;
+  letter-spacing: .5px;
+  flex: none;
+}
+.obs-sets-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.obs-set-box {
+  width: 24px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--tx2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.obs-set-box.won {
+  color: var(--gold);
+  background: rgba(212, 175, 55, 0.16);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  font-weight: 900;
+}
+.obs-set-box sup {
+  font-size: 9px;
+  margin-left: 1px;
+}
+.obs-games-box {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-family: var(--cond);
+  font-weight: 900;
+  font-size: 21px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.obs-pts-box {
+  min-width: 44px;
+  height: 32px;
+  padding: 0 8px;
+  display: grid;
+  place-items: center;
+  font-family: var(--cond);
+  font-weight: 900;
+  font-size: 20px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffe58f 0%, #d4af37 60%, #a87910 100%);
+  color: #080600;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.45);
+  letter-spacing: .5px;
+}
+.obs-pts-box.dim {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--tx3);
+  box-shadow: none;
+}
+.obs-pts-box.gold {
+  animation: obsGoldPulse 1.2s infinite ease-in-out;
+}
+@keyframes obsGoldPulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(212, 175, 55, 0.8); }
+  50% { box-shadow: 0 0 6px rgba(212, 175, 55, 0.3); }
+}
+
+/* Event Tickers */
+.obs-ticker {
+  margin-top: 2px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 12.5px;
+  text-align: center;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: var(--gold);
+}
+.obs-ticker.obs-ticker-gold {
+  background: linear-gradient(135deg, rgba(255, 229, 143, 0.25) 0%, rgba(212, 175, 55, 0.35) 100%);
+  border-color: var(--gold);
+  color: #fff;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
+  animation: obsTickerPulse 1.5s infinite;
+}
+.obs-ticker.obs-ticker-warn {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+.obs-ticker.obs-ticker-hot {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #fca5a5;
+  animation: obsTickerPulse 1.2s infinite;
+}
+@keyframes obsTickerPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Standby Bug */
+.obs-scorebug.obs-waiting {
+  padding: 12px 18px;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+.obs-waiting-logo svg {
+  width: 32px;
+  height: 32px;
+}
+.obs-waiting-info {
+  display: flex;
+  flex-direction: column;
+}
+.obs-waiting-title {
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+.obs-waiting-sub {
+  font-size: 11px;
+  color: var(--tx2);
+  letter-spacing: .6px;
+  font-weight: 700;
+}
+
 </style>
 </head>
 <body>
@@ -853,6 +1251,7 @@ const ICONS = {
   flag:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
   edit:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
   ball:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6c3.5 3.5 3.5 9.3 0 12.8M18.4 5.6c-3.5 3.5-3.5 9.3 0 12.8"/></svg>',
+  copy:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
   live:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>'
 };
 
@@ -1000,9 +1399,28 @@ if (!preset.totalSets) {
 preset.setsToWin = Math.floor(preset.totalSets / 2) + 1;
 let activeMatch = loadJSON(LS_ACTIVE, null);
 
+// Migrate any old generic "JUGADOR 1..4" defaults to "DRIVE / REVÉS"
+function migratePlayerDefaults(tList) {
+  if (!tList) return;
+  for (let tm = 0; tm < 2; tm++) {
+    if (!tList[tm] || !tList[tm].players) continue;
+    for (let pi = 0; pi < 2; pi++) {
+      const cur = tList[tm].players[pi];
+      if (/^jugador\s*[1-4]$/i.test(cur?.trim() || '')) {
+        tList[tm].players[pi] = pi === 0 ? `DRIVE ${tm+1}` : `REVÉS ${tm+1}`;
+      }
+    }
+  }
+}
+if (preset && preset.teams) migratePlayerDefaults(preset.teams);
+if (activeMatch && activeMatch.teams) migratePlayerDefaults(activeMatch.teams);
+
+
 const ui = {
   route: 'home',
-  qrModalOpen: false,       // 'home' | 'new' | 'board' | 'display' | 'live' | 'stats' | 'history' | 'players' | 'settings'
+  qrModalOpen: false,       // 'home' | 'new' | 'board' | 'display' | 'live' | 'obs' | 'stats' | 'history' | 'players' | 'settings'
+  obsModalOpen: false,
+  obsSelectedPos: 'tl',
   statsId: null,       // match id or 'active' or 'shared' or 'live'
   sharedMatch: null,
   liveId: null,
@@ -1046,7 +1464,9 @@ function teamLabel(m, t) {
   return p.length ? p.join(' · ') : `Pareja ${t+1}`;
 }
 function playerLabel(m, t, p) {
-  return m.teams[t].players[p] || m.teams[t].players[0] || `J${t*2+p+1}`;
+  const custom = m?.teams?.[t]?.players?.[p]?.trim();
+  if (custom) return custom;
+  return p === 0 ? `DRIVE ${t+1}` : `REVÉS ${t+1}`;
 }
 
 // ==================== CROSS-TAB LIVE DISPLAY SYNC ====================
@@ -1055,7 +1475,7 @@ if (bc) {
   bc.onmessage = (ev) => {
     if (ev.data && ev.data.type === 'sync') {
       activeMatch = ev.data.match;
-      if (ui.route === 'display' || ui.route === 'board' || (ui.route === 'stats' && ui.statsId === 'active')) {
+      if (ui.route === 'display' || ui.route === 'board' || ui.route === 'obs' || (ui.route === 'stats' && ui.statsId === 'active')) {
         render();
       }
     }
@@ -1064,7 +1484,7 @@ if (bc) {
 window.addEventListener('storage', (ev) => {
   if (ev.key === LS_ACTIVE) {
     activeMatch = loadJSON(LS_ACTIVE, null);
-    if (ui.route === 'display' || ui.route === 'board') render();
+    if (ui.route === 'display' || ui.route === 'board' || ui.route === 'obs') render();
   }
 });
 function persistActive() {
@@ -1091,8 +1511,8 @@ function archiveMatchToHistory(m) {
 // ==================== MATCH ENGINE (DETERMINISTIC REPLAY) ====================
 function createMatchFromPreset(p) {
   const t0 = p.teams[0], t1 = p.teams[1];
-  const players0 = [t0.players[0]?.trim() || 'JUGADOR 1', t0.players[1]?.trim() || 'JUGADOR 2'];
-  const players1 = [t1.players[0]?.trim() || 'JUGADOR 3', t1.players[1]?.trim() || 'JUGADOR 4'];
+  const players0 = [t0.players[0]?.trim() || 'DRIVE 1', t0.players[1]?.trim() || 'REVÉS 1'];
+  const players1 = [t1.players[0]?.trim() || 'DRIVE 2', t1.players[1]?.trim() || 'REVÉS 2'];
   const fs = p.firstServer || [0,0];
   const totalSets = Math.max(1, Number(p.totalSets) || (p.setsToWin ? (Number(p.setsToWin) * 2 - 1) : 3));
   const setsToWin = Math.floor(totalSets / 2) + 1;
@@ -1417,6 +1837,9 @@ function computeMatch(m) {
     }
   }
 
+  const srvSide = matchWinner !== null ? null : (((p[0] + p[1]) % 2 === 0) ? 'D' : 'R');
+  const srvSideLabel = srvSide === 'D' ? 'Derecha' : (srvSide === 'R' ? 'Revés' : '');
+
   return {
     sets,
     curSetIdx,
@@ -1427,6 +1850,8 @@ function computeMatch(m) {
     pointDisplay,
     srvTeam,
     srvPlayer,
+    srvSide,
+    srvSideLabel,
     isTB,
     isSuperTB,
     isGP,
@@ -1954,7 +2379,11 @@ function findPlayerInCommand(cmd, m) {
   const c = normVoiceStr(cmd);
   if (!c) return null;
 
-  // 0. Explicit "jugador 1..4" / "jugador uno..cuatro"
+  // 0. Explicit "drive 1/2", "reves 1/2", "jugador 1..4"
+  if (/\bdrive\s*(2|dos)\b/.test(c)) return { team: 1, playerIdx: 0, name: playerLabel(m, 1, 0) };
+  if (/\breves\s*(2|dos)\b/.test(c)) return { team: 1, playerIdx: 1, name: playerLabel(m, 1, 1) };
+  if (/\bdrive\s*(1|uno)?\b/.test(c)) return { team: 0, playerIdx: 0, name: playerLabel(m, 0, 0) };
+  if (/\breves\s*(1|uno)?\b/.test(c)) return { team: 0, playerIdx: 1, name: playerLabel(m, 0, 1) };
   if (/\bjugador\s*(1|uno)\b/.test(c)) return { team: 0, playerIdx: 0, name: playerLabel(m, 0, 0) };
   if (/\bjugador\s*(2|dos)\b/.test(c)) return { team: 0, playerIdx: 1, name: playerLabel(m, 0, 1) };
   if (/\bjugador\s*(3|tres)\b/.test(c)) return { team: 1, playerIdx: 0, name: playerLabel(m, 1, 0) };
@@ -2244,11 +2673,11 @@ setInterval(() => {
   const dt = Math.min(2500, Math.max(0, now - lastTickAt));
   lastTickAt = now;
 
-  if (activeMatch && activeMatch.status === 'playing' && ui.route === 'board' && !ui.changeoverOverlay) {
+  if (activeMatch && activeMatch.status === 'playing' && (ui.route === 'board' || ui.route === 'obs' || ui.route === 'display') && !ui.changeoverOverlay) {
     activeMatch.durationMs = (activeMatch.durationMs || 0) + dt;
     const clkEl = document.getElementById('sb-clock-val');
     if (clkEl) clkEl.textContent = fmtClock(activeMatch.durationMs);
-  } else if (ui.route === 'live' && ui.liveMatch && ui.liveMatch.status === 'playing') {
+  } else if ((ui.route === 'live' || ui.route === 'obs') && ui.liveMatch && ui.liveMatch.status === 'playing') {
     ui.liveMatch.durationMs = (ui.liveMatch.durationMs || 0) + dt;
     const clkEl = document.getElementById('sb-clock-val');
     if (clkEl) clkEl.textContent = fmtClock(ui.liveMatch.durationMs);
@@ -2707,7 +3136,7 @@ function applyIncomingLiveSnapshot(b64, isInitial = false) {
     }
   }
 
-  if (ui.route === 'live' || (ui.route === 'stats' && ui.statsId === 'live')) {
+  if (ui.route === 'live' || ui.route === 'obs' || (ui.route === 'stats' && ui.statsId === 'live')) {
     render();
   }
 }
@@ -2742,7 +3171,7 @@ function connectLiveSpectator(rawParam) {
 
   const isSameChannel = (ui.liveId === matchId && liveEvtSource);
   ui.liveId = matchId;
-  ui.route = 'live';
+  if (ui.route !== 'obs') ui.route = 'live';
 
   if (initialSnap && !ui.liveMatch) {
     applyIncomingLiveSnapshot(initialSnap, true);
@@ -3149,7 +3578,7 @@ function renderNewMatch() {
   const srvChips = [];
   for (let t = 0; t < 2; t++) {
     for (let pi = 0; pi < 2; pi++) {
-      const name = p.teams[t].players[pi] || `Jugador ${t*2 + pi + 1}`;
+      const name = p.teams[t].players[pi] || (pi === 0 ? `DRIVE ${t+1}` : `REVÉS ${t+1}`);
       const isOn = p.firstServer[0] === t && p.firstServer[1] === pi;
       const col = p.teams[t].color;
       srvChips.push(`
@@ -3173,12 +3602,12 @@ function renderNewMatch() {
       <h3>Pareja ${t+1}</h3>
       <div class="row wrap">
         <div class="field">
-          <label>Jugador ${t*2+1}</label>
-          <input class="inp" list="known-players" value="${esc(p.teams[t].players[0]||'')}" placeholder="Nombre" data-pname="${t},0">
+          <label>Drive ${t+1} (Derecha)</label>
+          <input class="inp" list="known-players" value="${esc(p.teams[t].players[0]||'')}" placeholder="DRIVE ${t+1}" data-pname="${t},0">
         </div>
         <div class="field">
-          <label>Jugador ${t*2+2}</label>
-          <input class="inp" list="known-players" value="${esc(p.teams[t].players[1]||'')}" placeholder="Nombre" data-pname="${t},1">
+          <label>Revés ${t+1} (Izquierda)</label>
+          <input class="inp" list="known-players" value="${esc(p.teams[t].players[1]||'')}" placeholder="REVÉS ${t+1}" data-pname="${t},1">
         </div>
       </div>
       <div class="field">
@@ -3516,6 +3945,220 @@ function renderQRModal() {
   </div>`;
 }
 
+
+// ==================== OBS & BROADCAST OVERLAY RENDERER ====================
+function getOBSPosition() {
+  const h = (location.hash || '').slice(1);
+  const qIdx = h.indexOf('?');
+  const ampIdx = h.indexOf('&');
+  const paramStr = qIdx >= 0 ? h.slice(qIdx + 1) : (ampIdx >= 0 ? h.slice(ampIdx + 1) : '');
+  const sp = new URLSearchParams(paramStr);
+  const p = sp.get('pos');
+  if (['tl', 'tr', 'bl', 'br', 'bar'].includes(p)) return p;
+  return 'tl';
+}
+
+function renderOBSOverlay() {
+  const isRemoteLive = (ui.route === 'live' || !!ui.liveId);
+  const m = (isRemoteLive && ui.liveMatch) ? ui.liveMatch : (activeMatch || ui.liveMatch);
+  const pos = getOBSPosition();
+
+  if (!m) {
+    return `
+    <div class="obs-overlay obs-pos-${pos}">
+      <div class="obs-scorebug obs-waiting">
+        <div class="obs-waiting-logo">${LOGO_SVG}</div>
+        <div class="obs-waiting-info">
+          <div class="obs-waiting-title">PÁDEL CONTROL SÉ</div>
+          <div class="obs-waiting-sub">ESPERANDO INICIO DEL PARTIDO...</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  const st = computeMatch(m);
+
+  const pastSets = st.sets.filter((s, idx) => {
+    if (idx === st.curSetIdx && st.matchWinner === null) return false;
+    if (s.games[0] === 0 && s.games[1] === 0 && s.winner === null) return false;
+    return true;
+  });
+
+  const renderTeamRow = (t) => {
+    const col = m.teams[t].color;
+    const isSrv = (st.matchWinner === null && st.srvTeam === t);
+    const names = esc(teamLabel(m, t));
+
+    const setsHtml = pastSets.map(s => {
+      const won = (s.winner === t);
+      const tb = s.tbScore ? `<sup>${s.tbScore[t]}</sup>` : '';
+      return `<div class="obs-set-box ${won ? 'won' : ''}">${s.games[t]}${tb}</div>`;
+    }).join('');
+
+    const ptVal = st.matchWinner !== null
+      ? (st.matchWinner === t ? '🏆' : '—')
+      : esc(st.pointDisplay[t]);
+
+    const isGoldPt = (st.pointDisplay[t] === 'ADV' || st.pointDisplay[t] === 'GP' || st.isGP || st.isStar);
+
+    const playersLine = [0, 1].map(pi => {
+      const nm = esc(playerLabel(m, t, pi));
+      const pIsSrv = (isSrv && st.srvPlayer === pi);
+      if (pIsSrv) {
+        return `<span class="obs-p srv">${nm} <span class="obs-ball" title="Al saque">🎾</span><span class="obs-srv-side srv-${st.srvSide.toLowerCase()}" title="Saque desde la ${st.srvSide === 'D' ? 'Derecha' : 'Revés'}">${st.srvSide}</span></span>`;
+      }
+      return `<span class="obs-p">${nm}</span>`;
+    }).join(' <span style="opacity:0.4;margin:0 2px">·</span> ');
+
+    return `
+    <div class="obs-team-row ${isSrv ? 'serving' : ''}">
+      <div class="obs-team-bar" style="--tc:${esc(col)}"></div>
+      <div class="obs-team-names">
+        ${playersLine}
+        ${isSrv && m.pendingFault ? `<span class="obs-fault">2º</span>` : ''}
+      </div>
+      <div class="obs-sets-wrap">${setsHtml}</div>
+      <div class="obs-games-box">${st.curSet.games[t]}</div>
+      <div class="obs-pts-box ${st.matchWinner !== null ? 'dim' : (isGoldPt ? 'gold' : '')}">${ptVal}</div>
+    </div>`;
+  };
+
+  let tickerHtml = '';
+  if (st.matchWinner !== null) {
+    tickerHtml = `<div class="obs-ticker obs-ticker-gold">🏆 PARTIDO FINALIZADO · GANADORES: ${esc(teamLabel(m, st.matchWinner))}</div>`;
+  } else if (st.isStar) {
+    tickerHtml = `<div class="obs-ticker obs-ticker-gold">★ STAR POINT (PUNTO DECISIVO)</div>`;
+  } else if (st.isGP) {
+    tickerHtml = `<div class="obs-ticker obs-ticker-gold">★ PUNTO DE ORO</div>`;
+  } else if (st.mp[0] || st.mp[1]) {
+    const winTeam = st.mp[0] ? 0 : 1;
+    tickerHtml = `<div class="obs-ticker obs-ticker-hot">MATCH POINT · ${esc(teamLabel(m, winTeam))}</div>`;
+  } else if (st.sp[0] || st.sp[1]) {
+    const winTeam = st.sp[0] ? 0 : 1;
+    tickerHtml = `<div class="obs-ticker obs-ticker-hot">SET POINT · ${esc(teamLabel(m, winTeam))}</div>`;
+  } else if (st.isBP) {
+    const rcv = 1 - st.srvTeam;
+    tickerHtml = `<div class="obs-ticker obs-ticker-warn">BOLA DE BREAK · ${esc(teamLabel(m, rcv))}</div>`;
+  } else if (st.isSuperTB) {
+    tickerHtml = `<div class="obs-ticker">SÚPER TIE-BREAK A 10</div>`;
+  } else if (st.isTB) {
+    tickerHtml = `<div class="obs-ticker">TIE-BREAK A 7</div>`;
+  }
+
+  const setLabel = st.matchWinner !== null ? 'FINALIZADO' : (st.isSuperTB ? 'SÚPER TB' : (st.isTB ? 'TIE-BREAK' : `SET ${st.curSetIdx + 1}`));
+
+  return `
+  <div class="obs-overlay obs-pos-${pos}">
+    <div class="obs-scorebug">
+      <div class="obs-header">
+        <div class="obs-brand">${LOGO_SVG} <span>PÁDEL CONTROL SÉ</span></div>
+        <div class="obs-status-pill">${setLabel}</div>
+        <div class="obs-clock">
+          <span class="obs-clock-dot"></span>
+          <span id="sb-clock-val">${esc(fmtClock(m.durationMs))}</span>
+        </div>
+      </div>
+      ${renderTeamRow(0)}
+      ${renderTeamRow(1)}
+      ${tickerHtml}
+    </div>
+  </div>`;
+}
+
+function getOBSUrls(pos = 'tl') {
+  const baseUrl = location.href.split('#')[0];
+  const posParam = pos !== 'tl' ? `&pos=${pos}` : '';
+  const localUrl = `${baseUrl}#obs${posParam}`;
+  
+  const m = activeMatch || ui.liveMatch;
+  let remoteCode = '';
+  if (m) {
+    publishLiveMatchState(m, true);
+    remoteCode = shortMatchCode(m.id);
+  }
+  const remoteUrl = remoteCode ? `${baseUrl}#obs&v=${remoteCode}${posParam}` : `${baseUrl}#obs${posParam}`;
+  return { localUrl, remoteUrl, remoteCode };
+}
+
+function renderOBSModal() {
+  const pos = ui.obsSelectedPos || 'tl';
+  const { localUrl, remoteUrl, remoteCode } = getOBSUrls(pos);
+
+  return `
+  <div class="scrim" data-close-obs-modal="1" style="z-index:96">
+    <div class="sheet" style="max-width:560px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#ffe58f,#d4af37);color:#080600;display:grid;place-items:center;flex:none;box-shadow:0 6px 16px rgba(212,175,55,.45)">
+            ${ICONS.tv}
+          </div>
+          <div>
+            <h2 style="margin:0;font-size:19px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.5px">Superposición OBS / vMix</h2>
+            <small style="color:var(--tx2)">Marcador broadcast transparente para streamings en vivo</small>
+          </div>
+        </div>
+        <button class="icon-btn" data-act="close-obs-modal" style="width:38px;height:38px;border-radius:12px" title="Cerrar">✕</button>
+      </div>
+
+      <!-- Live scorebug preview box -->
+      <div style="background:rgba(0,0,0,0.55);border:1px dashed rgba(212,175,55,0.4);border-radius:16px;padding:12px;margin:10px 0 14px;position:relative;overflow:hidden">
+        <div style="font-size:10.5px;font-weight:800;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+          <span>Vista Previa del Marcador</span>
+          <span style="margin-left:auto;font-size:10px;color:var(--tx3);font-weight:600">Fondo 100% transparente en OBS</span>
+        </div>
+        <div style="overflow-x:auto;padding-bottom:2px">
+          ${renderOBSOverlay()}
+        </div>
+      </div>
+
+      <!-- Screen Position Selector -->
+      <div class="opt-sec" style="margin-top:4px">Posición en Pantalla (Streaming)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="pill ${pos==='tl'?'active':''}" data-set-obs-pos="tl">Arriba Izquierda</button>
+        <button class="pill ${pos==='tr'?'active':''}" data-set-obs-pos="tr">Arriba Derecha</button>
+        <button class="pill ${pos==='bl'?'active':''}" data-set-obs-pos="bl">Abajo Izquierda</button>
+        <button class="pill ${pos==='br'?'active':''}" data-set-obs-pos="br">Abajo Derecha</button>
+        <button class="pill ${pos==='bar'?'active':''}" data-set-obs-pos="bar">Barra Inferior (Chyron)</button>
+      </div>
+
+      <!-- Links -->
+      <div class="opt-sec">1. Enlace Remoto (Celular en Cancha ➔ OBS en PC) <span class="tag gold" style="font-size:9.5px;margin-left:4px">Recomendado</span></div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:6px">Anotás los puntos con el celular en la pista y OBS en la PC se actualiza solo en tiempo real vía nube:</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="inp" readonly value="${esc(remoteUrl)}" id="obs-remote-url-inp" style="font-family:monospace;font-size:11.5px;height:38px">
+          <button class="btn primary sm" data-copy-input="obs-remote-url-inp" style="flex:none">${ICONS.copy} Copiar</button>
+        </div>
+      </div>
+
+      <div class="opt-sec">2. Enlace Local (Misma PC)</div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:14px">
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:6px">Sincronización instantánea de latencia cero si anotás en Chrome en la misma PC donde tenés el OBS:</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="inp" readonly value="${esc(localUrl)}" id="obs-local-url-inp" style="font-family:monospace;font-size:11.5px;height:38px">
+          <button class="btn sm" data-copy-input="obs-local-url-inp" style="flex:none">${ICONS.copy} Copiar</button>
+        </div>
+      </div>
+
+      <!-- Quick OBS Guide -->
+      <div class="card" style="padding:10px 12px;background:rgba(212,175,55,0.05);border-color:rgba(212,175,55,0.22);margin-bottom:14px">
+        <b style="font-size:12px;color:var(--gold);display:block;margin-bottom:4px">Cómo configurarlo en OBS Studio / vMix:</b>
+        <ol style="margin:0;padding-left:18px;font-size:11.5px;color:var(--tx2);line-height:1.45">
+          <li>En OBS, en el panel <b>Fuentes (Sources)</b>, hacé clic en <b>+</b> y elegí <b>Navegador (Browser)</b>.</li>
+          <li>Pegá el enlace copiado en el campo <b>URL</b>.</li>
+          <li>Poné Ancho: <b>1920</b> y Alto: <b>1080</b> (o la resolución de tu video).</li>
+          <li>¡Listo! El fondo es 100% transparente y se actualizará automáticamente a cada punto.</li>
+        </ol>
+      </div>
+
+      <div class="btn-row">
+        <a href="${esc(remoteUrl)}" target="_blank" class="btn" style="text-decoration:none">${ICONS.full} Abrir overlay en pestaña</a>
+        <button class="btn primary" data-act="close-obs-modal">Listo</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 // ==================== SCOREBOARD & MODALS RENDERER ====================
 function renderBoard(isDisplayOnly = false) {
   const isRemoteLive = (ui.route === 'live');
@@ -3548,6 +4191,7 @@ function renderBoard(isDisplayOnly = false) {
         <div class="pn ${isSrv?'srv':''}">
           <span class="ball"></span>
           <span class="nm">${esc(playerLabel(m, t, pi))}</span>
+          ${isSrv && st.srvSide ? `<span class="srv-side-badge srv-side-${st.srvSide.toLowerCase()}" title="Saque desde la ${st.srvSide==='D'?'Derecha':'Revés'}">${st.srvSide}</span>` : ''}
           ${isSrv && m.pendingFault ? `<em class="fault">2º SAQUE</em>` : ''}
         </div>`);
     }
@@ -3618,7 +4262,7 @@ function renderBoard(isDisplayOnly = false) {
         <button class="icon-btn" data-act="exit-live" title="Salir de la transmisión">${ICONS.back}</button>
         <div class="sb-clock">
           <span id="sb-clock-val">${esc(fmtClock(m.durationMs))}</span>
-          <small><b class="red">● EN VIVO</b> · ${st.matchWinner !== null ? 'FINALIZADO' : `SET ${st.curSetIdx + 1} · SACA ${esc(playerLabel(m, st.srvTeam, st.srvPlayer))}`}</small>
+          <small><b class="red">● EN VIVO</b> · ${st.matchWinner !== null ? 'FINALIZADO' : `SET ${st.curSetIdx + 1} · SACA ${esc(playerLabel(m, st.srvTeam, st.srvPlayer))} (${st.srvSide === 'D' ? 'DERECHA' : 'REVÉS'})`}</small>
         </div>
         <button class="icon-btn ${prefs.voice?'on':''}" data-act="toggle-voice-tts" title="Activar voz de árbitro en vivo">${prefs.voice ? ICONS.vol : ICONS.mute}</button>
         <button class="icon-btn" data-open-stats="live" title="Estadísticas en tiempo real">${ICONS.chart}</button>
@@ -3635,7 +4279,7 @@ function renderBoard(isDisplayOnly = false) {
         <button class="icon-btn" data-act="share-live" title="Compartir partido en vivo por link">${ICONS.live}</button>
         <div class="sb-clock" data-act="toggle-pause" style="cursor:pointer" title="Tocar para pausar/reanudar reloj">
           <span id="sb-clock-val">${esc(fmtClock(m.durationMs))}</span>
-          <small>${m.status==='paused' ? '<b class="red">PAUSADO</b>' : `SET ${st.curSetIdx + 1} · SACA ${esc(playerLabel(m, st.srvTeam, st.srvPlayer))}`}</small>
+          <small>${m.status==='paused' ? '<b class="red">PAUSADO</b>' : `SET ${st.curSetIdx + 1} · SACA ${esc(playerLabel(m, st.srvTeam, st.srvPlayer))} (${st.srvSide === 'D' ? 'DERECHA' : 'REVÉS'})`}</small>
         </div>
         <button class="icon-btn ${prefs.voice?'on':''}" data-act="toggle-voice-tts" title="Voz de árbitro">${prefs.voice ? ICONS.vol : ICONS.mute}</button>
         <button class="icon-btn ${ui.voiceListening?'on':''}" data-act="toggle-voice-rec" title="Control por voz manos libres">${ICONS.mic}</button>
@@ -3829,6 +4473,7 @@ function renderBoardOverlays(m, st) {
           <button data-act="open-qr-modal">${ICONS.qr}<div><b>Compartir App (Código QR)</b><small>Mostrá el código para que otra persona escanee y abra la app en su teléfono</small></div></button>
           <button data-act="share-live">${ICONS.live}<div><b>Compartir partido EN VIVO (Link)</b><small>Enviá un enlace por WhatsApp para que sigan el marcador en tiempo real desde cualquier lugar</small></div></button>
           <button data-act="toggle-shot-prompt">${ICONS.edit}<div><b>${m.shotPrompt ? 'Desactivar' : 'Activar'} pregunta de golpe</b><small>${m.shotPrompt ? 'Actualmente pregunta Winner / Error al anotar' : 'Actualmente anota punto directo con un toque'}</small></div></button>
+                    <button data-act="open-obs-modal">${ICONS.tv}<div><b>Superposición para OBS (Overlay)</b><small>Marcador broadcast transparente para streamings en vivo (YouTube, Twitch, OBS)</small></div></button>
           <button data-act="open-tv">${ICONS.tv}<div><b>Abrir Modo TV / Espectador</b><small>Segunda ventana sincronizada en vivo para proyector o monitor</small></div></button>
           <button data-act="fullscreen">${ICONS.full}<div><b>Pantalla completa</b><small>Ocultar barras del navegador</small></div></button>
           <button data-act="rotate-server">${ICONS.ball}<div><b>Cambiar sacador actual</b><small>Alternar quién saca si hubo un ajuste manual</small></div></button>
@@ -3852,8 +4497,8 @@ function renderBoardOverlays(m, st) {
         ${[0,1].map(t => `
           <div class="opt-sec">Pareja ${t+1}</div>
           <div class="row wrap">
-            <div class="field"><input class="inp" id="ed-p-${t}-0" value="${esc(m.teams[t].players[0]||'')}"></div>
-            <div class="field"><input class="inp" id="ed-p-${t}-1" value="${esc(m.teams[t].players[1]||'')}"></div>
+            <div class="field"><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Drive (Derecha)</label><input class="inp" id="ed-p-${t}-0" placeholder="DRIVE ${t+1}" value="${esc(m.teams[t].players[0]||'')}"></div>
+            <div class="field"><label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:3px">Revés (Izquierda)</label><input class="inp" id="ed-p-${t}-1" placeholder="REVÉS ${t+1}" value="${esc(m.teams[t].players[1]||'')}"></div>
           </div>
           <div class="colors" style="margin:6px 0 10px">
             ${COLORS.map(c => `<button type="button" style="--c:${c.c}" class="${m.teams[t].color===c.c?'on':''}" data-edit-tcolor="${t},${c.c}" title="${c.n}"></button>`).join('')}
@@ -4408,6 +5053,26 @@ function renderSettings() {
       </div>
     </div>
 
+
+    <div class="sec-t">Transmisión en Vivo y Overlay (OBS / vMix)</div>
+    <div class="card" style="background:linear-gradient(135deg, rgba(212,175,55,0.14) 0%, var(--card) 60%);border:1px solid rgba(212,175,55,0.32)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#ffe58f,#d4af37);color:#080600;display:grid;place-items:center;flex:none;font-weight:900;box-shadow:0 8px 18px -4px rgba(212,175,55,.5)">
+          ${ICONS.tv}
+        </div>
+        <div>
+          <h3 style="margin:0;font-size:17px">Marcador Broadcast para Streaming</h3>
+          <small style="color:var(--tx2)">Transmití torneos y partidos con OBS Studio, vMix o Streamlabs</small>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--tx2);line-height:1.5;margin-bottom:12px">
+        Pádel Control SÉ incluye un modo de <b>Superposición Broadcast transparente</b>. Muestra únicamente el marcador estilo Premier Padel / WPT sobre la cámara del partido, con fondo 100% transparente para que el video se vea limpio y profesional.
+      </p>
+      <div class="btn-row">
+        <button class="btn primary" data-act="open-obs-modal">${ICONS.tv} Configurar y Copiar Link para OBS</button>
+      </div>
+    </div>
+
     <div class="card">
       <h3>Datos</h3>
       <div class="btn-row">
@@ -4425,11 +5090,20 @@ function render() {
   const root = document.getElementById('app');
   if (!root) return;
 
+  if (ui.route === 'obs') {
+    document.documentElement.classList.add('obs-mode');
+    document.body.classList.add('obs-mode');
+  } else {
+    document.documentElement.classList.remove('obs-mode');
+    document.body.classList.remove('obs-mode');
+  }
+
   let html = '';
   switch (ui.route) {
     case 'new': html = renderNewMatch(); break;
     case 'board': html = renderBoard(false); break;
     case 'display': html = renderBoard(true); break;
+    case 'obs': html = renderOBSOverlay(); break;
     case 'live': html = renderBoard(true); break;
     case 'stats': html = renderStats(); break;
     case 'history': html = renderHistory(); break;
@@ -4439,6 +5113,9 @@ function render() {
   }
   if (ui.qrModalOpen) {
     html += renderQRModal();
+  }
+  if (ui.obsModalOpen) {
+    html += renderOBSModal();
   }
   root.innerHTML = html;
   afterRenderQR();
@@ -4588,6 +5265,35 @@ document.addEventListener('click', (ev) => {
   }
 
   // Close modals (buttons or clicking the dark backdrop outside .sheet)
+  const closeObsEl = t.closest('[data-close-obs-modal]');
+  if (closeObsEl && (closeObsEl.tagName === 'BUTTON' || !t.closest('.sheet'))) {
+    ui.obsModalOpen = false; render(); return;
+  }
+  const posBtn = t.closest('[data-set-obs-pos]');
+  if (posBtn) {
+    ui.obsSelectedPos = posBtn.getAttribute('data-set-obs-pos');
+    render();
+    return;
+  }
+  const copyInpBtn = t.closest('[data-copy-input]');
+  if (copyInpBtn) {
+    const inputId = copyInpBtn.getAttribute('data-copy-input');
+    const inputEl = document.getElementById(inputId);
+    if (inputEl) {
+      inputEl.select?.();
+      const val = inputEl.value;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(val).then(() => {
+          showToast('Enlace copiado al portapapeles');
+        }).catch(() => {
+          try { document.execCommand('copy'); showToast('Enlace copiado'); } catch {}
+        });
+      } else {
+        try { document.execCommand('copy'); showToast('Enlace copiado'); } catch {}
+      }
+    }
+    return;
+  }
   const closeQrEl = t.closest('[data-close-qr]');
   if (closeQrEl && (closeQrEl.tagName === 'BUTTON' || !t.closest('.sheet'))) {
     ui.qrModalOpen = false; render(); return;
@@ -4705,6 +5411,15 @@ document.addEventListener('click', (ev) => {
           render();
         }
         break;
+      case 'open-obs-modal':
+        ui.menuOpen = false;
+        ui.obsModalOpen = true;
+        render();
+        break;
+      case 'close-obs-modal':
+        ui.obsModalOpen = false;
+        render();
+        break;
       case 'open-tv': {
         ui.menuOpen = false;
         const tvUrl = `${location.href.split('#')[0]}#display`;
@@ -4756,8 +5471,8 @@ document.addEventListener('click', (ev) => {
           for (let tm = 0; tm < 2; tm++) {
             const p0 = document.getElementById(`ed-p-${tm}-0`)?.value.trim();
             const p1 = document.getElementById(`ed-p-${tm}-1`)?.value.trim();
-            if (p0) activeMatch.teams[tm].players[0] = p0;
-            if (p1) activeMatch.teams[tm].players[1] = p1;
+            activeMatch.teams[tm].players[0] = p0 || (tm === 0 ? 'DRIVE 1' : 'DRIVE 2');
+            activeMatch.teams[tm].players[1] = p1 || (tm === 0 ? 'REVÉS 1' : 'REVÉS 2');
           }
           ui.editNamesOpen = false;
           persistActive();
@@ -4824,7 +5539,7 @@ document.addEventListener('input', (ev) => {
       const btns = box.querySelectorAll('[data-set-srv]');
       btns.forEach(b => {
         const [bt, bp] = b.getAttribute('data-set-srv').split(',').map(Number);
-        const nm = preset.teams[bt].players[bp] || `Jugador ${bt*2 + bp + 1}`;
+        const nm = preset.teams[bt].players[bp] || (bp === 0 ? `DRIVE ${bt+1}` : `REVÉS ${bt+1}`);
         b.innerHTML = `<span class="dot"></span>${esc(nm)}`;
       });
     }
@@ -4922,6 +5637,26 @@ document.addEventListener('keydown', (ev) => {
 // Hash routing & shared links
 function checkHashRoute() {
   const h = location.hash.slice(1);
+  if (h === 'obs' || h.startsWith('obs?') || h.startsWith('obs&') || h.startsWith('obs=')) {
+    let code = '';
+    if (h.startsWith('obs=')) {
+      code = h.slice(4);
+    } else {
+      const qIdx = h.indexOf('?');
+      const ampIdx = h.indexOf('&');
+      const paramStr = qIdx >= 0 ? h.slice(qIdx + 1) : (ampIdx >= 0 ? h.slice(ampIdx + 1) : '');
+      const sp = new URLSearchParams(paramStr);
+      code = sp.get('v') || sp.get('live') || sp.get('code') || '';
+    }
+    ui.route = 'obs';
+    if (code) {
+      connectLiveSpectator(code);
+    } else {
+      render();
+    }
+    return;
+  }
+
   if (h.startsWith('v=')) {
     connectLiveSpectator(h.slice(2));
     return;
