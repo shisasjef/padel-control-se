@@ -1657,7 +1657,9 @@ const DEFAULT_PREFS = {
   shotPrompt: true,
   changeoverAlerts: true,
   changeoverTimer: 90,
-  wakeLock: true
+  wakeLock: true,
+  rankingName: 'Mi Ranking',
+  rankingId: ''
 };
 
 const DEFAULT_PRESET = {
@@ -1679,7 +1681,21 @@ const DEFAULT_PRESET = {
   shotPrompt: true
 };
 
+function generateRankingId() {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let id = '';
+  for (let i = 0; i < 4; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
+  return 'RK-' + id;
+}
+
 let prefs = loadJSON(LS_PREFS, DEFAULT_PREFS);
+if (!prefs.rankingId) {
+  prefs.rankingId = generateRankingId();
+  saveJSON(LS_PREFS, prefs);
+}
+if (!prefs.rankingName) {
+  prefs.rankingName = 'Mi Ranking';
+}
 let preset = loadJSON(LS_PRESET, DEFAULT_PRESET);
 if (!preset.totalSets) {
   preset.totalSets = preset.setsToWin ? (preset.setsToWin * 2 - 1) : 3;
@@ -1711,6 +1727,9 @@ const ui = {
   obsSelectedPos: 'tl',
   statsId: null,       // match id or 'active' or 'shared' or 'live'
   sharedMatch: null,
+  sharedRanking: null,
+  playerRankingView: 'local', // 'local' | 'shared'
+  playerSort: 'elo',
   liveId: null,
   liveMatch: null,
   liveConnected: false,
@@ -1739,6 +1758,7 @@ let historyList = loadArr(LS_HIST);
 function saveJSON(k, v) {
   try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.warn('Storage error', e); }
 }
+ui.sharedRanking = loadJSON('padel_shared_ranking', null);
 function clone(o) { return o ? JSON.parse(JSON.stringify(o)) : o; }
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -4006,79 +4026,88 @@ function assignPlayerRanks(players, sortKey = 'elo') {
   return players;
 }
 
-async function shareRankingText() {
-  const eloState = computeEloRatings(historyList);
-  const map = new Map();
-  historyList.forEach(m => {
-    const S = computeStats(m, 'all');
-    const w = S.st.matchWinner;
-    S.P.forEach(p => {
-      const key = p.name.trim().toUpperCase();
-      if (!key) return;
-      if (!map.has(key)) {
-        const elo = eloState.playerRatings[key] ?? BASE_ELO;
-        const lastDelta = eloState.playerLastDelta[key] ?? 0;
-        const finishedMatches = eloState.playerMatchCount[key] ?? 0;
-        map.set(key, {
-          name: p.name.trim(),
-          key,
-          elo,
-          lastDelta,
-          finishedMatches,
-          matches: 0,
-          wins: 0
-        });
-      }
-      const rec = map.get(key);
-      rec.matches++;
-      if (w === p.team) rec.wins++;
-    });
-  });
-
-  const players = Array.from(map.values()).sort((a, b) => (b.elo - a.elo) || (b.wins - a.wins) || (b.matches - a.matches));
-  if (!players.length) {
-    showToast('Todavía no hay jugadores registrados en el ranking');
-    return;
-  }
-
-  assignPlayerRanks(players, 'elo');
-
-  const baseUrl = location.href.split('#')[0];
-  const rankingUrl = `${baseUrl}#players`;
-
-  const medals = { 1: '🥇 1º', 2: '🥈 2º', 3: '🥉 3º' };
-  const topRows = players.slice(0, 10).map((p) => {
-    const rankLabel = medals[p.rank] || `${p.rank}º`;
-    const lvl = getEloLevel(p.elo);
-    const winPct = pct(p.wins, p.matches);
-    const trend = p.lastDelta > 0 ? ` (+${p.lastDelta})` : p.lastDelta < 0 ? ` (${p.lastDelta})` : '';
-    return `${rankLabel} *${p.name}* · ${p.elo} pts ELO${trend} · Nivel ${lvl.level} (${lvl.icon}) · ${p.wins}V/${p.matches}P (${winPct}%)`;
-  }).join('\n');
-
-  const moreCount = players.length > 10 ? `\n...y ${players.length - 10} jugadores más` : '';
-
-  const text = `🎾 *RANKING OFICIAL ELO · PÁDEL CONTROL SÉ*\n_By Sairaf Engel · Niveles Playtomic (1.00 - 7.00)_\n\n🏆 *Tabla de Posiciones:*\n${topRows}${moreCount}\n\n📲 Ver ranking completo interactivo y marcador:\n${rankingUrl}`;
-
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: '🎾 Ranking Oficial · Pádel Control SÉ',
-        text
-      });
-      return;
-    } catch {}
-  }
+function encodeRankingPayload(players) {
   try {
-    await navigator.clipboard.writeText(text);
-    showToast('¡Ranking copiado al portapapeles!');
-  } catch {
-    prompt('Copiá el texto del ranking para compartir:', text);
+    const isShared = (ui.playerRankingView === 'shared' || (!historyList.length && ui.sharedRanking?.players?.length));
+    const rkId = (isShared && ui.sharedRanking?.id) ? ui.sharedRanking.id : (prefs.rankingId || 'RK-OFFICIAL');
+    const rkName = (isShared && ui.sharedRanking?.name) ? ui.sharedRanking.name : (prefs.rankingName || 'Mi Ranking');
+
+    const compact = {
+      v: 1,
+      id: rkId,
+      n: rkName,
+      t: Date.now(),
+      p: (players || []).map(p => [
+        p.name,
+        p.elo,
+        p.wins,
+        p.matches,
+        p.lastDelta || 0,
+        p.color || '#d4af37',
+        p.winners || 0,
+        p.ue || 0,
+        p.firstServeIn || 0,
+        p.srvPtsTotal || 0,
+        p.srvPtsWon || 0,
+        p.finishedMatches || p.matches || 0
+      ])
+    };
+    const json = JSON.stringify(compact);
+    return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  } catch (e) {
+    return '';
   }
 }
 
-async function exportRankingImage() {
-  if (document.fonts && document.fonts.ready) {
-    try { await document.fonts.ready; } catch {}
+function decodeRankingPayload(b64) {
+  try {
+    const norm = String(b64 || '').trim().replace(/-/g, '+').replace(/_/g, '/');
+    if (!norm) return null;
+    const json = decodeURIComponent(escape(atob(norm)));
+    const c = JSON.parse(json);
+    if (!c || !Array.isArray(c.p)) return null;
+    const players = c.p.map(row => ({
+      name: String(row[0] || 'Jugador'),
+      key: String(row[0] || 'Jugador').toUpperCase(),
+      elo: Number(row[1]) || 1000,
+      wins: Number(row[2]) || 0,
+      matches: Number(row[3]) || 0,
+      lastDelta: Number(row[4]) || 0,
+      color: String(row[5] || '#d4af37'),
+      winners: Number(row[6]) || 0,
+      ue: Number(row[7]) || 0,
+      fe: 0,
+      shots: {},
+      firstServeIn: Number(row[8]) || 0,
+      srvPtsTotal: Number(row[9]) || 0,
+      srvPtsWon: Number(row[10]) || 0,
+      finishedMatches: Number(row[11]) || Number(row[3]) || 0
+    }));
+    return {
+      version: c.v || 1,
+      id: c.id || 'RK-EXT',
+      name: c.n || 'Ranking Compartido',
+      timestamp: c.t || Date.now(),
+      players
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveSharedRankingToVault(ranking) {
+  if (!ranking || !ranking.id) return;
+  try {
+    const vault = loadJSON('padel_ranking_vault', {});
+    vault[ranking.id] = ranking;
+    saveJSON('padel_ranking_vault', vault);
+  } catch {}
+}
+
+function getRankingPlayersList(forceSource = null) {
+  const isShared = forceSource === 'shared' || (forceSource !== 'local' && (ui.playerRankingView === 'shared' || (!historyList.length && ui.sharedRanking?.players?.length)));
+  if (isShared && ui.sharedRanking && Array.isArray(ui.sharedRanking.players) && ui.sharedRanking.players.length > 0) {
+    return ui.sharedRanking.players.map(p => ({ ...p, shots: { ...(p.shots || {}) } }));
   }
 
   const eloState = computeEloRatings(historyList);
@@ -4101,21 +4130,102 @@ async function exportRankingImage() {
           lastDelta,
           finishedMatches,
           matches: 0,
-          wins: 0
+          wins: 0,
+          winners: 0,
+          ue: 0,
+          fe: 0,
+          shots: { smash: 0, volea: 0, bandeja: 0, bajada: 0, dejada: 0, passing: 0, globo: 0 },
+          srvPtsWon: 0,
+          srvPtsTotal: 0,
+          firstServeIn: 0,
+          doubleFaults: 0
         });
       }
       const rec = map.get(key);
       rec.matches++;
       if (w === p.team) rec.wins++;
+      rec.winners += p.winners;
+      rec.ue += p.ue;
+      rec.fe += p.fe;
+      rec.shots = rec.shots || { smash: 0, volea: 0, bandeja: 0, bajada: 0, dejada: 0, passing: 0, globo: 0 };
+      if (p.shots) {
+        Object.entries(p.shots).forEach(([k, v]) => {
+          rec.shots[k] = (rec.shots[k] || 0) + v;
+        });
+      }
+      rec.srvPtsWon += p.srvPtsWon;
+      rec.srvPtsTotal += p.srvPtsTotal;
+      rec.firstServeIn += p.firstServeIn;
+      rec.doubleFaults += p.doubleFaults;
     });
   });
+  return Array.from(map.values());
+}
 
-  const players = Array.from(map.values()).sort((a, b) => (b.elo - a.elo) || (b.wins - a.wins) || (b.matches - a.matches));
+async function shareRankingText() {
+  const isShared = (ui.playerRankingView === 'shared' || (!historyList.length && ui.sharedRanking?.players?.length));
+  const rankingTitle = (isShared && ui.sharedRanking?.name) ? ui.sharedRanking.name : (prefs.rankingName || 'Mi Ranking');
+  const rankingId = (isShared && ui.sharedRanking?.id) ? ui.sharedRanking.id : (prefs.rankingId || 'RK-OFFICIAL');
+
+  const players = getRankingPlayersList();
+  if (!players.length) {
+    showToast('Todavía no hay jugadores registrados en el ranking');
+    return;
+  }
+
+  players.sort((a, b) => (b.elo - a.elo) || (b.wins - a.wins) || (b.matches - a.matches));
+  assignPlayerRanks(players, 'elo');
+
+  const baseUrl = location.href.split('#')[0];
+  const rkPayload = encodeRankingPayload(players);
+  const rankingUrl = rkPayload ? `${baseUrl}#rk=${rkPayload}` : `${baseUrl}#players`;
+
+  const medals = { 1: '🥇 1º', 2: '🥈 2º', 3: '🥉 3º' };
+  const topRows = players.slice(0, 10).map((p) => {
+    const rankLabel = medals[p.rank] || `${p.rank}º`;
+    const lvl = getEloLevel(p.elo);
+    const winPct = pct(p.wins, p.matches);
+    const trend = p.lastDelta > 0 ? ` (+${p.lastDelta})` : p.lastDelta < 0 ? ` (${p.lastDelta})` : '';
+    return `${rankLabel} *${p.name}* · ${p.elo} pts ELO${trend} · Nivel ${lvl.level} (${lvl.icon}) · ${p.wins}V/${p.matches}P (${winPct}%)`;
+  }).join('\n');
+
+  const moreCount = players.length > 10 ? `\n...y ${players.length - 10} jugadores más` : '';
+
+  const text = `🎾 *RANKING OFICIAL ELO · PÁDEL CONTROL SÉ*\n🏷️ *Cuenta / Ranking:* ${rankingTitle} · ID: #${rankingId}\n_By Sairaf Engel · Niveles Playtomic (1.00 - 7.00)_\n\n🏆 *Tabla de Posiciones:*\n${topRows}${moreCount}\n\n📲 Ver ranking completo interactivo y marcador:\n${rankingUrl}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `🎾 Ranking Oficial: ${rankingTitle} (#${rankingId})`,
+        text
+      });
+      return;
+    } catch {}
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('¡Ranking y enlace copiados al portapapeles!');
+  } catch {
+    prompt('Copiá el texto del ranking para compartir:', text);
+  }
+}
+
+async function exportRankingImage() {
+  if (document.fonts && document.fonts.ready) {
+    try { await document.fonts.ready; } catch {}
+  }
+
+  const isShared = (ui.playerRankingView === 'shared' || (!historyList.length && ui.sharedRanking?.players?.length));
+  const rankingTitle = (isShared && ui.sharedRanking?.name) ? ui.sharedRanking.name : (prefs.rankingName || 'Mi Ranking');
+  const rankingId = (isShared && ui.sharedRanking?.id) ? ui.sharedRanking.id : (prefs.rankingId || 'RK-OFFICIAL');
+
+  const players = getRankingPlayersList();
   if (!players.length) {
     showToast('Todavía no hay jugadores registrados para exportar');
     return;
   }
 
+  players.sort((a, b) => (b.elo - a.elo) || (b.wins - a.wins) || (b.matches - a.matches));
   assignPlayerRanks(players, 'elo');
 
   const topPlayers = players.slice(0, 8);
@@ -4146,10 +4256,11 @@ async function exportRankingImage() {
   ctx.font = '800 28px Inter, -apple-system, sans-serif';
   ctx.fillText('PÁDEL CONTROL SÉ  ·  RANKING OFICIAL ELO', 64, 82);
 
-  const nowStr = new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const imageDate = (isShared && ui.sharedRanking?.timestamp) ? new Date(ui.sharedRanking.timestamp) : new Date();
+  const nowStr = imageDate.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
   ctx.fillStyle = '#a39e93';
-  ctx.font = '500 22px Inter, sans-serif';
-  ctx.fillText(`Clasificación general y niveles Playtomic  ·  ${nowStr}`, 64, 120);
+  ctx.font = '500 21px Inter, sans-serif';
+  ctx.fillText(`${rankingTitle.toUpperCase()}  ·  ID: #${rankingId}  ·  ${nowStr}`, 64, 120);
 
   // Virtual signature top-right
   ctx.save();
@@ -5867,60 +5978,20 @@ function renderHistory() {
 }
 
 function renderPlayers() {
-  const eloState = computeEloRatings(historyList);
   const currentSort = ui.playerSort || 'elo';
+  const hasLocal = historyList.length > 0;
+  const hasShared = !!(ui.sharedRanking && Array.isArray(ui.sharedRanking.players) && ui.sharedRanking.players.length > 0);
 
-  // Aggregate career stats per player name across all matches in history
-  const map = new Map();
-  historyList.forEach(m => {
-    const S = computeStats(m, 'all');
-    const w = S.st.matchWinner;
-    S.P.forEach(p => {
-      const key = p.name.trim().toUpperCase();
-      if (!key) return;
-      if (!map.has(key)) {
-        const elo = eloState.playerRatings[key] ?? BASE_ELO;
-        const lastDelta = eloState.playerLastDelta[key] ?? 0;
-        const finishedMatches = eloState.playerMatchCount[key] ?? 0;
-        map.set(key, {
-          name: p.name.trim(),
-          key,
-          color: p.color,
-          elo,
-          lastDelta,
-          finishedMatches,
-          matches: 0,
-          wins: 0,
-          winners: 0,
-          ue: 0,
-          fe: 0,
-          shots: { smash: 0, volea: 0, bandeja: 0, bajada: 0, dejada: 0, passing: 0, globo: 0 },
-          srvPtsWon: 0,
-          srvPtsTotal: 0,
-          firstServeIn: 0,
-          doubleFaults: 0
-        });
-      }
-      const rec = map.get(key);
-      rec.matches++;
-      if (w === p.team) rec.wins++;
-      rec.winners += p.winners;
-      rec.ue += p.ue;
-      rec.fe += p.fe;
-      rec.shots = rec.shots || { smash: 0, volea: 0, bandeja: 0, bajada: 0, dejada: 0, passing: 0, globo: 0 };
-      if (p.shots) {
-        Object.entries(p.shots).forEach(([k, v]) => {
-          rec.shots[k] = (rec.shots[k] || 0) + v;
-        });
-      }
-      rec.srvPtsWon += p.srvPtsWon;
-      rec.srvPtsTotal += p.srvPtsTotal;
-      rec.firstServeIn += p.firstServeIn;
-      rec.doubleFaults += p.doubleFaults;
-    });
-  });
+  let currentView = ui.playerRankingView;
+  if (!currentView) {
+    currentView = hasLocal ? 'local' : (hasShared ? 'shared' : 'local');
+    ui.playerRankingView = currentView;
+  } else if (currentView === 'local' && !hasLocal && hasShared) {
+    currentView = 'shared';
+    ui.playerRankingView = 'shared';
+  }
 
-  let players = Array.from(map.values());
+  let players = getRankingPlayersList(currentView);
   if (currentSort === 'elo') {
     players.sort((a, b) => (b.elo - a.elo) || (b.wins - a.wins) || (b.matches - a.matches));
   } else if (currentSort === 'wins') {
@@ -5929,6 +6000,63 @@ function renderPlayers() {
     players.sort((a, b) => (b.matches - a.matches) || (b.elo - a.elo) || (b.wins - a.wins));
   }
   assignPlayerRanks(players, currentSort);
+
+  let viewToggleHtml = '';
+  const vault = loadJSON('padel_ranking_vault', {});
+  const sharedList = Object.values(vault);
+
+  if (hasLocal && sharedList.length > 0) {
+    viewToggleHtml = `
+    <div class="seg" style="margin-bottom:14px;overflow-x:auto;white-space:nowrap">
+      <button class="${currentView==='local'?'on':''}" data-set-prview="local">🏆 ${esc(prefs.rankingName || 'Mi Ranking')} (#${esc(prefs.rankingId)})</button>
+      ${sharedList.map(sr => `
+        <button class="${(currentView==='shared' && ui.sharedRanking?.id === sr.id)?'on':''}" data-select-ranking="${esc(sr.id)}">📡 ${esc(sr.name || 'Compartido')} (#${esc(sr.id)})</button>
+      `).join('')}
+    </div>`;
+  } else if (hasLocal && hasShared) {
+    viewToggleHtml = `
+    <div class="seg" style="margin-bottom:14px">
+      <button class="${currentView==='local'?'on':''}" data-set-prview="local">🏆 ${esc(prefs.rankingName || 'Mi Ranking')} (#${esc(prefs.rankingId)})</button>
+      <button class="${currentView==='shared'?'on':''}" data-set-prview="shared">📡 ${esc(ui.sharedRanking.name || 'Compartido')} (#${esc(ui.sharedRanking.id || 'EXT')})</button>
+    </div>`;
+  }
+
+  let accountBarHtml = '';
+  if (currentView === 'local') {
+    accountBarHtml = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:linear-gradient(135deg,rgba(212,175,55,0.08) 0%,rgba(16,16,22,0.92) 80%);border:1px solid rgba(212,175,55,0.25);border-radius:12px;padding:8px 14px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden">
+        <span style="font-size:16px">🏷️</span>
+        <div style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <span style="font-size:13px;font-weight:700;color:var(--tx)">${esc(prefs.rankingName || 'Mi Ranking')}</span>
+          <span style="font-family:monospace;font-size:11.5px;color:var(--gold);margin-left:6px;background:rgba(212,175,55,0.12);padding:2px 6px;border-radius:6px;font-weight:700">#${esc(prefs.rankingId)}</span>
+        </div>
+      </div>
+      <button class="btn sm" data-act="prompt-ranking-name" style="padding:4px 9px;font-size:11.5px;height:auto">✏️ Renombrar</button>
+    </div>`;
+  }
+
+  let sharedBannerHtml = '';
+  if (currentView === 'shared' && hasShared) {
+    const dateStr = ui.sharedRanking.timestamp ? ` · Actualizado el ${new Date(ui.sharedRanking.timestamp).toLocaleDateString('es-AR', {day:'numeric', month:'short'})}` : '';
+    sharedBannerHtml = `
+    <div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,rgba(212,175,55,0.14) 0%,rgba(16,16,22,0.96) 60%);border:1px solid rgba(212,175,55,0.38);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:24px">📡</span>
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <b style="font-size:14px;color:var(--acc-ink)">${esc(ui.sharedRanking.name || 'Ranking Compartido')}</b>
+            <span style="font-family:monospace;font-size:11.5px;color:var(--gold);background:rgba(212,175,55,0.15);padding:1px 6px;border-radius:6px;font-weight:700">#${esc(ui.sharedRanking.id || 'RK-EXT')}</span>
+          </div>
+          <small style="color:var(--tx2);font-size:12px">Visualizando ranking interactivo (${players.length} jugadores)${dateStr}</small>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        ${hasLocal ? `<button class="btn sm" data-set-prview="local">Ver mi ranking local</button>` : `<button class="btn primary sm" data-nav="new">${ICONS.plus} Jugar Partido</button>`}
+        <button class="btn sm" data-act="clear-shared-ranking" title="Cerrar ranking compartido">✕</button>
+      </div>
+    </div>`;
+  }
 
   return `
   <div class="page">
@@ -5940,6 +6068,10 @@ function renderPlayers() {
       </div>
     </div>
     <p class="muted" style="margin-bottom:14px">Ranking oficial ELO, nivel Playtomic (1.00 a 7.00) y estadísticas acumuladas de todos los partidos guardados.</p>
+
+    ${accountBarHtml}
+    ${viewToggleHtml}
+    ${sharedBannerHtml}
 
     <!-- Sort segmented controls -->
     <div class="seg" style="margin-bottom:16px">
@@ -6059,6 +6191,39 @@ function renderSettings() {
   <div class="page">
     <div class="page-h">
       <h1>Ajustes y Controles</h1>
+    </div>
+
+    <!-- Account & Ranking ID Card -->
+    <div class="card" style="background:linear-gradient(135deg, rgba(212,175,55,0.12) 0%, var(--card) 60%);border:1px solid rgba(212,175,55,0.35)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#ffe58f,#d4af37);color:#080600;display:grid;place-items:center;flex:none;font-size:20px;box-shadow:0 6px 16px -4px rgba(212,175,55,.5)">
+          🏷️
+        </div>
+        <div>
+          <h3 style="margin:0;font-size:16px">Cuenta y Ranking Oficial</h3>
+          <small style="color:var(--tx2)">Identifica la autoría de tu ranking al compartirlo</small>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Nombre de tu Cuenta / Ranking / Club</label>
+        <div style="display:flex;gap:8px">
+          <input class="inp" id="cfg-ranking-name" value="${esc(prefs.rankingName || '')}" placeholder="Ej: Ranking de Fabián, Torneo Central..." style="flex:1">
+          <button class="btn sm primary" data-act="save-ranking-name">Guardar</button>
+        </div>
+        <small class="muted" style="margin-top:4px;display:block">Aparece en los mensajes de WhatsApp, enlaces interactivos y tarjetas descargadas.</small>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;background:rgba(255,255,255,0.035);padding:10px 14px;border-radius:12px;border:1px solid var(--line);flex-wrap:wrap;gap:8px">
+        <div>
+          <b style="font-size:12px;color:var(--tx2);display:block">ID ÚNICO DE TU CUENTA</b>
+          <span style="font-family:monospace;font-size:16px;color:var(--gold);font-weight:800;letter-spacing:1px">#${esc(prefs.rankingId)}</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn sm" data-act="copy-ranking-id" title="Copiar ID">${ICONS.share} Copiar ID</button>
+          <button class="btn sm" data-act="regen-ranking-id" title="Generar nuevo código ID">↻ Regenerar</button>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -6237,6 +6402,28 @@ document.addEventListener('click', (ev) => {
   if (psEl) {
     ui.playerSort = psEl.getAttribute('data-set-psort');
     render();
+    return;
+  }
+
+  // Ranking view (local vs shared)
+  const prvEl = t.closest('[data-set-prview]');
+  if (prvEl) {
+    ui.playerRankingView = prvEl.getAttribute('data-set-prview');
+    render();
+    return;
+  }
+
+  // Select specific shared ranking from vault
+  const selRkEl = t.closest('[data-select-ranking]');
+  if (selRkEl) {
+    const id = selRkEl.getAttribute('data-select-ranking');
+    const vault = loadJSON('padel_ranking_vault', {});
+    if (vault[id]) {
+      ui.sharedRanking = vault[id];
+      saveJSON('padel_shared_ranking', vault[id]);
+      ui.playerRankingView = 'shared';
+      render();
+    }
     return;
   }
 
@@ -6584,6 +6771,55 @@ document.addEventListener('click', (ev) => {
       case 'export-ranking-img':
         exportRankingImage();
         break;
+      case 'clear-shared-ranking':
+        ui.sharedRanking = null;
+        try { localStorage.removeItem('padel_shared_ranking'); } catch {}
+        ui.playerRankingView = 'local';
+        render();
+        showToast('Ranking compartido cerrado');
+        break;
+      case 'prompt-ranking-name': {
+        const cur = prefs.rankingName || 'Mi Ranking';
+        const val = prompt('Ingresá el nombre de tu cuenta o ranking (ej: Ranking de Fabián, Torneo Central):', cur);
+        if (val !== null && val.trim()) {
+          prefs.rankingName = val.trim();
+          saveJSON(LS_PREFS, prefs);
+          render();
+          showToast('Nombre de ranking actualizado');
+        }
+        break;
+      }
+      case 'save-ranking-name': {
+        const inp = document.getElementById('cfg-ranking-name');
+        if (inp) {
+          prefs.rankingName = inp.value.trim() || 'Mi Ranking';
+          saveJSON(LS_PREFS, prefs);
+          render();
+          showToast('Nombre de ranking guardado');
+        }
+        break;
+      }
+      case 'copy-ranking-id': {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText('#' + prefs.rankingId).then(() => {
+            showToast('ID de cuenta copiado');
+          }).catch(() => {
+            prompt('Tu ID de cuenta:', '#' + prefs.rankingId);
+          });
+        } else {
+          prompt('Tu ID de cuenta:', '#' + prefs.rankingId);
+        }
+        break;
+      }
+      case 'regen-ranking-id': {
+        if (confirm('¿Deseás generar un nuevo ID único para tu cuenta de ranking?')) {
+          prefs.rankingId = generateRankingId();
+          saveJSON(LS_PREFS, prefs);
+          render();
+          showToast('Nuevo ID generado: #' + prefs.rankingId);
+        }
+        break;
+      }
       case 'share-img-active':
         if (activeMatch) exportMatchSummaryImage(activeMatch);
         break;
@@ -6637,6 +6873,11 @@ document.addEventListener('input', (ev) => {
         b.innerHTML = `<span class="dot"></span>${esc(nm)}`;
       });
     }
+    return;
+  }
+  if (t.id === 'cfg-ranking-name') {
+    prefs.rankingName = t.value;
+    saveJSON(LS_PREFS, prefs);
     return;
   }
   if (t.id === 'hist-search-inp') {
@@ -6770,6 +7011,20 @@ function checkHashRoute() {
       ui.statsId = 'shared';
       ui.route = 'stats';
       render();
+      return;
+    }
+  }
+  if (h.startsWith('rk=') || h.startsWith('ranking=')) {
+    const raw = h.startsWith('rk=') ? h.slice(3) : h.slice(8);
+    const decoded = decodeRankingPayload(raw);
+    if (decoded && Array.isArray(decoded.players) && decoded.players.length) {
+      ui.sharedRanking = decoded;
+      saveJSON('padel_shared_ranking', decoded);
+      saveSharedRankingToVault(decoded);
+      ui.playerRankingView = 'shared';
+      ui.route = 'players';
+      render();
+      showToast(`📡 ${decoded.name || 'Ranking'} (#${decoded.id || 'RK'}) cargado`);
       return;
     }
   }
