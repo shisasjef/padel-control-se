@@ -3983,6 +3983,29 @@ function roundRect(ctx, x, y, w, h, r, fill) {
 
 function pct(a, b) { return b > 0 ? Math.round((a * 100) / b) : 0; }
 
+function assignPlayerRanks(players, sortKey = 'elo') {
+  let currentRank = 1;
+  for (let i = 0; i < players.length; i++) {
+    if (i > 0) {
+      const prev = players[i - 1];
+      const curr = players[i];
+      let isSame = false;
+      if (sortKey === 'elo') {
+        isSame = (curr.elo === prev.elo);
+      } else if (sortKey === 'wins') {
+        isSame = (curr.wins === prev.wins && curr.elo === prev.elo);
+      } else if (sortKey === 'matches') {
+        isSame = (curr.matches === prev.matches && curr.wins === prev.wins);
+      }
+      if (!isSame) {
+        currentRank++;
+      }
+    }
+    players[i].rank = currentRank;
+  }
+  return players;
+}
+
 async function shareRankingText() {
   const eloState = computeEloRatings(historyList);
   const map = new Map();
@@ -4018,12 +4041,14 @@ async function shareRankingText() {
     return;
   }
 
+  assignPlayerRanks(players, 'elo');
+
   const baseUrl = location.href.split('#')[0];
   const rankingUrl = `${baseUrl}#players`;
 
-  const medals = ['🥇 1º', '🥈 2º', '🥉 3º'];
-  const topRows = players.slice(0, 10).map((p, idx) => {
-    const rankLabel = idx < 3 ? medals[idx] : `${idx + 1}º`;
+  const medals = { 1: '🥇 1º', 2: '🥈 2º', 3: '🥉 3º' };
+  const topRows = players.slice(0, 10).map((p) => {
+    const rankLabel = medals[p.rank] || `${p.rank}º`;
     const lvl = getEloLevel(p.elo);
     const winPct = pct(p.wins, p.matches);
     const trend = p.lastDelta > 0 ? ` (+${p.lastDelta})` : p.lastDelta < 0 ? ` (${p.lastDelta})` : '';
@@ -4090,6 +4115,8 @@ async function exportRankingImage() {
     showToast('Todavía no hay jugadores registrados para exportar');
     return;
   }
+
+  assignPlayerRanks(players, 'elo');
 
   const topPlayers = players.slice(0, 8);
   const W = 1080;
@@ -4160,10 +4187,10 @@ async function exportRankingImage() {
     const rankX = 84, rankY = rowY + 18, rankSize = 50;
     let rankBg = 'rgba(255, 255, 255, 0.06)';
     let rankColor = '#a39e93';
-    let rankTxt = `#${i+1}`;
-    if (i === 0) { rankBg = '#d4af37'; rankColor = '#080602'; rankTxt = '1º'; }
-    else if (i === 1) { rankBg = '#cbd5e1'; rankColor = '#080602'; rankTxt = '2º'; }
-    else if (i === 2) { rankBg = '#d97706'; rankColor = '#080602'; rankTxt = '3º'; }
+    let rankTxt = `#${p.rank}`;
+    if (p.rank === 1) { rankBg = '#d4af37'; rankColor = '#080602'; rankTxt = '1º'; }
+    else if (p.rank === 2) { rankBg = '#cbd5e1'; rankColor = '#080602'; rankTxt = '2º'; }
+    else if (p.rank === 3) { rankBg = '#d97706'; rankColor = '#080602'; rankTxt = '3º'; }
 
     roundRect(ctx, rankX, rankY, rankSize, rankSize, 14, rankBg);
     ctx.fillStyle = rankColor;
@@ -4173,7 +4200,7 @@ async function exportRankingImage() {
 
     // Player name & Level
     ctx.textAlign = 'left';
-    ctx.fillStyle = i < 3 ? '#ffe58f' : '#f8f6f0';
+    ctx.fillStyle = p.rank <= 3 ? '#ffe58f' : '#f8f6f0';
     ctx.font = '800 32px "Barlow Condensed", sans-serif';
     ctx.fillText(p.name.toUpperCase(), 156, rowY + 40);
 
@@ -5901,6 +5928,7 @@ function renderPlayers() {
   } else if (currentSort === 'matches') {
     players.sort((a, b) => (b.matches - a.matches) || (b.elo - a.elo) || (b.wins - a.wins));
   }
+  assignPlayerRanks(players, currentSort);
 
   return `
   <div class="page">
@@ -5920,18 +5948,18 @@ function renderPlayers() {
       <button class="${currentSort==='matches'?'on':''}" data-set-psort="matches">🎾 Más Partidos</button>
     </div>
 
-    ${players.length ? players.map((p, idx) => {
+    ${players.length ? players.map((p) => {
       const winPct = pct(p.wins, p.matches);
       const initials = p.name.split(/\s+/).map(x => x[0]).join('').slice(0,2).toUpperCase();
       const lvl = getEloLevel(p.elo);
       const isCalib = p.finishedMatches < CALIBRATION_MATCHES_THRESHOLD;
-      const rankBadge = idx === 0
+      const rankBadge = p.rank === 1
         ? `<div class="rank-pos rank-gold" title="1º del Ranking">🥇 1º</div>`
-        : idx === 1
+        : p.rank === 2
           ? `<div class="rank-pos rank-silver" title="2º del Ranking">🥈 2º</div>`
-          : idx === 2
+          : p.rank === 3
             ? `<div class="rank-pos rank-bronze" title="3º del Ranking">🥉 3º</div>`
-            : `<div class="rank-pos" title="${idx+1}º del Ranking">#${idx+1}</div>`;
+            : `<div class="rank-pos" title="${p.rank}º del Ranking">#${p.rank}</div>`;
 
       const trendHtml = p.lastDelta > 0
         ? `<div class="elo-trend up">▲ +${p.lastDelta} pts</div>`
