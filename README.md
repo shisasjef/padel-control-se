@@ -32,18 +32,42 @@
   * Distintivo visual en el marcador, en el overlay de transmisión y en el reloj superior.
   * Soporte completo en Tie-Break (saques en `D` y `R` con rotación estricta de jugadores).
 
-### 📱 3. Código QR Offline Embebido
+### 🏆 3. Sistema Oficial de Ranking ELO y Nivel Playtomic (1.00 a 7.00)
+* **Cálculo de Suma Cero 100% Automático y Offline**: Replay determinista sobre todos los partidos registrados en el historial, sin necesidad de conexión externa ni base de datos central.
+* **Punto de Partida**: Todos los jugadores nuevos inician con **1000 puntos base** (equivalente exacto a **Nivel Playtomic 2.50**).
+* **Promedio de la Pareja**: Antes de cada partido se calcula el promedio ELO de cada pareja ($R_{\text{pareja}} = \frac{R(p_1) + R(p_2)}{2}$) para determinar la probabilidad matemática esperada de victoria:
+  $$E_A = \frac{1}{1 + 10^{(R_B - R_A) / 400}}$$
+* **Factor K Dinámico (Calibración Rápida)**:
+  * **$K = 50$** para jugadores en etapa de calibración ($< 10$ partidos jugados), permitiendo que alcancen rápidamente su nivel real.
+  * **$K = 32$** para jugadores consolidados ($\ge 10$ partidos).
+* **Bonus por Diferencia de Juegos ($1.2\times$)**: Si la diferencia de juegos al término del partido es de 6 o más juegos (por ejemplo, `6-1 / 6-1`), se aplica un bonus multiplicador de **x1.2** a los puntos transferidos.
+* **Escala de Niveles Playtomic (1.00 a 7.00)**:
+  $$\text{Nivel} = 2.50 + \frac{\text{ELO} - 1000}{200} \quad (\text{acotado entre } 1.00 \text{ y } 7.00)$$
+  * **1.00 - 1.99**: *Iniciación* (🌱)
+  * **2.00 - 2.99**: *Intermedio Bajo* (🔷)
+  * **3.00 - 3.99**: *Intermedio* (⚡)
+  * **4.00 - 4.99**: *Avanzado* (💎)
+  * **5.00 - 5.99**: *Competición* (🏆)
+  * **6.00 - 7.00**: *Pro / Élite* (👑)
+* **Visualización Completa en la App**:
+  * **Pestaña «Jugadores y Ranking»**: Podio con medallas (🥇, 🥈, 🥉), puntos ELO, nivel Playtomic, badge de calibración, tendencia reciente (`▲ +XX` / `▼ -XX`), ordenamiento configurable y guía explicativa desplegable.
+  * **Compartir solo el Ranking (Texto / WhatsApp e Imagen HD)**: Botones dedicados en la cabecera y pie de la tabla para compartir el ranking directamente por WhatsApp o redes, o descargar una tarjeta visual de alta resolución en PNG con el diseño Obsidian & Gold y la firma virtual.
+  * **Overlay de Victoria**: Impacto ELO inmediato en pantalla al terminar el partido con aviso de bonus por diferencia de juegos.
+  * **Detalles del Partido**: Desglose de puntos ganados y perdidos por cada jugador con probabilidad previa.
+  * **Tarjetas del Historial**: Distintivo `⚡ ELO ±XX` en cada tarjeta de partido finalizado.
+
+### 📱 4. Código QR Offline Embebido
 * Generador de códigos QR integrado de forma local (sin dependencias externas).
 * Tarjeta QR accesible desde el Inicio, Ajustes y el menú del marcador para que amigos y espectadores escaneen y abran la app al instante.
 
-### 📡 4. Transmisión en Vivo para Espectadores
+### 📡 5. Transmisión en Vivo para Espectadores
 * Enlace en vivo compartible por WhatsApp: cualquier persona puede seguir el marcador, cronómetro y estadísticas en tiempo real desde cualquier lugar del mundo.
 
-### 🎙️ 5. Control por Voz Manos Libres y Árbitro Parlante (TTS)
+### 🎙️ 6. Control por Voz Manos Libres y Árbitro Parlante (TTS)
 * **Reconocimiento continuo**: Permite registrar puntos, faltas y rotaciones sin tocar la pantalla, ideal para árbitros o jugadores desde la pista.
 * **Voz de árbitro automática**: Canta el tanteador en español tras cada tanto (*"15 iguales"*, *"Segunda ventaja al saque"*, *"Punto de oro"*).
 
-### 📊 6. Estadísticas Avanzadas y Reportes PDF / Imagen
+### 📊 7. Estadísticas Avanzadas y Reportes PDF / Imagen
 * Registro por golpe: **Smash**, **Volea**, **Bandeja**, **Bajada**, **Dejada**, **Passing**, Errores No Forzados (**ENF**) y Errores Forzados (**EF**).
 * Rendimiento bajo presión: Puntos de Oro, Star Points, bolas de break convertidas/salvadas y efectividad de 1º saque.
 * Gráfico de evolución de dominio y reporte imprimible en **PDF** con desglose punto a punto.

@@ -254,6 +254,7 @@ a{color:inherit}
 .hero h1{
   font-family:var(--cond);font-size:clamp(30px,6vw,42px);font-weight:800;font-style:italic;text-transform:uppercase;line-height:1.12;letter-spacing:1px;
   padding:2px 8px 2px 0;
+  margin:0 0 4px 0;
   background:linear-gradient(90deg, #ffffff 0%, #ffe58f 60%, #d4af37 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
@@ -1192,6 +1193,293 @@ html.obs-mode #app, body.obs-mode #app {
   font-weight: 700;
 }
 
+/* ==================== ELO RANKING & PLAYTOMIC STYLES ==================== */
+.badge.elo {
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.38);
+  color: var(--gold);
+  font-weight: 800;
+  letter-spacing: .3px;
+}
+
+.rank-pos {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 15px;
+  flex: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--tx2);
+}
+.rank-pos.rank-gold {
+  background: linear-gradient(135deg, #ffe58f 0%, #d4af37 60%, #b8860b 100%);
+  color: #080600;
+  border: none;
+  font-size: 16px;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.45);
+}
+.rank-pos.rank-silver {
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 60%, #94a3b8 100%);
+  color: #080600;
+  border: none;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(203, 213, 225, 0.35);
+}
+.rank-pos.rank-bronze {
+  background: linear-gradient(135deg, #fcd34d 0%, #d97706 60%, #92400e 100%);
+  color: #080600;
+  border: none;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+}
+
+.tier-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  background: color-mix(in srgb, var(--tcol) 15%, transparent);
+  color: var(--tcol);
+  border: 1px solid color-mix(in srgb, var(--tcol) 35%, transparent);
+}
+
+.calib-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2.5px 8px;
+  border-radius: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.calib-pill.calib {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.32);
+}
+.calib-pill.fixed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.elo-trend {
+  font-size: 11px;
+  font-weight: 800;
+  margin-top: 4px;
+  letter-spacing: .3px;
+  font-family: var(--font);
+}
+.elo-trend.up { color: #10b981; }
+.elo-trend.down { color: #ef4444; }
+.elo-trend.neu { color: var(--tx3); }
+
+/* FAQ guide accordion */
+.elo-guide-card {
+  margin-top: 20px;
+  margin-bottom: 24px;
+  background: rgba(16, 16, 22, 0.7);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 18px;
+  padding: 14px 18px;
+  text-align: left;
+}
+.elo-guide-card summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--gold);
+  user-select: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.elo-guide-content {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--tx2);
+  line-height: 1.45;
+}
+.guide-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.guide-item b {
+  color: #f5f3ef;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+.guide-item p {
+  margin: 0;
+  color: var(--tx2);
+}
+
+/* Victory celebration ELO box */
+.ov-elo-box {
+  margin-top: 14px;
+  background: rgba(10, 10, 14, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 16px;
+  padding: 12px 14px;
+  width: 100%;
+  max-width: 440px;
+}
+.ov-elo-title {
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ov-elo-pairs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.ov-elo-card {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ov-elo-card.win {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.ov-elo-card.lose {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.ov-elo-tag {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+.ov-elo-card.win .ov-elo-tag { color: #34d399; }
+.ov-elo-card.lose .ov-elo-tag { color: #f87171; }
+.ov-elo-card b {
+  font-family: var(--cond);
+  font-size: 15px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ov-elo-delta {
+  font-family: var(--cond);
+  font-size: 18px;
+  font-weight: 900;
+}
+.ov-elo-card.win .ov-elo-delta { color: #10b981; }
+.ov-elo-card.lose .ov-elo-delta { color: #ef4444; }
+.ov-elo-card small {
+  font-size: 10px;
+  color: var(--tx3);
+  font-weight: 600;
+}
+
+/* Match Stats ELO Card */
+.elo-match-card {
+  text-align: left;
+}
+.elo-teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+.elo-team-col {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.elo-team-col.winner-col {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border-color: rgba(212, 175, 55, 0.35);
+}
+.elo-team-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.elo-team-hdr b {
+  font-family: var(--cond);
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.elo-team-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--tx2);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 8px;
+}
+.elo-team-meta b {
+  color: var(--gold);
+}
+.elo-players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.elo-player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  padding: 4px 0;
+}
+.elo-player-row .p-name {
+  font-weight: 700;
+  color: #fff;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.elo-player-row .p-delta {
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 14px;
+  margin: 0 10px;
+}
+.elo-player-row .p-delta.up { color: #10b981; }
+.elo-player-row .p-delta.down { color: #ef4444; }
+.elo-player-row .p-after {
+  font-size: 11.5px;
+  color: var(--tx2);
+}
+.elo-player-row .p-after b {
+  color: var(--gold);
+}
+
 </style>
 </head>
 <body>
@@ -1865,6 +2153,239 @@ function computeMatch(m) {
     allPoints,
     totalGamesPlayed,
     lastTransition
+  };
+}
+
+// ==================== ELO RANKING & PLAYTOMIC LEVEL ENGINE ====================
+const BASE_ELO = 1000;
+const K_CALIBRATION = 50;
+const K_STANDARD = 32;
+const CALIBRATION_MATCHES_THRESHOLD = 10;
+const BLOWOUT_GAME_DIFF = 6;
+const BLOWOUT_MULTIPLIER = 1.2;
+const MIN_ELO = 100;
+
+function getEloLevel(elo) {
+  const num = Number(elo) || BASE_ELO;
+  let lvl = 2.50 + (num - BASE_ELO) / 200;
+  lvl = Math.max(1.00, Math.min(7.00, lvl));
+  const levelNum = Number(lvl.toFixed(2));
+  const levelStr = levelNum.toFixed(2);
+  
+  let tier = 'Iniciación';
+  let color = '#94a3b8';
+  let icon = '🌱';
+  
+  if (lvl >= 6.0) {
+    tier = 'Pro / Élite';
+    color = '#ef4444';
+    icon = '👑';
+  } else if (lvl >= 5.0) {
+    tier = 'Competición';
+    color = '#a855f7';
+    icon = '🏆';
+  } else if (lvl >= 4.0) {
+    tier = 'Avanzado';
+    color = '#10b981';
+    icon = '💎';
+  } else if (lvl >= 3.0) {
+    tier = 'Intermedio';
+    color = '#f59e0b';
+    icon = '⚡';
+  } else if (lvl >= 2.0) {
+    tier = 'Intermedio Bajo';
+    color = '#38bdf8';
+    icon = '🔷';
+  }
+  
+  return { level: levelStr, levelNum, tier, color, icon, elo: Math.round(num) };
+}
+
+function computeEloRatings(matchesList = historyList) {
+  const playerRatings = {};
+  const playerMatchCount = {};
+  const playerLastDelta = {};
+  const playerHistory = {};
+  const matchEloMap = {};
+
+  // Sort finished matches in chronological order
+  const finished = (matchesList || [])
+    .map(m => ({ m, st: computeMatch(m) }))
+    .filter(({ st }) => st.matchWinner !== null)
+    .sort((a, b) => (a.m.createdAt || 0) - (b.m.createdAt || 0));
+
+  finished.forEach(({ m, st }) => {
+    const w = st.matchWinner;
+    const isSingles = (m.mode === 'singles') || (!m.teams[0]?.players?.[1] && !m.teams[1]?.players?.[1]);
+
+    const getPair = (t) => {
+      if (isSingles) {
+        const nm = playerLabel(m, t, 0).trim();
+        return [{ name: nm, key: nm.toUpperCase(), idx: 0 }];
+      }
+      const p0 = playerLabel(m, t, 0).trim();
+      const p1 = playerLabel(m, t, 1).trim();
+      return [
+        { name: p0, key: p0.toUpperCase(), idx: 0 },
+        { name: p1, key: p1.toUpperCase(), idx: 1 }
+      ];
+    };
+
+    const pair0 = getPair(0);
+    const pair1 = getPair(1);
+
+    const r0List = pair0.map(p => playerRatings[p.key] ?? BASE_ELO);
+    const r1List = pair1.map(p => playerRatings[p.key] ?? BASE_ELO);
+
+    const R0 = r0List.reduce((a, b) => a + b, 0) / r0List.length;
+    const R1 = r1List.reduce((a, b) => a + b, 0) / r1List.length;
+
+    const exp0 = 1 / (1 + Math.pow(10, (R1 - R0) / 400));
+    const exp1 = 1 - exp0;
+
+    const g0 = st.sets.reduce((sum, s) => sum + (s.games ? s.games[0] : 0), 0);
+    const g1 = st.sets.reduce((sum, s) => sum + (s.games ? s.games[1] : 0), 0);
+    const diffGames = Math.abs(g0 - g1);
+    const isBlowout = diffGames >= BLOWOUT_GAME_DIFF;
+    const M = isBlowout ? BLOWOUT_MULTIPLIER : 1.0;
+
+    const S0 = w === 0 ? 1 : 0;
+    const S1 = w === 1 ? 1 : 0;
+
+    const pair0Results = pair0.map((p, i) => {
+      const eloBefore = r0List[i];
+      const matchCount = playerMatchCount[p.key] || 0;
+      const k = matchCount < CALIBRATION_MATCHES_THRESHOLD ? K_CALIBRATION : K_STANDARD;
+      const rawDelta = k * M * (S0 - exp0);
+      const delta = S0 === 1 ? Math.max(1, Math.round(rawDelta)) : Math.min(-1, Math.round(rawDelta));
+      const eloAfter = Math.max(MIN_ELO, eloBefore + delta);
+      return { name: p.name, key: p.key, eloBefore, delta, eloAfter, k };
+    });
+
+    const pair1Results = pair1.map((p, i) => {
+      const eloBefore = r1List[i];
+      const matchCount = playerMatchCount[p.key] || 0;
+      const k = matchCount < CALIBRATION_MATCHES_THRESHOLD ? K_CALIBRATION : K_STANDARD;
+      const rawDelta = k * M * (S1 - exp1);
+      const delta = S1 === 1 ? Math.max(1, Math.round(rawDelta)) : Math.min(-1, Math.round(rawDelta));
+      const eloAfter = Math.max(MIN_ELO, eloBefore + delta);
+      return { name: p.name, key: p.key, eloBefore, delta, eloAfter, k };
+    });
+
+    [...pair0Results, ...pair1Results].forEach(res => {
+      playerRatings[res.key] = res.eloAfter;
+      playerMatchCount[res.key] = (playerMatchCount[res.key] || 0) + 1;
+      playerLastDelta[res.key] = res.delta;
+      if (!playerHistory[res.key]) playerHistory[res.key] = [];
+      playerHistory[res.key].push({
+        matchId: m.id,
+        delta: res.delta,
+        newElo: res.eloAfter,
+        date: m.createdAt
+      });
+    });
+
+    matchEloMap[m.id] = {
+      matchId: m.id,
+      winner: w,
+      diffGames,
+      isBlowout,
+      multiplier: M,
+      pair0: {
+        avgBefore: Math.round(R0),
+        expPct: Math.round(exp0 * 100),
+        players: pair0Results
+      },
+      pair1: {
+        avgBefore: Math.round(R1),
+        expPct: Math.round(exp1 * 100),
+        players: pair1Results
+      }
+    };
+  });
+
+  return { playerRatings, playerMatchCount, playerLastDelta, playerHistory, matchEloMap };
+}
+
+function calculateMatchEloPreview(m, eloState) {
+  if (!m) return null;
+  const state = eloState || computeEloRatings(historyList);
+  if (state.matchEloMap[m.id]) return state.matchEloMap[m.id];
+
+  const st = computeMatch(m);
+  const w = st.matchWinner ?? 0;
+  const isSingles = (m.mode === 'singles') || (!m.teams[0]?.players?.[1] && !m.teams[1]?.players?.[1]);
+
+  const getPair = (t) => {
+    if (isSingles) {
+      const nm = playerLabel(m, t, 0).trim();
+      return [{ name: nm, key: nm.toUpperCase(), idx: 0 }];
+    }
+    const p0 = playerLabel(m, t, 0).trim();
+    const p1 = playerLabel(m, t, 1).trim();
+    return [
+      { name: p0, key: p0.toUpperCase(), idx: 0 },
+      { name: p1, key: p1.toUpperCase(), idx: 1 }
+    ];
+  };
+
+  const pair0 = getPair(0);
+  const pair1 = getPair(1);
+
+  const r0List = pair0.map(p => state.playerRatings[p.key] ?? BASE_ELO);
+  const r1List = pair1.map(p => state.playerRatings[p.key] ?? BASE_ELO);
+
+  const R0 = r0List.reduce((a, b) => a + b, 0) / r0List.length;
+  const R1 = r1List.reduce((a, b) => a + b, 0) / r1List.length;
+
+  const exp0 = 1 / (1 + Math.pow(10, (R1 - R0) / 400));
+  const exp1 = 1 - exp0;
+
+  const g0 = st.sets.reduce((sum, s) => sum + (s.games ? s.games[0] : 0), 0);
+  const g1 = st.sets.reduce((sum, s) => sum + (s.games ? s.games[1] : 0), 0);
+  const diffGames = Math.abs(g0 - g1);
+  const isBlowout = diffGames >= BLOWOUT_GAME_DIFF;
+  const M = isBlowout ? BLOWOUT_MULTIPLIER : 1.0;
+
+  const S0 = w === 0 ? 1 : 0;
+  const S1 = w === 1 ? 1 : 0;
+
+  const pair0Results = pair0.map((p, i) => {
+    const eloBefore = r0List[i];
+    const matchCount = state.playerMatchCount[p.key] || 0;
+    const k = matchCount < CALIBRATION_MATCHES_THRESHOLD ? K_CALIBRATION : K_STANDARD;
+    const rawDelta = k * M * (S0 - exp0);
+    const delta = S0 === 1 ? Math.max(1, Math.round(rawDelta)) : Math.min(-1, Math.round(rawDelta));
+    const eloAfter = Math.max(MIN_ELO, eloBefore + delta);
+    return { name: p.name, key: p.key, eloBefore, delta, eloAfter, k };
+  });
+
+  const pair1Results = pair1.map((p, i) => {
+    const eloBefore = r1List[i];
+    const matchCount = state.playerMatchCount[p.key] || 0;
+    const k = matchCount < CALIBRATION_MATCHES_THRESHOLD ? K_CALIBRATION : K_STANDARD;
+    const rawDelta = k * M * (S1 - exp1);
+    const delta = S1 === 1 ? Math.max(1, Math.round(rawDelta)) : Math.min(-1, Math.round(rawDelta));
+    const eloAfter = Math.max(MIN_ELO, eloBefore + delta);
+    return { name: p.name, key: p.key, eloBefore, delta, eloAfter, k };
+  });
+
+  return {
+    matchId: m.id,
+    winner: st.matchWinner,
+    diffGames,
+    isBlowout,
+    multiplier: M,
+    pair0: {
+      avgBefore: Math.round(R0),
+      expPct: Math.round(exp0 * 100),
+      players: pair0Results
+    },
+    pair1: {
+      avgBefore: Math.round(R1),
+      expPct: Math.round(exp1 * 100),
+      players: pair1Results
+    }
   };
 }
 
@@ -3294,6 +3815,9 @@ async function shareMatchLink(m) {
 }
 
 async function exportMatchSummaryImage(m) {
+  if (document.fonts && document.fonts.ready) {
+    try { await document.fonts.ready; } catch {}
+  }
   const stats = computeStats(m, 'all');
   const st = stats.st;
   const T = stats.T;
@@ -3387,22 +3911,61 @@ async function exportMatchSummaryImage(m) {
     if (barW - w0 > 0) roundRect(ctx, barX + w0, barY, barW - w0, 14, 7, m.teams[1].color);
   });
 
-  // Bottom signature watermark
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#a39e93';
-  ctx.font = '600 18px Inter, sans-serif';
-  ctx.fillText('PÁDEL CONTROL SÉ · BY', W / 2 - 75, 1320);
-  ctx.fillStyle = '#ffe58f';
-  ctx.font = '40px "Great Vibes", cursive';
-  ctx.fillText('Sairaf Engel', W / 2 + 80, 1324);
+  // Bottom signature watermark (dynamic width measurement so texts never overlap)
+  ctx.save();
+  const labelText = 'PÁDEL CONTROL SÉ  ·  BY';
+  const sigText = 'Sairaf Engel';
+
+  ctx.font = '600 18px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  const labelWidth = ctx.measureText(labelText).width;
+
+  ctx.font = '42px "Great Vibes", cursive';
+  const sigWidth = ctx.measureText(sigText).width;
+
+  const gap = 16;
+  const totalWidth = labelWidth + gap + sigWidth;
+  const startX = Math.round((W - totalWidth) / 2);
+  const baselineY = 1322;
+
   ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+
+  // 1. Text "PÁDEL CONTROL SÉ · BY"
+  ctx.fillStyle = '#a39e93';
+  ctx.font = '600 18px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText(labelText, startX, baselineY);
+
+  // 2. Signature "Sairaf Engel" starting strictly after the label + gap
+  ctx.fillStyle = '#ffe58f';
+  ctx.font = '42px "Great Vibes", cursive';
+  ctx.fillText(sigText, startX + labelWidth + gap, baselineY - 2);
+
+  // Subtle luxury metallic line underneath
+  const lineY = baselineY + 22;
+  const lineGrad = ctx.createLinearGradient(startX + 20, lineY, startX + totalWidth - 20, lineY);
+  lineGrad.addColorStop(0, 'rgba(212, 175, 55, 0)');
+  lineGrad.addColorStop(0.5, 'rgba(212, 175, 55, 0.4)');
+  lineGrad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(startX + 20, lineY);
+  ctx.lineTo(startX + totalWidth - 20, lineY);
+  ctx.stroke();
+
+  ctx.restore();
 
   canvas.toBlob(async (blob) => {
     if (!blob) return;
-    const file = new File([blob], `padel-control-se-${m.id}.png`, {type:'image/png'});
-    if (navigator.canShare && navigator.canShare({files:[file]})) {
-      try { await navigator.share({files:[file], title:'Pádel Control SÉ'}); return; } catch {}
-    }
+    try {
+      if (typeof File !== 'undefined' && navigator.canShare) {
+        const file = new File([blob], `padel-control-se-${m.id}.png`, {type:'image/png'});
+        if (navigator.canShare({files:[file]})) {
+          await navigator.share({files:[file], title:'Pádel Control SÉ'});
+          return;
+        }
+      }
+    } catch {}
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `padel-control-se-${new Date(m.createdAt).toISOString().slice(0,10)}.png`;
@@ -3419,6 +3982,291 @@ function roundRect(ctx, x, y, w, h, r, fill) {
 }
 
 function pct(a, b) { return b > 0 ? Math.round((a * 100) / b) : 0; }
+
+async function shareRankingText() {
+  const eloState = computeEloRatings(historyList);
+  const map = new Map();
+  historyList.forEach(m => {
+    const S = computeStats(m, 'all');
+    const w = S.st.matchWinner;
+    S.P.forEach(p => {
+      const key = p.name.trim().toUpperCase();
+      if (!key) return;
+      if (!map.has(key)) {
+        const elo = eloState.playerRatings[key] ?? BASE_ELO;
+        const lastDelta = eloState.playerLastDelta[key] ?? 0;
+        const finishedMatches = eloState.playerMatchCount[key] ?? 0;
+        map.set(key, {
+          name: p.name.trim(),
+          key,
+          elo,
+          lastDelta,
+          finishedMatches,
+          matches: 0,
+          wins: 0
+        });
+      }
+      const rec = map.get(key);
+      rec.matches++;
+      if (w === p.team) rec.wins++;
+    });
+  });
+
+  const players = Array.from(map.values()).sort((a, b) => (b.elo - a.elo) || (b.wins - a.wins) || (b.matches - a.matches));
+  if (!players.length) {
+    showToast('Todavía no hay jugadores registrados en el ranking');
+    return;
+  }
+
+  const baseUrl = location.href.split('#')[0];
+  const rankingUrl = `${baseUrl}#players`;
+
+  const medals = ['🥇 1º', '🥈 2º', '🥉 3º'];
+  const topRows = players.slice(0, 10).map((p, idx) => {
+    const rankLabel = idx < 3 ? medals[idx] : `${idx + 1}º`;
+    const lvl = getEloLevel(p.elo);
+    const winPct = pct(p.wins, p.matches);
+    const trend = p.lastDelta > 0 ? ` (+${p.lastDelta})` : p.lastDelta < 0 ? ` (${p.lastDelta})` : '';
+    return `${rankLabel} *${p.name}* · ${p.elo} pts ELO${trend} · Nivel ${lvl.level} (${lvl.icon}) · ${p.wins}V/${p.matches}P (${winPct}%)`;
+  }).join('\n');
+
+  const moreCount = players.length > 10 ? `\n...y ${players.length - 10} jugadores más` : '';
+
+  const text = `🎾 *RANKING OFICIAL ELO · PÁDEL CONTROL SÉ*\n_By Sairaf Engel · Niveles Playtomic (1.00 - 7.00)_\n\n🏆 *Tabla de Posiciones:*\n${topRows}${moreCount}\n\n📲 Ver ranking completo interactivo y marcador:\n${rankingUrl}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: '🎾 Ranking Oficial · Pádel Control SÉ',
+        text
+      });
+      return;
+    } catch {}
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('¡Ranking copiado al portapapeles!');
+  } catch {
+    prompt('Copiá el texto del ranking para compartir:', text);
+  }
+}
+
+async function exportRankingImage() {
+  if (document.fonts && document.fonts.ready) {
+    try { await document.fonts.ready; } catch {}
+  }
+
+  const eloState = computeEloRatings(historyList);
+  const map = new Map();
+  historyList.forEach(m => {
+    const S = computeStats(m, 'all');
+    const w = S.st.matchWinner;
+    S.P.forEach(p => {
+      const key = p.name.trim().toUpperCase();
+      if (!key) return;
+      if (!map.has(key)) {
+        const elo = eloState.playerRatings[key] ?? BASE_ELO;
+        const lastDelta = eloState.playerLastDelta[key] ?? 0;
+        const finishedMatches = eloState.playerMatchCount[key] ?? 0;
+        map.set(key, {
+          name: p.name.trim(),
+          key,
+          color: p.color || '#d4af37',
+          elo,
+          lastDelta,
+          finishedMatches,
+          matches: 0,
+          wins: 0
+        });
+      }
+      const rec = map.get(key);
+      rec.matches++;
+      if (w === p.team) rec.wins++;
+    });
+  });
+
+  const players = Array.from(map.values()).sort((a, b) => (b.elo - a.elo) || (b.wins - a.wins) || (b.matches - a.matches));
+  if (!players.length) {
+    showToast('Todavía no hay jugadores registrados para exportar');
+    return;
+  }
+
+  const topPlayers = players.slice(0, 8);
+  const W = 1080;
+  const H = Math.max(1200, 360 + topPlayers.length * 105);
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  // Background gradient (Obsidian & Gold)
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#050507');
+  grad.addColorStop(0.5, '#0c0c10');
+  grad.addColorStop(1, '#12100a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Outer Gold border
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(28, 28, W - 56, H - 56, 24) : ctx.rect(28, 28, W - 56, H - 56);
+  ctx.stroke();
+
+  // Header brand
+  ctx.fillStyle = '#d4af37';
+  ctx.font = '800 28px Inter, -apple-system, sans-serif';
+  ctx.fillText('PÁDEL CONTROL SÉ  ·  RANKING OFICIAL ELO', 64, 82);
+
+  const nowStr = new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+  ctx.fillStyle = '#a39e93';
+  ctx.font = '500 22px Inter, sans-serif';
+  ctx.fillText(`Clasificación general y niveles Playtomic  ·  ${nowStr}`, 64, 120);
+
+  // Virtual signature top-right
+  ctx.save();
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#ffe58f';
+  ctx.font = '42px "Great Vibes", cursive';
+  ctx.fillText('Sairaf Engel', W - 64, 96);
+  ctx.restore();
+
+  // Main Card container for table
+  const cardY = 160;
+  const cardH = H - cardY - 120;
+  roundRect(ctx, 56, cardY, W - 112, cardH, 24, '#121218');
+
+  // Table header bar
+  roundRect(ctx, 56, cardY, W - 112, 58, 24, 'rgba(212, 175, 55, 0.12)');
+  ctx.fillStyle = '#d4af37';
+  ctx.font = '700 18px Inter, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('POS', 88, cardY + 36);
+  ctx.fillText('JUGADOR & NIVEL', 190, cardY + 36);
+  ctx.textAlign = 'right';
+  ctx.fillText('PARTIDOS', W - 280, cardY + 36);
+  ctx.fillText('PUNTOS ELO', W - 92, cardY + 36);
+
+  // Rows
+  topPlayers.forEach((p, i) => {
+    const rowY = cardY + 72 + i * 98;
+    const isEven = i % 2 === 0;
+    if (isEven) {
+      roundRect(ctx, 64, rowY, W - 128, 86, 14, 'rgba(255, 255, 255, 0.025)');
+    }
+
+    // Rank Badge
+    const rankX = 84, rankY = rowY + 18, rankSize = 50;
+    let rankBg = 'rgba(255, 255, 255, 0.06)';
+    let rankColor = '#a39e93';
+    let rankTxt = `#${i+1}`;
+    if (i === 0) { rankBg = '#d4af37'; rankColor = '#080602'; rankTxt = '1º'; }
+    else if (i === 1) { rankBg = '#cbd5e1'; rankColor = '#080602'; rankTxt = '2º'; }
+    else if (i === 2) { rankBg = '#d97706'; rankColor = '#080602'; rankTxt = '3º'; }
+
+    roundRect(ctx, rankX, rankY, rankSize, rankSize, 14, rankBg);
+    ctx.fillStyle = rankColor;
+    ctx.font = '800 24px "Barlow Condensed", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(rankTxt, rankX + rankSize / 2, rankY + 34);
+
+    // Player name & Level
+    ctx.textAlign = 'left';
+    ctx.fillStyle = i < 3 ? '#ffe58f' : '#f8f6f0';
+    ctx.font = '800 32px "Barlow Condensed", sans-serif';
+    ctx.fillText(p.name.toUpperCase(), 156, rowY + 40);
+
+    const lvl = getEloLevel(p.elo);
+    ctx.fillStyle = lvl.color;
+    ctx.font = '600 18px Inter, sans-serif';
+    ctx.fillText(`Nivel ${lvl.level} · ${lvl.tier}`, 156, rowY + 68);
+
+    // Record (Wins / Matches / Win%)
+    const winPct = pct(p.wins, p.matches);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#e2ded5';
+    ctx.font = '700 22px "Barlow Condensed", sans-serif';
+    ctx.fillText(`${p.wins}V - ${p.matches - p.wins}D`, W - 280, rowY + 40);
+    ctx.fillStyle = '#a39e93';
+    ctx.font = '500 16px Inter, sans-serif';
+    ctx.fillText(`${winPct}% efectividad`, W - 280, rowY + 66);
+
+    // ELO Pill
+    const eloW = 140, eloH = 54;
+    const eloX = W - 232, eloY = rowY + 16;
+    roundRect(ctx, eloX, eloY, eloW, eloH, 12, 'rgba(212, 175, 55, 0.12)');
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(eloX, eloY, eloW, eloH, 12) : ctx.rect(eloX, eloY, eloW, eloH);
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffe58f';
+    ctx.font = '900 32px "Barlow Condensed", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(p.elo), eloX + eloW / 2, eloY + 38);
+  });
+
+  // Bottom watermark with dynamic measurement
+  ctx.save();
+  const labelText = 'PÁDEL CONTROL SÉ  ·  BY';
+  const sigText = 'Sairaf Engel';
+
+  ctx.font = '600 18px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  const labelWidth = ctx.measureText(labelText).width;
+
+  ctx.font = '42px "Great Vibes", cursive';
+  const sigWidth = ctx.measureText(sigText).width;
+
+  const gap = 16;
+  const totalWidth = labelWidth + gap + sigWidth;
+  const startX = Math.round((W - totalWidth) / 2);
+  const baselineY = H - 52;
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+
+  ctx.fillStyle = '#a39e93';
+  ctx.font = '600 18px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText(labelText, startX, baselineY);
+
+  ctx.fillStyle = '#ffe58f';
+  ctx.font = '42px "Great Vibes", cursive';
+  ctx.fillText(sigText, startX + labelWidth + gap, baselineY - 2);
+
+  const lineY = baselineY + 22;
+  const lineGrad = ctx.createLinearGradient(startX + 20, lineY, startX + totalWidth - 20, lineY);
+  lineGrad.addColorStop(0, 'rgba(212, 175, 55, 0)');
+  lineGrad.addColorStop(0.5, 'rgba(212, 175, 55, 0.4)');
+  lineGrad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(startX + 20, lineY);
+  ctx.lineTo(startX + totalWidth - 20, lineY);
+  ctx.stroke();
+
+  ctx.restore();
+
+  canvas.toBlob(async (blob) => {
+    if (!blob) return;
+    try {
+      if (typeof File !== 'undefined' && navigator.canShare) {
+        const file = new File([blob], `ranking-padel-control-se.png`, {type:'image/png'});
+        if (navigator.canShare({files:[file]})) {
+          await navigator.share({files:[file], title:'Ranking Oficial · Pádel Control SÉ'});
+          return;
+        }
+      }
+    } catch {}
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `ranking-padel-control-se-${new Date().toISOString().slice(0,10)}.png`;
+    a.click();
+    showToast('¡Imagen del Ranking descargada!');
+  }, 'image/png');
+}
 
 // ==================== VIEWS & RENDERERS ====================
 function navigate(route, extra = {}) {
@@ -3455,6 +4303,16 @@ function renderMatchCard(m) {
       ? `<span class="badge ab">Incompleto</span>`
       : `<span class="badge">${esc(fmtDurationLong(m.durationMs))}</span>`;
 
+  let eloBadge = '';
+  if (w !== null) {
+    const eloInfo = calculateMatchEloPreview(m);
+    if (eloInfo) {
+      const winPair = w === 0 ? eloInfo.pair0 : eloInfo.pair1;
+      const pts = Math.abs(winPair.players[0]?.delta || 0);
+      eloBadge = `<span class="badge elo" title="Puntos ELO en juego">⚡ ELO ±${pts}</span>`;
+    }
+  }
+
   const renderRow = (t) => {
     const setsHtml = st.sets.map((s, idx) => {
       if (s.games[0] === 0 && s.games[1] === 0 && idx > 0 && s.winner === null) return '';
@@ -3474,6 +4332,7 @@ function renderMatchCard(m) {
   <button class="mcard" data-open-stats="${esc(m.id)}">
     <div class="mmeta">
       <span>${esc(fmtDateLong(m.createdAt))}</span>
+      ${eloBadge}
       ${badgeHtml}
     </div>
     ${renderRow(0)}
@@ -3914,8 +4773,8 @@ function renderQRModal() {
         <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px">
           ${LOGO_SVG.replace('class="logo-ic"', 'class="logo-ic" style="width:48px;height:48px"')}
           <div style="text-align:left">
-            <div style="font-family:var(--cond);font-size:22px;font-weight:800;font-style:italic;text-transform:uppercase;line-height:1;color:var(--tx)">Pádel Control SÉ</div>
-            <div style="font-family:var(--sig);font-size:18px;color:#f5d572;line-height:1.2">By Sairaf Engel</div>
+            <div style="font-family:var(--cond);font-size:22px;font-weight:800;font-style:italic;text-transform:uppercase;line-height:1.15;color:var(--tx);margin-bottom:3px">Pádel Control SÉ</div>
+            <div style="font-family:var(--sig);font-size:19px;color:#f5d572;line-height:1.2">By Sairaf Engel</div>
           </div>
         </div>
 
@@ -4439,6 +5298,32 @@ function renderBoardOverlays(m, st) {
   // 4. Match finished celebration overlay
   if (st.matchWinner !== null && !ui.matchEndDismissed) {
     const w = st.matchWinner;
+    const eloPreview = calculateMatchEloPreview(m);
+    let eloBanner = '';
+    if (eloPreview) {
+      const winPair = w === 0 ? eloPreview.pair0 : eloPreview.pair1;
+      const losePair = w === 0 ? eloPreview.pair1 : eloPreview.pair0;
+      const winPts = Math.abs(winPair.players[0]?.delta || 0);
+      const losePts = Math.abs(losePair.players[0]?.delta || 0);
+      eloBanner = `
+      <div class="ov-elo-box">
+        <div class="ov-elo-title">⚡ RANKING ELO & NIVEL ACTUALIZADO</div>
+        <div class="ov-elo-pairs">
+          <div class="ov-elo-card win">
+            <span class="ov-elo-tag">GANADORES</span>
+            <b>${esc(teamLabel(m, w))}</b>
+            <div class="ov-elo-delta">▲ +${winPts} pts ELO</div>
+            ${eloPreview.isBlowout ? '<small>💥 Bonus x1.2 (+6 juegos)</small>' : '<small>Ranking actualizado</small>'}
+          </div>
+          <div class="ov-elo-card lose">
+            <span class="ov-elo-tag">SUBCAMPEONES</span>
+            <b>${esc(teamLabel(m, 1 - w))}</b>
+            <div class="ov-elo-delta">▼ -${losePts} pts ELO</div>
+            <small>Ajuste de puntos</small>
+          </div>
+        </div>
+      </div>`;
+    }
     html += `
     <div class="overlay">
       <div class="big-ic">${ICONS.trophy}</div>
@@ -4452,6 +5337,7 @@ function renderBoardOverlays(m, st) {
             ${st.sets.map(s => `<span class="s ${s.winner===t?'w':''}">${s.games[t]}</span>`).join('')}
           </div>`).join('')}
       </div>
+      ${eloBanner}
       <div class="btn-row">
         <button class="btn primary big" data-open-stats="${esc(m.id)}">${ICONS.chart} Ver Análisis y PDF</button>
         <button class="btn big" data-act="share-img-active">${ICONS.img} Imagen resumen</button>
@@ -4617,6 +5503,76 @@ function renderStats() {
   const gpSrvLabel = isStarRule ? 'Star Points ganados al saque' : 'Puntos de oro ganados al saque';
   const gpRetLabel = isStarRule ? 'Star Points ganados al resto' : 'Puntos de oro ganados al resto';
 
+  const eloInfo = calculateMatchEloPreview(m);
+  let eloCardHtml = '';
+  if (eloInfo && st.matchWinner !== null) {
+    const p0 = eloInfo.pair0;
+    const p1 = eloInfo.pair1;
+    eloCardHtml = `
+    <div class="sec-t">Ranking ELO & Niveles</div>
+    <div class="card elo-match-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          ${ICONS.trophy}
+          <h3 style="margin:0">Impacto en Ranking ELO</h3>
+        </div>
+        ${eloInfo.isBlowout ? `<span class="tag-gold" style="font-size:11px;padding:3px 8px;border-radius:6px;background:rgba(212,175,55,0.15);color:var(--gold);border:1px solid rgba(212,175,55,0.35);font-weight:700">💥 Bonus x1.2 (+6 juegos de ventaja)</span>` : ''}
+      </div>
+
+      <div class="elo-teams-grid">
+        <!-- Team 0 -->
+        <div class="elo-team-col ${st.matchWinner===0?'winner-col':''}">
+          <div class="elo-team-hdr">
+            <span class="bar" style="--c:${esc(m.teams[0].color)}"></span>
+            <b>${esc(teamLabel(m, 0))}</b>
+            ${st.matchWinner===0?'<span class="tro">🏆</span>':''}
+          </div>
+          <div class="elo-team-meta">
+            <span>Promedio previo: <b>${p0.avgBefore} pts</b></span>
+            <span>Probabilidad esperada: <b>${p0.expPct}%</b></span>
+          </div>
+          <div class="elo-players-list">
+            ${p0.players.map(pl => {
+              const lvl = getEloLevel(pl.eloAfter);
+              const sign = pl.delta >= 0 ? '+' : '';
+              return `
+              <div class="elo-player-row">
+                <span class="p-name">${esc(pl.name)}</span>
+                <span class="p-delta ${pl.delta>=0?'up':'down'}">${sign}${pl.delta} pts</span>
+                <span class="p-after"><b>${pl.eloAfter} pts</b> (${lvl.icon} ${lvl.level})</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Team 1 -->
+        <div class="elo-team-col ${st.matchWinner===1?'winner-col':''}">
+          <div class="elo-team-hdr">
+            <span class="bar" style="--c:${esc(m.teams[1].color)}"></span>
+            <b>${esc(teamLabel(m, 1))}</b>
+            ${st.matchWinner===1?'<span class="tro">🏆</span>':''}
+          </div>
+          <div class="elo-team-meta">
+            <span>Promedio previo: <b>${p1.avgBefore} pts</b></span>
+            <span>Probabilidad esperada: <b>${p1.expPct}%</b></span>
+          </div>
+          <div class="elo-players-list">
+            ${p1.players.map(pl => {
+              const lvl = getEloLevel(pl.eloAfter);
+              const sign = pl.delta >= 0 ? '+' : '';
+              return `
+              <div class="elo-player-row">
+                <span class="p-name">${esc(pl.name)}</span>
+                <span class="p-delta ${pl.delta>=0?'up':'down'}">${sign}${pl.delta} pts</span>
+                <span class="p-after"><b>${pl.eloAfter} pts</b> (${lvl.icon} ${lvl.level})</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
   const playedSets = st.sets.filter((s, idx) => s.games[0] > 0 || s.games[1] > 0 || idx === 0);
 
   // Evolution chips per set
@@ -4705,6 +5661,8 @@ function renderStats() {
       <button class="${f==='all'?'on':''}" data-st-filter="all">Partido completo</button>
       ${playedSets.map((s, idx) => `<button class="${String(f)===String(idx)?'on':''}" data-st-filter="${idx}">Set ${idx+1} (${s.games[0]}-${s.games[1]})</button>`).join('')}
     </div>` : ''}
+
+    ${eloCardHtml}
 
     <div class="sec-t">Resumen</div>
     <div class="card">
@@ -4882,6 +5840,9 @@ function renderHistory() {
 }
 
 function renderPlayers() {
+  const eloState = computeEloRatings(historyList);
+  const currentSort = ui.playerSort || 'elo';
+
   // Aggregate career stats per player name across all matches in history
   const map = new Map();
   historyList.forEach(m => {
@@ -4891,9 +5852,16 @@ function renderPlayers() {
       const key = p.name.trim().toUpperCase();
       if (!key) return;
       if (!map.has(key)) {
+        const elo = eloState.playerRatings[key] ?? BASE_ELO;
+        const lastDelta = eloState.playerLastDelta[key] ?? 0;
+        const finishedMatches = eloState.playerMatchCount[key] ?? 0;
         map.set(key, {
           name: p.name.trim(),
+          key,
           color: p.color,
+          elo,
+          lastDelta,
+          finishedMatches,
           matches: 0,
           wins: 0,
           winners: 0,
@@ -4925,18 +5893,52 @@ function renderPlayers() {
     });
   });
 
-  const players = Array.from(map.values()).sort((a,b) => b.wins - a.wins || b.matches - a.matches);
+  let players = Array.from(map.values());
+  if (currentSort === 'elo') {
+    players.sort((a, b) => (b.elo - a.elo) || (b.wins - a.wins) || (b.matches - a.matches));
+  } else if (currentSort === 'wins') {
+    players.sort((a, b) => (b.wins - a.wins) || (b.elo - a.elo) || (b.matches - a.matches));
+  } else if (currentSort === 'matches') {
+    players.sort((a, b) => (b.matches - a.matches) || (b.elo - a.elo) || (b.wins - a.wins));
+  }
 
   return `
   <div class="page">
     <div class="page-h">
-      <h1>Jugadores y Ranking</h1>
+      <h1 style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Jugadores y Ranking</h1>
+      <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap">
+        <button class="btn primary sm" data-act="share-ranking" title="Compartir Ranking por WhatsApp o enlace">${ICONS.share} Compartir</button>
+        <button class="btn sm" data-act="export-ranking-img" title="Descargar imagen oficial del Ranking">${ICONS.img} Imagen</button>
+      </div>
     </div>
-    <p class="muted" style="margin-bottom:14px">Estadísticas acumuladas de todos los partidos guardados en el historial.</p>
+    <p class="muted" style="margin-bottom:14px">Ranking oficial ELO, nivel Playtomic (1.00 a 7.00) y estadísticas acumuladas de todos los partidos guardados.</p>
 
-    ${players.length ? players.map(p => {
+    <!-- Sort segmented controls -->
+    <div class="seg" style="margin-bottom:16px">
+      <button class="${currentSort==='elo'?'on':''}" data-set-psort="elo">⭐ Ranking ELO</button>
+      <button class="${currentSort==='wins'?'on':''}" data-set-psort="wins">🏆 Más Victorias</button>
+      <button class="${currentSort==='matches'?'on':''}" data-set-psort="matches">🎾 Más Partidos</button>
+    </div>
+
+    ${players.length ? players.map((p, idx) => {
       const winPct = pct(p.wins, p.matches);
       const initials = p.name.split(/\s+/).map(x => x[0]).join('').slice(0,2).toUpperCase();
+      const lvl = getEloLevel(p.elo);
+      const isCalib = p.finishedMatches < CALIBRATION_MATCHES_THRESHOLD;
+      const rankBadge = idx === 0
+        ? `<div class="rank-pos rank-gold" title="1º del Ranking">🥇 1º</div>`
+        : idx === 1
+          ? `<div class="rank-pos rank-silver" title="2º del Ranking">🥈 2º</div>`
+          : idx === 2
+            ? `<div class="rank-pos rank-bronze" title="3º del Ranking">🥉 3º</div>`
+            : `<div class="rank-pos" title="${idx+1}º del Ranking">#${idx+1}</div>`;
+
+      const trendHtml = p.lastDelta > 0
+        ? `<div class="elo-trend up">▲ +${p.lastDelta} pts</div>`
+        : p.lastDelta < 0
+          ? `<div class="elo-trend down">▼ ${p.lastDelta} pts</div>`
+          : `<div class="elo-trend neu">Sin cambios</div>`;
+
       const shotBadges = [];
       if (p.shots) {
         if (p.shots.smash) shotBadges.push(`💥 ${p.shots.smash} Smash`);
@@ -4946,29 +5948,79 @@ function renderPlayers() {
         if (p.shots.dejada) shotBadges.push(`🎯 ${p.shots.dejada} Dejada`);
         if (p.shots.passing) shotBadges.push(`🏹 ${p.shots.passing} Passing`);
       }
+
       return `
       <div class="pcard">
+        ${rankBadge}
         <div class="avatar" style="--c:${esc(p.color)};--f:${fgFor(p.color)}">${esc(initials)}</div>
         <div class="info">
-          <b>${esc(p.name)}</b>
-          <small>${p.matches} ${p.matches===1?'partido':'partidos'} · ${p.wins} ${p.wins===1?'victoria':'victorias'}</small>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <b>${esc(p.name)}</b>
+            <span class="tier-pill" style="--tcol:${lvl.color}">${lvl.icon} Nivel ${lvl.level} · ${lvl.tier}</span>
+            ${isCalib
+              ? `<span class="calib-pill calib" title="Factor K=50 para calibración rápida">Calibrando (${p.finishedMatches}/10 · K=50)</span>`
+              : `<span class="calib-pill fixed" title="Factor K=32 consolidado">Consolidado (K=32)</span>`}
+          </div>
+          <small>${p.matches} ${p.matches===1?'partido':'partidos'} · ${p.wins} ${p.wins===1?'victoria':'victorias'} (${winPct}% efectividad)</small>
           <div class="pstats">
             <span>Winners: <b>${p.winners}</b></span>
             <span>ENF: <b>${p.ue}</b></span>
             <span>1º Saque: <b>${pct(p.firstServeIn, p.srvPtsTotal)}%</b></span>
-            <span> Gan. al saque: <b>${pct(p.srvPtsWon, p.srvPtsTotal)}%</b></span>
+            <span>Gan. al saque: <b>${pct(p.srvPtsWon, p.srvPtsTotal)}%</b></span>
           </div>
           ${shotBadges.length ? `
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
             ${shotBadges.map(b => `<span class="tag-s" style="font-size:10px">${esc(b)}</span>`).join('')}
           </div>` : ''}
         </div>
-        <div class="pct">
-          ${winPct}%
-          <small>Efectividad</small>
+        <div class="pct" style="min-width:85px">
+          <span style="font-family:var(--cond);font-size:30px;font-weight:900;color:var(--gold);display:block;line-height:1">${p.elo}</span>
+          <small>Puntos ELO</small>
+          ${trendHtml}
         </div>
       </div>`;
-    }).join('') : `<div class="empty">${ICONS.users}<br>Todavía no hay jugadores registrados.</div>`}
+    }).join('') : `<div class="empty">${ICONS.users}<br>Todavía no hay jugadores registrados.<br>Iniciá un partido para calcular el Ranking ELO.</div>`}
+
+    ${players.length ? `
+    <div class="btn-row" style="margin-top:14px;margin-bottom:14px">
+      <button class="btn primary big" data-act="share-ranking">${ICONS.share} Compartir Tabla de Ranking</button>
+      <button class="btn big" data-act="export-ranking-img">${ICONS.img} Descargar Imagen en HD</button>
+    </div>` : ''}
+
+    <!-- Expandable ELO explanation guide -->
+    <details class="elo-guide-card">
+      <summary>
+        <span>ℹ️ ¿Cómo funciona el Sistema de Ranking ELO y Niveles?</span>
+        <span style="font-size:12px;opacity:0.8">Tocar para ver</span>
+      </summary>
+      <div class="elo-guide-content">
+        <div class="guide-item">
+          <b>🎯 Base de 1000 puntos</b>
+          <p>Todos los jugadores nuevos inician con 1000 pts base (equivalente a Nivel Playtomic 2.50).</p>
+        </div>
+        <div class="guide-item">
+          <b>👥 Promedio de pareja</b>
+          <p>Antes de cada partido se calcula el promedio ELO de la pareja para estimar la probabilidad matemática de victoria.</p>
+        </div>
+        <div class="guide-item">
+          <b>📈 Calibración rápida (Factor K dinámico)</b>
+          <p>Durante los primeros 10 partidos el factor es K=50 para que cada jugador encuentre rápido su nivel real. Luego se consolida en K=32.</p>
+        </div>
+        <div class="guide-item">
+          <b>💥 Bonus por diferencia de juegos</b>
+          <p>Si la diferencia final es de 6 o más juegos (ej. 6-1 6-1), se aplica un bonus multiplicador de x1.2 al puntaje transferido.</p>
+        </div>
+        <div class="guide-item">
+          <b>🏅 Escala Playtomic (1.00 a 7.00)</b>
+          <p>Iniciación (1.00-1.99) · Intermedio Bajo (2.00-2.99) · Intermedio (3.00-3.99) · Avanzado (4.00-4.99) · Competición (5.00-5.99) · Pro / Élite (6.00-7.00).</p>
+        </div>
+        <div class="guide-item">
+          <b>⚖️ Sistema de suma cero</b>
+          <p>Los puntos que gana la pareja vencedora son los que descuenta la pareja derrotada. 100% automático y offline.</p>
+        </div>
+      </div>
+    </details>
+
     ${renderSignatureFooter()}
   </div>
   ${renderTabbar('players')}`;
@@ -5148,6 +6200,14 @@ document.addEventListener('click', (ev) => {
   const sfEl = t.closest('[data-st-filter]');
   if (sfEl) {
     ui.statsSetFilter = sfEl.getAttribute('data-st-filter');
+    render();
+    return;
+  }
+
+  // Player ranking sort (elo, wins, matches)
+  const psEl = t.closest('[data-set-psort]');
+  if (psEl) {
+    ui.playerSort = psEl.getAttribute('data-set-psort');
     render();
     return;
   }
@@ -5490,6 +6550,12 @@ document.addEventListener('click', (ev) => {
         if (m) exportMatchSummaryImage(m);
         break;
       }
+      case 'share-ranking':
+        shareRankingText();
+        break;
+      case 'export-ranking-img':
+        exportRankingImage();
+        break;
       case 'share-img-active':
         if (activeMatch) exportMatchSummaryImage(activeMatch);
         break;
