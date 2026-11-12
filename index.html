@@ -4162,6 +4162,81 @@ function getRankingPlayersList(forceSource = null) {
   return Array.from(map.values());
 }
 
+async function shortenUrl(longUrl) {
+  if (!longUrl || longUrl.length < 60) return longUrl;
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 2400);
+    const res = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`, {
+      signal: ctrl.signal
+    });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.shorturl) return data.shorturl;
+    }
+  } catch {}
+
+  try {
+    const ctrl2 = new AbortController();
+    const timer2 = setTimeout(() => ctrl2.abort(), 2400);
+    const res2 = await fetch(`https://v.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`, {
+      signal: ctrl2.signal
+    });
+    clearTimeout(timer2);
+    if (res2.ok) {
+      const data2 = await res2.json();
+      if (data2 && data2.shorturl) return data2.shorturl;
+    }
+  } catch {}
+
+  return longUrl;
+}
+
+function publishRankingSnapshot(code, b64) {
+  if (!code || !b64) return;
+  const clean = String(code).replace(/^rk[-_]?/i, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const topic = 'padel_se_rk_' + clean;
+  fetch(`https://ntfy.sh/${topic}`, {
+    method: 'POST',
+    body: b64,
+    headers: { 'Title': 'Padel Control SE Ranking', 'Cache': 'yes' }
+  }).catch(() => {});
+}
+
+async function openShortSharedRanking(rawCode) {
+  const clean = String(rawCode || '').replace(/^rk[-_]?/i, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const topic = 'padel_se_rk_' + clean;
+  try {
+    const res = await fetch(`https://ntfy.sh/${topic}/json?poll=1&since=12h`, { cache: 'no-store' });
+    if (res.ok) {
+      const txt = await res.text();
+      const lines = txt.trim().split('\n').filter(Boolean);
+      let latestMsg = null;
+      for (const line of lines) {
+        try {
+          const obj = JSON.parse(line);
+          if (obj && obj.event === 'message' && obj.message) latestMsg = obj.message;
+        } catch {}
+      }
+      if (latestMsg) {
+        const decoded = decodeRankingPayload(latestMsg);
+        if (decoded && Array.isArray(decoded.players) && decoded.players.length) {
+          ui.sharedRanking = decoded;
+          saveJSON('padel_shared_ranking', decoded);
+          saveSharedRankingToVault(decoded);
+          ui.playerRankingView = 'shared';
+          ui.route = 'players';
+          render();
+          showToast(`📡 ${decoded.name || 'Ranking'} (#${decoded.id || 'RK'}) cargado`);
+          return;
+        }
+      }
+    }
+  } catch {}
+  showToast('No se encontró el ranking compartido o expiró');
+}
+
 async function shareRankingText() {
   const isShared = (ui.playerRankingView === 'shared' || (!historyList.length && ui.sharedRanking?.players?.length));
   const rankingTitle = (isShared && ui.sharedRanking?.name) ? ui.sharedRanking.name : (prefs.rankingName || 'Mi Ranking');
@@ -4178,7 +4253,16 @@ async function shareRankingText() {
 
   const baseUrl = location.href.split('#')[0];
   const rkPayload = encodeRankingPayload(players);
-  const rankingUrl = rkPayload ? `${baseUrl}#rk=${rkPayload}` : `${baseUrl}#players`;
+  const fullUrl = rkPayload ? `${baseUrl}#rk=${rkPayload}` : `${baseUrl}#players`;
+
+  // Publish to short channel as backup
+  publishRankingSnapshot(rankingId, rkPayload);
+
+  // Shorten url automatically to a clean short link (e.g. https://is.gd/...)
+  let rankingUrl = fullUrl;
+  try {
+    rankingUrl = await shortenUrl(fullUrl);
+  } catch {}
 
   const medals = { 1: '🥇 1º', 2: '🥈 2º', 3: '🥉 3º' };
   const topRows = players.slice(0, 10).map((p) => {
@@ -7002,6 +7086,11 @@ function checkHashRoute() {
   }
   if (h.startsWith('s=')) {
     openShortSharedMatch(h.slice(2));
+    return;
+  }
+  if (h.startsWith('r=') || h.startsWith('rk_id=')) {
+    const code = h.startsWith('r=') ? h.slice(2) : h.slice(6);
+    openShortSharedRanking(code);
     return;
   }
   if (h.startsWith('share=')) {
