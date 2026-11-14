@@ -1,12 +1,15 @@
 # 🎾 Pádel Control SÉ
-### *Marcador Broadcast, Análisis Estadístico y Transmisión en Vivo · By Sairaf Engel*
+### *Marcador Broadcast, Análisis Estadístico, Gestión de Ligas/Torneos y Transmisión en Vivo · By Sairaf Engel*
+
+🌐 **Idioma / Language:** **Español** · [English Version (README.en.md)](./README.en.md)
 
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-gold?style=for-the-badge&logo=pwa&logoColor=black)](https://shisasjef.github.io/padel-control-se/)
 [![OBS Compatible](https://img.shields.io/badge/OBS-Overlay_Transparente-blue?style=for-the-badge&logo=obsstudio&logoColor=white)](https://shisasjef.github.io/padel-control-se/#obs)
 [![FIP Regulations](https://img.shields.io/badge/FIP-Reglamento_Oficial-darkgreen?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
+[![Multi-Device Sync](https://img.shields.io/badge/Sync-QR_%26_Multi--Cancha-gold?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
 [![Zero Install](https://img.shields.io/badge/Instalación-Cero_(Navegador)-black?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
 
-**Pádel Control SÉ** es una suite profesional e integral diseñada para jugadores, árbitros, clubes y creadores de contenido de pádel (**2 vs 2**). Funciona 100% en el navegador (móviles, tablets, PC y TV), sin descargas de tiendas ni configuraciones complejas, guardando el historial de forma privada en cada dispositivo.
+**Pádel Control SÉ** es una suite profesional e integral diseñada para jugadores, árbitros, organizadores, clubes y creadores de contenido de pádel (**2 vs 2**). Funciona 100% en el navegador (móviles, tablets, PC y TV), sin descargas de tiendas ni configuraciones complejas, guardando el historial de forma privada en cada dispositivo y ofreciendo sincronización multi-cancha por QR cuando administrás ligas o torneos.
 
 🔗 **Acceso a la Aplicación:** **[https://shisasjef.github.io/padel-control-se/](https://shisasjef.github.io/padel-control-se/)**
 
@@ -14,7 +17,37 @@
 
 ## 🌟 Novedades y Características Principales
 
-### 📺 1. Superposición Transparente para OBS Studio / vMix / Streamlabs
+### 🏟️ 1. Partido del Día, Ligas y Torneos (Rankings 100% Separados)
+Elegí el contexto antes de iniciar cualquier partido para mantener cada ranking, tabla de puntos y ELO completamente aislado:
+
+* **☀️ Partido del Día**:
+  * Ranking exclusivo para partidos casuales o jornadas abiertas, sin mezclarse con Ligas ni Torneos.
+  * Puntos configurables por defecto (`+3` Victoria / `+1` Derrota), con ELO independiente.
+  * Filtros instantáneos en la pestaña **Ranking**: **☀️ Hoy** (solo partidos del día) vs **📅 Acumulado**, en vista **👤 Individual** o **👥 Por Parejas**.
+* **🏅 Ligas y 🏆 Torneos Independientes**:
+  * Cada Liga o Torneo tiene su propia tabla de posiciones, puntaje personalizado (**Pts Victoria**, **Pts Derrota** y **Bonus por Set ganado**) y su propio **ELO aislado** (los partidos de una liga o torneo no alteran el ranking del día ni el de otras competencias).
+  * Modo de ranking seleccionable por competencia: **Parejas Fijas**, **Individual** o **Ambos**.
+  * **Formatos de Liga**: *Todos contra Todos* (fixture por fechas), *Ida y Vuelta* o *Liga Libre*.
+  * **Formatos de Torneo**: *Eliminación Directa* (llaves con BYEs automáticos), *Grupos + Playoffs* (sorteo por grupos, clasificación configurable y generación de cuadro eliminatorio desde las tablas) y *Libre / Americano* (rotación automática de compañeros cuando el modo es individual).
+  * **Fixture, Carga Rápida y W.O.**: Jugá cualquier cruce directo en el marcador en vivo (**Jugar**) o cargá sets manualmente (**Resultado**), incluyendo **Victoria por Walkover (W.O.)** que asigna puntos de tabla y hace avanzar las llaves eliminatorias sin alterar el rating ELO.
+
+---
+
+### 🔗 2. Sincronización Multi-Dispositivo por QR y Enlace (Multi-Cancha)
+Ideal para torneos o ligas donde se juegan **varios partidos en paralelo** y cada cancha necesita cargar sus resultados al finalizar:
+
+* **Sala por Código QR y Enlace**:
+  * Desde cualquier Liga o Torneo tocá **Conectar dispositivos** (o el ícono QR) para generar un **Código de Sala** de 6 caracteres (ej. `#D7U8HZ`), su **QR escaneable**, enlace directo, invitación lista para WhatsApp y descarga de placa **QR HD**.
+* **Conexión en Segundos desde Cualquier Celular**:
+  * Escaneá el QR, abrí el link compartido o entrá a **Ligas y Torneos → `📲 Unirse`** e ingresá el código de sala.
+  * Incluye precarga instantánea en el QR para bootstrap offline (nombre, reglas e inscriptos al momento) y sincronización completa del fixture al estar en línea.
+* **Fusión Concurrente sin Sobrescribirse**:
+  * Cada dispositivo publica resultados atómicos por partido/cruce mediante **Server-Sent Events (`ntfy.sh`) + polling automático**, calculando posiciones y ELO de forma determinista y avanzando llaves en todos los celulares conectados en tiempo real.
+  * **Cola Offline Automática**: Si una cancha pierde conexión al cerrar un partido, el resultado se guarda localmente en cola y se publica automáticamente en cuanto vuelve internet.
+
+---
+
+### 📺 3. Superposición Transparente para OBS Studio / vMix / Streamlabs
 * **Gráfica Broadcast Profesional**: Generador de caracteres (*scorebug / chyron*) estilo **Premier Padel** y **World Padel Tour**.
 * **Fondo 100% Transparente**: Al entrar con la ruta `#obs`, la interfaz elimina botones y fondos para montarse de forma limpia sobre la cámara de la pista.
 * **Sincronización Dual**:
@@ -22,19 +55,24 @@
   * **Modo Local (Misma PC)**: Latencia cero mediante `BroadcastChannel` para torneos donde se anota desde una pestaña en la misma máquina del streaming.
 * **Selector de Posición**: Arriba Izquierda (estándar), Arriba Derecha, Abajo Izquierda, Abajo Derecha o Barra Inferior (*Chyron horizontal*).
 
-### 🎾 2. Posiciones Tácticas y Lado de Saque Dinámico (`D` / `R`)
+---
+
+### 🎾 4. Posiciones Tácticas y Lado de Saque Dinámico (`D` / `R`)
 * **Nombres Predeterminados Tácticos**:
   * **Pareja 1**: `DRIVE 1` (derecha) y `REVÉS 1` (izquierda).
   * **Pareja 2**: `DRIVE 2` (derecha) y `REVÉS 2` (izquierda).
-  *(Personalizables en cualquier momento al crear el partido o durante el juego).*
+  *(Personalizables en cualquier momento al crear el partido, desde inscriptos o durante el juego).*
 * **Indicador Reglamentario de Lado de Saque (`D` / `R`)**:
   * Cumple con la regla oficial FIP: cada juego comienza con saque desde la **Derecha** (`D`), alternando al **Revés** (`R`) tras cada punto anotado.
   * Distintivo visual en el marcador, en el overlay de transmisión y en el reloj superior.
   * Soporte completo en Tie-Break (saques en `D` y `R` con rotación estricta de jugadores).
 
-### 🏆 3. Sistema Oficial de Ranking ELO y Nivel Playtomic (1.00 a 7.00)
-* **Cálculo de Suma Cero 100% Automático y Offline**: Replay determinista sobre todos los partidos registrados en el historial, sin necesidad de conexión externa ni base de datos central.
-* **Punto de Partida**: Todos los jugadores nuevos inician con **1000 puntos base** (equivalente exacto a **Nivel Playtomic 2.50**).
+---
+
+### 🏆 5. Sistema de Ranking Combinado: Puntos de Tabla + ELO y Nivel Playtomic (1.00 a 7.00)
+* **Sistema Mixto (Tabla + ELO Aislado)**: Cada ámbito (*Partido del Día*, cada *Liga* y cada *Torneo*) calcula tanto los **puntos de tabla** por victoria/derrota/bonus como un **ELO independiente** sobre los partidos de esa competencia.
+* **Cálculo ELO de Suma Cero Determinista**: Replay ordenado cronológicamente sobre los partidos válidos (excluyendo W.O.), produciendo resultados idénticos entre dispositivos sincronizados.
+* **Punto de Partida**: Todos los jugadores o parejas inician con **1000 puntos base** (equivalente exacto a **Nivel Playtomic 2.50**).
 * **Promedio de la Pareja**: Antes de cada partido se calcula el promedio ELO de cada pareja ($R_{\text{pareja}} = \frac{R(p_1) + R(p_2)}{2}$) para determinar la probabilidad matemática esperada de victoria:
   $$E_A = \frac{1}{1 + 10^{(R_B - R_A) / 400}}$$
 * **Factor K Dinámico (Calibración Rápida)**:
@@ -49,28 +87,32 @@
   * **4.00 - 4.99**: *Avanzado* (💎)
   * **5.00 - 5.99**: *Competición* (🏆)
   * **6.00 - 7.00**: *Pro / Élite* (👑)
-* **Visualización Completa en la App**:
-  * **Identificación de Cuenta y Ranking (`#RK-XXXX`)**: Cada instalación dispone de un **ID Único de Cuenta** generado automáticamente (ej: `#RK-7F2A`) y un **Nombre de Cuenta / Club** personalizable (ej: *"Ranking de Fabián"*, *"Torneo Central"*). Al compartir la tabla por WhatsApp, enlace interactivo o tarjeta HD, el nombre y el ID viajan integrados para que todos sepan exactamente a quién pertenece ese ranking.
-  * **Pestaña «Jugadores y Ranking»**: Podio con medallas (🥇, 🥈, 🥉), puntos ELO, nivel Playtomic, badge de calibración, barra de identificación de cuenta con botón directo para renombrar, tendencia reciente (`▲ +XX` / `▼ -XX`), posiciones compartidas en caso de empate de puntos ELO (ambos compañeros comparten el mismo puesto), ordenamiento configurable y guía explicativa desplegable.
-  * **Compartir Ranking con Enlace Corto Automático**: Al pulsar «Compartir», la app acorta el enlace de forma automática y transparente (ej: `https://is.gd/...`), manteniendo la instantánea codificada completa y la compatibilidad con el canal en la nube (`#r=...`). Cualquier persona que abra el enlace en su PC, tablet o celular verá al instante el ranking completo con todos los jugadores y sus estadísticas, incluso sin tener partidos registrados en su propio equipo.
-  * **Bóveda y Selector Multi-Ranking**: Permite alternar fácilmente entre «Mi Ranking Local» y los distintos rankings compartidos recibidos de otros administradores o clubes.
-  * **Descarga de Tarjeta HD en Imagen**: Generación de tarjeta visual de alta resolución (1080px) en PNG con diseño Obsidian & Gold, nombre de la cuenta, ID de ranking y firma virtual By Sairaf Engel.
-  * **Overlay de Victoria**: Impacto ELO inmediato en pantalla al terminar el partido con aviso de bonus por diferencia de juegos.
-  * **Detalles del Partido**: Desglose de puntos ganados y perdidos por cada jugador con probabilidad previa.
-  * **Tarjetas del Historial**: Distintivo `⚡ ELO ±XX` en cada tarjeta de partido finalizado.
+* **Compartir y Visualización Completa**:
+  * **ID de Cuenta y Ranking (`#RK-XXXX`)**: Cada instalación cuenta con un ID único y nombre personalizable de cuenta/club.
+  * **Compartir Ranking con Enlace Corto**: Generación automática de enlace corto (`#r=...`) con instantánea completa y sincronización para abrir en cualquier celular o PC.
+  * **Bóveda Multi-Ranking**: Alterná entre tus rankings locales y rankings compartidos de otros clubes u organizadores.
+  * **Tarjeta HD en Imagen (1080px)** y **Overlay de Victoria**: Impacto en puntos de tabla y delta ELO (`⚡ ELO ±XX`) visible al instante en historial, estadísticas y pantalla final.
 
-### 📱 4. Código QR Offline Embebido
-* Generador de códigos QR integrado de forma local (sin dependencias externas).
-* Tarjeta QR accesible desde el Inicio, Ajustes y el menú del marcador para que amigos y espectadores escaneen y abran la app al instante.
+---
 
-### 📡 5. Transmisión en Vivo para Espectadores
-* Enlace en vivo compartible por WhatsApp: cualquier persona puede seguir el marcador, cronómetro y estadísticas en tiempo real desde cualquier lugar del mundo.
+### 📱 6. Código QR Offline Embebido
+* Generador de códigos QR integrado localmente (`QRious`, sin dependencias externas de red para generar el gráfico).
+* Disponible para compartir la aplicación desde el Inicio y Ajustes, y para generar QR de salas multi-dispositivo en Ligas y Torneos.
 
-### 🎙️ 6. Control por Voz Manos Libres y Árbitro Parlante (TTS)
-* **Reconocimiento continuo**: Permite registrar puntos, faltas y rotaciones sin tocar la pantalla, ideal para árbitros o jugadores desde la pista.
+---
+
+### 📡 7. Transmisión en Vivo para Espectadores
+* Enlace en vivo compartible por WhatsApp para seguir marcador, reloj y estadísticas en tiempo real desde cualquier lugar.
+
+---
+
+### 🎙️ 8. Control por Voz Manos Libres y Árbitro Parlante (TTS)
+* **Reconocimiento continuo**: Registrá puntos, faltas y rotaciones sin tocar la pantalla desde la pista.
 * **Voz de árbitro automática**: Canta el tanteador en español tras cada tanto (*"15 iguales"*, *"Segunda ventaja al saque"*, *"Punto de oro"*).
 
-### 📊 7. Estadísticas Avanzadas y Reportes PDF / Imagen
+---
+
+### 📊 9. Estadísticas Avanzadas y Reportes PDF / Imagen
 * Registro por golpe: **Smash**, **Volea**, **Bandeja**, **Bajada**, **Dejada**, **Passing**, Errores No Forzados (**ENF**) y Errores Forzados (**EF**).
 * Rendimiento bajo presión: Puntos de Oro, Star Points, bolas de break convertidas/salvadas y efectividad de 1º saque.
 * Gráfico de evolución de dominio y reporte imprimible en **PDF** con desglose punto a punto.
@@ -136,9 +178,10 @@ Compatible con teclados inalámbricos y pulsadores Bluetooth para usar desde la 
 
 ## 🔒 Privacidad y Rendimiento
 
-* **Sin Base de Datos Externa Obligatoria**: Toda la información se guarda localmente en el dispositivo mediante `localStorage`.
-* **Caché Instantáneo y Modo Offline**: Diseñado como Progressive Web App (PWA) de alto rendimiento.
-* **Estética de Lujo**: Diseño Obsidian Black & Oro 24K con tipografía condensada de alta visibilidad para estadios y retransmisiones.
+* **Sin Base de Datos Externa Obligatoria**: Toda la información se guarda localmente en cada dispositivo mediante `localStorage`, con exportación/importación JSON de respaldo.
+* **Sincronización Ligera Bajo Demanda**: La nube efímera (`ntfy.sh`) solo se utiliza cuando activás la transmisión en vivo, el overlay remoto de OBS o una sala multi-dispositivo de Liga/Torneo.
+* **Caché Instantáneo y Modo Offline**: Aplicación web de archivo único de alto rendimiento lista para usar en navegadores móviles y escritorio.
+* **Estética Obsidian & Gold**: Diseño Obsidian Black & Oro 24K con tipografía condensada de alta visibilidad para pistas y retransmisiones.
 
 ---
 
