@@ -146,7 +146,7 @@ a{color:inherit}
 }
 .btn.primary:hover:not(:disabled){box-shadow:0 16px 36px -6px rgba(212,175,55,.68), inset 0 1px 0 rgba(255,255,255,.88)}
 .btn.danger{color:var(--red);border-color:rgba(255,77,94,.25);background:rgba(255,77,94,.08)}
-.btn.block{width:100%}
+.btn.block{width:100%;max-width:100%;white-space:normal;text-align:center;box-sizing:border-box}
 .btn.big{min-height:62px;font-size:18px;border-radius:20px;font-weight:800;letter-spacing:.3px}
 .btn.sm{min-height:38px;padding:0 14px;font-size:13px;border-radius:12px}
 .btn-row{display:flex;flex-wrap:wrap;gap:12px}
@@ -1728,6 +1728,46 @@ html.obs-mode #app, body.obs-mode #app {
 }
 @media (max-width: 480px) {
   .home-actions-grid { grid-template-columns: 1fr; }
+}
+
+.daily-rk-btn {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 6px;
+  padding: 10px 14px;
+  min-height: 52px;
+  height: auto;
+  white-space: normal;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+.daily-rk-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.daily-rk-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--tx);
+}
+.daily-rk-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tx2);
+}
+.daily-rk-cta {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  color: var(--gold);
+  font-weight: 800;
+  font-size: 13.5px;
 }
 
 .badge.sync {
@@ -6764,9 +6804,12 @@ function renderHome() {
       <button class="btn primary big" data-nav="new">${ICONS.plus} Nuevo Partido</button>
       <button class="btn big" data-nav="competitions">${ICONS.award} Ligas y Torneos</button>
     </div>
-    <button class="btn block" data-act="open-daily-ranking" style="margin-bottom:6px;justify-content:space-between">
-      <span>☀️ Ranking Partido del Día (${todayCount} hoy · ${dailyMatches.length} total)</span>
-      <span style="color:var(--gold);font-weight:800">Ver tabla →</span>
+    <button class="btn block daily-rk-btn" data-act="open-daily-ranking">
+      <span class="daily-rk-meta">
+        <span class="daily-rk-title">☀️ Ranking Partido del Día</span>
+        <span class="daily-rk-sub">${todayCount} hoy · ${dailyMatches.length} total</span>
+      </span>
+      <span class="daily-rk-cta">Ver tabla →</span>
     </button>
 
     ${compStripHtml}
