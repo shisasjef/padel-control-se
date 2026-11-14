@@ -29,7 +29,7 @@ Pick the match mode before starting any match so every ranking, points table, an
   * Selectable ranking mode per competition: **Fixed Pairs**, **Individual**, or **Both**.
   * **League Formats**: *Round Robin* (auto-generated matchdays), *Double Round Robin* (home & away), or *Open League*.
   * **Tournament Formats**: *Single Elimination Bracket* (with automatic BYEs and round progression), *Groups + Playoffs* (group draw, configurable qualifiers per group, and automatic seeding into knockout brackets), and *Open / Americano* (rotating partners when set to individual mode).
-  * **Fixtures, Quick Results & Walkovers (W.O.)**: Launch any scheduled matchup directly onto the live court scoreboard, or enter set scores manually — including **Walkover (W.O.)** wins that award table points and advance bracket slots without affecting ELO.
+  * **Fixtures, Quick Sets & Games Entry & Walkovers (W.O.)**: Built for events **without court umpires**: from **New Match** (`Ya terminó · Cargar Sets y Games`), any scheduled **Fixture** (`Resultado`), or directly inside a League/Tournament (**Cargar Resultado / Cargar Sets / Games**), pick the pairs or players and tap the game counts per set with **quick tactile pills (`0–7` plus `10` for Super Tie-Breaks, up to 5 sets)** — no point-by-point tracking required. Also supports **Walkover (W.O.)** wins that award table points and advance bracket slots without affecting ELO.
 
 ---
 

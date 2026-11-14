@@ -29,7 +29,7 @@ Elegí el contexto antes de iniciar cualquier partido para mantener cada ranking
   * Modo de ranking seleccionable por competencia: **Parejas Fijas**, **Individual** o **Ambos**.
   * **Formatos de Liga**: *Todos contra Todos* (fixture por fechas), *Ida y Vuelta* o *Liga Libre*.
   * **Formatos de Torneo**: *Eliminación Directa* (llaves con BYEs automáticos), *Grupos + Playoffs* (sorteo por grupos, clasificación configurable y generación de cuadro eliminatorio desde las tablas) y *Libre / Americano* (rotación automática de compañeros cuando el modo es individual).
-  * **Fixture, Carga Rápida y W.O.**: Jugá cualquier cruce directo en el marcador en vivo (**Jugar**) o cargá sets manualmente (**Resultado**), incluyendo **Victoria por Walkover (W.O.)** que asigna puntos de tabla y hace avanzar las llaves eliminatorias sin alterar el rating ELO.
+  * **Fixture, Carga Directa por Sets/Games y W.O.**: Ideal para torneos o jornadas **sin fiscalizadores**: desde **Nuevo Partido** (`Ya terminó · Cargar Sets y Games`), desde un cruce del **Fixture** (`Resultado`) o desde **Cargar Sets / Games** dentro de una Liga o Torneo, podés elegir las parejas/jugadores y seleccionar directamente los games de cada set con **botones táctiles (`0–7` y `10` para Súper TB, hasta 5 sets)** sin anotar punto por punto. Incluye también **Victoria por Walkover (W.O.)** que asigna puntos de tabla y hace avanzar las llaves sin alterar el rating ELO.
 
 ---
 
