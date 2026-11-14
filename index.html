@@ -1803,6 +1803,108 @@ html.obs-mode #app, body.obs-mode #app {
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.85);
 }
 
+.qs-set-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.qs-set-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.qs-set-hdr b {
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.qs-team-row {
+  margin-bottom: 8px;
+}
+.qs-team-row:last-child {
+  margin-bottom: 0;
+}
+.qs-team-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.qs-team-lbl {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tx);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.qs-team-lbl .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c, var(--gold));
+  flex: none;
+}
+.qs-num {
+  width: 56px;
+  min-height: 36px;
+  padding: 4px 6px;
+  text-align: center;
+  font-family: var(--fd);
+  font-size: 17px;
+  font-weight: 800;
+  border-radius: 10px;
+  flex: none;
+}
+.qs-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.qs-g-pill {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 7px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card2);
+  color: var(--tx2);
+  font-family: var(--fd);
+  font-size: 14px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.qs-g-pill.on {
+  background: var(--c, var(--gold));
+  color: var(--f, #080600);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
+}
+.qs-preview {
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: rgba(212, 175, 55, 0.09);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tx);
+  margin: 10px 0 12px;
+  text-align: center;
+}
+
 </style>
 </head>
 <body>
@@ -2078,6 +2180,7 @@ const ui = {
   compModal: null, // null | 'create' | 'edit' | 'quick-score' | 'daily-pts' | 'add-fixture' | 'sync-qr' | 'join-comp'
   compFormState: null,
   quickScoreFixtureId: null,
+  quickScoreState: null,
   compSyncConnected: {}, // syncCode -> boolean
   compLastSyncAt: {},    // syncCode -> timestamp
   liveId: null,
@@ -3429,36 +3532,112 @@ function startFixtureMatch(compId, fixtureId) {
   navigate('board');
 }
 
-function submitQuickFixtureResult(compId, fixtureId, setsArr, winnerSide, isWalkover = false) {
-  const comp = getCompById(compId);
-  if (!comp) return;
-  const fx = (comp.fixtures || []).find(f => f.id === fixtureId);
-  if (!fx || !fx.team0 || !fx.team1) return;
+function buildQuickScoreState(opts = {}) {
+  const mode = opts.mode || (opts.fixtureId ? 'fixture' : (opts.compId ? 'comp-adhoc' : 'preset'));
+  let comp = opts.compId ? getCompById(opts.compId) : null;
+  let fx = null;
+  let teams = opts.teams || null;
+  let stageLabel = opts.stageLabel || '';
+  let defaultTotalSets = Number(opts.totalSets) || 3;
 
-  const p0 = [fx.team0.players?.[0] || 'DRIVE 1', fx.team0.players?.[1] || 'REVÉS 1'];
-  const p1 = [fx.team1.players?.[0] || 'DRIVE 2', fx.team1.players?.[1] || 'REVÉS 2'];
-  const dr = comp.defaultRules || preset;
+  if (mode === 'fixture' && opts.fixtureKey) {
+    const [cid, fxid] = String(opts.fixtureKey).split(':');
+    comp = getCompById(cid);
+    fx = (comp?.fixtures || []).find(f => f.id === fxid) || null;
+    if (fx) {
+      teams = [
+        { players: [fx.team0?.players?.[0] || 'DRIVE 1', fx.team0?.players?.[1] || 'REVÉS 1'], color: fx.team0?.color || '#d4af37' },
+        { players: [fx.team1?.players?.[0] || 'DRIVE 2', fx.team1?.players?.[1] || 'REVÉS 2'], color: fx.team1?.color || '#2f8cff' }
+      ];
+      stageLabel = fx.roundLabel || '';
+    }
+    defaultTotalSets = Number(comp?.defaultRules?.totalSets) || 3;
+  } else if (mode === 'comp-adhoc' && comp) {
+    const pairParts = (comp.participants || []).filter(pt => pt.type === 'pair');
+    defaultTotalSets = Number(comp.defaultRules?.totalSets) || 3;
+    teams = [
+      { players: [pairParts[0]?.players?.[0] || 'DRIVE 1', pairParts[0]?.players?.[1] || 'REVÉS 1'], color: pairParts[0]?.color || '#d4af37' },
+      { players: [pairParts[1]?.players?.[0] || 'DRIVE 2', pairParts[1]?.players?.[1] || 'REVÉS 2'], color: pairParts[1]?.color || '#2f8cff' }
+    ];
+    stageLabel = comp.kind === 'tournament' ? 'Cruce / Ronda' : 'Fecha';
+  } else if (mode === 'preset') {
+    const p = preset;
+    const ctx = p.matchContext || 'daily';
+    comp = (ctx === 'league' || ctx === 'tournament') && p.compId ? getCompById(p.compId) : null;
+    fx = comp && p.fixtureId ? (comp.fixtures || []).find(f => f.id === p.fixtureId) || null : null;
+    teams = [
+      { players: [p.teams[0]?.players?.[0]?.trim() || 'DRIVE 1', p.teams[0]?.players?.[1]?.trim() || 'REVÉS 1'], color: p.teams[0]?.color || '#d4af37' },
+      { players: [p.teams[1]?.players?.[0]?.trim() || 'DRIVE 2', p.teams[1]?.players?.[1]?.trim() || 'REVÉS 2'], color: p.teams[1]?.color || '#2f8cff' }
+    ];
+    stageLabel = fx?.roundLabel || p.stageLabel || '';
+    defaultTotalSets = Math.max(1, Number(p.totalSets) || (p.setsToWin ? (Number(p.setsToWin) * 2 - 1) : 3));
+  }
+
+  const initialRows = defaultTotalSets === 1 ? 1 : 2;
+  const pairParts = comp ? (comp.participants || []).filter(pt => pt.type === 'pair') : [];
+  return {
+    mode,
+    compId: comp?.id || null,
+    fixtureId: fx?.id || opts.fixtureId || null,
+    fixtureKey: opts.fixtureKey || (comp && fx ? `${comp.id}:${fx.id}` : ''),
+    stageLabel,
+    teams: teams || [
+      { players: ['DRIVE 1', 'REVÉS 1'], color: '#d4af37' },
+      { players: ['DRIVE 2', 'REVÉS 2'], color: '#2f8cff' }
+    ],
+    selPartIds: [pairParts[0]?.id || '', pairParts[1]?.id || ''],
+    useManualTeams: mode === 'comp-adhoc' ? (pairParts.length < 2 || comp?.rankingMode === 'individual') : false,
+    sets: Array.from({ length: initialRows }, () => [null, null]),
+    wo: false,
+    winner: 'auto',
+    hasSuperTbFinal: (comp?.defaultRules?.finalSet || preset.finalSet) === 'supertb'
+  };
+}
+
+function openQuickScoreModal(opts = {}) {
+  ui.quickScoreFixtureId = opts.fixtureKey || null;
+  ui.quickScoreState = buildQuickScoreState(opts);
+  ui.compModal = 'quick-score';
+  render();
+}
+
+function submitQuickMatchResult(cfg = {}) {
+  const comp = cfg.comp || (cfg.compId ? getCompById(cfg.compId) : null);
+  const kind = cfg.kind || (comp ? comp.kind : 'daily');
+  const fx = comp && cfg.fixtureId ? (comp.fixtures || []).find(f => f.id === cfg.fixtureId) || null : null;
+  const t0 = cfg.teams?.[0] || fx?.team0 || preset.teams[0];
+  const t1 = cfg.teams?.[1] || fx?.team1 || preset.teams[1];
+  const p0 = [String(t0?.players?.[0] || '').trim() || 'DRIVE 1', String(t0?.players?.[1] || '').trim() || 'REVÉS 1'];
+  const p1 = [String(t1?.players?.[0] || '').trim() || 'DRIVE 2', String(t1?.players?.[1] || '').trim() || 'REVÉS 2'];
+  const setsArr = Array.isArray(cfg.setsArr) ? cfg.setsArr : [];
+  const dr = cfg.rules || comp?.defaultRules || preset;
   const totalSets = Math.max(1, setsArr.length || Number(dr.totalSets) || 3);
 
+  const compMeta = comp
+    ? {
+        kind: comp.kind,
+        compId: comp.id,
+        compName: comp.name,
+        fixtureId: fx ? fx.id : (cfg.fixtureId || ''),
+        stageLabel: cfg.stageLabel || fx?.roundLabel || ''
+      }
+    : (kind === 'league' || kind === 'tournament'
+        ? { kind, compId: '', compName: kind === 'league' ? 'Liga' : 'Torneo', fixtureId: '', stageLabel: cfg.stageLabel || '' }
+        : { kind: 'daily', compId: '', compName: 'Partido del Día', fixtureId: '', stageLabel: '' });
+
   const m = {
-    id: fx.matchId || newCompId('mq'),
+    id: fx?.matchId || newCompId('mq'),
     createdAt: Date.now(),
     durationMs: 0,
     status: 'finished',
     mode: 'doubles',
-    isWalkover: !!isWalkover,
+    isWalkover: !!cfg.isWalkover,
     manualSets: setsArr,
-    manualWinner: winnerSide,
-    competition: {
-      kind: comp.kind,
-      compId: comp.id,
-      compName: comp.name,
-      fixtureId: fx.id,
-      stageLabel: fx.roundLabel || ''
-    },
+    manualWinner: cfg.winnerSide,
+    competition: compMeta,
     teams: [
-      { players: p0, color: fx.team0.color || '#d4af37' },
-      { players: p1, color: fx.team1.color || '#2f8cff' }
+      { players: p0, color: t0?.color || '#d4af37' },
+      { players: p1, color: t1?.color || '#2f8cff' }
     ],
     rules: {
       totalSets,
@@ -3479,11 +3658,32 @@ function submitQuickFixtureResult(compId, fixtureId, setsArr, winnerSide, isWalk
     redoStack: []
   };
 
-  fx.matchId = m.id;
-  fx.winnerSide = winnerSide;
+  if (fx) {
+    fx.matchId = m.id;
+    fx.winnerSide = cfg.winnerSide;
+  }
   archiveMatchToHistory(m);
-  resolveCompetitionFixtures(comp);
-  saveCompetitions();
+  if (comp) {
+    resolveCompetitionFixtures(comp);
+    saveCompetitions();
+  }
+  return m;
+}
+
+function submitQuickFixtureResult(compId, fixtureId, setsArr, winnerSide, isWalkover = false) {
+  const comp = getCompById(compId);
+  if (!comp) return null;
+  const fx = (comp.fixtures || []).find(f => f.id === fixtureId);
+  if (!fx || !fx.team0 || !fx.team1) return null;
+  return submitQuickMatchResult({
+    comp,
+    fixtureId: fx.id,
+    stageLabel: fx.roundLabel || '',
+    teams: [fx.team0, fx.team1],
+    setsArr,
+    winnerSide,
+    isWalkover
+  });
 }
 
 
@@ -7121,7 +7321,8 @@ function renderNewMatch() {
       </div>
     </div>
 
-    <button class="btn primary big block" data-act="start-match">${ICONS.play} Empezar Partido</button>
+    <button class="btn primary big block" data-act="start-match">${ICONS.play} Empezar Partido (punto a punto)</button>
+    <button class="btn big block" style="margin-top:10px" data-act="open-preset-quick-score">${ICONS.check} Ya terminó · Cargar Sets y Games</button>
     ${renderSignatureFooter()}
   </div>
   ${renderTabbar('new')}`;
@@ -8839,18 +9040,20 @@ function renderCompDetail() {
             <button class="btn sm" data-act="advance-playoffs" data-comp="${esc(comp.id)}" ${parts.length<4?'disabled':''}>${ICONS.trophy} 2. Clasificar a Llaves</button>
           ` : ''}
           <button class="btn sm" data-act="open-add-fixture" data-comp="${esc(comp.id)}">${ICONS.plus} Partido manual</button>
+          <button class="btn sm" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Resultado</button>
         </div>
         ${needParts ? `<small class="muted" style="display:block;margin-top:8px">Agregá al menos 2 participantes en la pestaña "Inscriptos" para generar cruces automáticos.</small>` : ''}
       </div>
 
       ${playoffFx.length ? `<div class="sec-t">Cuadro Eliminatorio (Playoffs)</div>${renderBracketHtml(comp)}` : ''}
       ${renderFixtureListHtml(comp, nonPlayoffFx, comp.format === 'groups_playoff' ? 'Fase de Grupos' : 'Fixture / Fechas')}
-      ${!fixtures.length ? `<div class="empty">${ICONS.calendar}<br>Todavía no hay cruces generados.<br>Generá el fixture automático arriba o agregá un partido manual.</div>` : ''}
+      ${!fixtures.length ? `<div class="empty">${ICONS.calendar}<br>Todavía no hay cruces generados.<br>Generá el fixture automático arriba o agregá un partido manual / resultado directo.</div>` : ''}
     `;
   } else if (tab === 'matches') {
     bodyHtml = `
       <div class="btn-row" style="margin-bottom:14px">
-        <button class="btn primary block" data-play-in-comp="${esc(comp.id)}">${ICONS.play} Jugar Nuevo Partido en ${esc(comp.name)}</button>
+        <button class="btn primary" data-play-in-comp="${esc(comp.id)}">${ICONS.play} Jugar en vivo</button>
+        <button class="btn" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Sets / Games</button>
       </div>
       ${matches.length ? matches.map(renderMatchCard).join('') : `<div class="empty">${ICONS.ball}<br>Aún no se registraron partidos en esta competencia.</div>`}
     `;
@@ -8991,6 +9194,80 @@ function renderCompDetail() {
   ${renderTabbar('competitions')}`;
 }
 
+function syncQuickScoreStateFromDom() {
+  const qs = ui.quickScoreState;
+  if (!qs) return;
+  const rInp = document.getElementById('qs-round');
+  if (rInp) qs.stageLabel = rInp.value;
+
+  const comp = qs.compId ? getCompById(qs.compId) : null;
+  if (qs.mode === 'comp-adhoc' && !qs.useManualTeams) {
+    const sel0 = document.getElementById('qs-sel0');
+    const sel1 = document.getElementById('qs-sel1');
+    if (sel0 && comp) {
+      qs.selPartIds[0] = sel0.value;
+      const t0 = participantToTeamObj((comp.participants || []).find(p => p.id === sel0.value));
+      if (t0) qs.teams[0] = { players: t0.players, color: t0.color || '#d4af37' };
+    }
+    if (sel1 && comp) {
+      qs.selPartIds[1] = sel1.value;
+      const t1 = participantToTeamObj((comp.participants || []).find(p => p.id === sel1.value));
+      if (t1) qs.teams[1] = { players: t1.players, color: t1.color || '#2f8cff' };
+    }
+  } else if (qs.mode === 'comp-adhoc' && qs.useManualTeams) {
+    const p00 = document.getElementById('qs-t0p0')?.value;
+    const p01 = document.getElementById('qs-t0p1')?.value;
+    const p10 = document.getElementById('qs-t1p0')?.value;
+    const p11 = document.getElementById('qs-t1p1')?.value;
+    if (p00 !== undefined || p01 !== undefined) {
+      qs.teams[0].players = [p00 ?? qs.teams[0].players[0], p01 ?? qs.teams[0].players[1]];
+    }
+    if (p10 !== undefined || p11 !== undefined) {
+      qs.teams[1].players = [p10 ?? qs.teams[1].players[0], p11 ?? qs.teams[1].players[1]];
+    }
+  }
+
+  for (let i = 0; i < (qs.sets?.length || 0); i++) {
+    const inp0 = document.getElementById(`qs-s${i + 1}-0`);
+    const inp1 = document.getElementById(`qs-s${i + 1}-1`);
+    if (inp0) qs.sets[i][0] = inp0.value === '' ? null : Math.max(0, Number(inp0.value) || 0);
+    if (inp1) qs.sets[i][1] = inp1.value === '' ? null : Math.max(0, Number(inp1.value) || 0);
+  }
+  const woEl = document.getElementById('qs-wo');
+  if (woEl) qs.wo = !!woEl.checked;
+  const winEl = document.getElementById('qs-winner');
+  if (winEl) qs.winner = winEl.value || 'auto';
+}
+
+function formatQuickScorePreview(qs) {
+  if (!qs) return 'Tocá los games de cada set para cargar el resultado';
+  const n0 = formatPairLabel(qs.teams[0]?.players?.[0] || 'DRIVE 1', qs.teams[0]?.players?.[1] || 'REVÉS 1');
+  const n1 = formatPairLabel(qs.teams[1]?.players?.[0] || 'DRIVE 2', qs.teams[1]?.players?.[1] || 'REVÉS 2');
+  if (qs.wo) {
+    if (qs.winner === '0') return `✓ Victoria por W.O. para ${n0}`;
+    if (qs.winner === '1') return `✓ Victoria por W.O. para ${n1}`;
+    return '⚠️ Activaste W.O.: elegí qué pareja ganó abajo';
+  }
+  const valid = (qs.sets || []).filter(s => s[0] !== null && s[1] !== null);
+  if (!valid.length) return 'Tocá los games de cada set (0–7) para calcular el ganador';
+  const scoreTxt = valid.map(s => `${s[0]}-${s[1]}`).join(' · ');
+  let w0 = 0, w1 = 0;
+  valid.forEach(s => { if (s[0] > s[1]) w0++; else if (s[1] > s[0]) w1++; });
+  if (qs.winner === '0') return `✓ Gana ${n0} (${scoreTxt})`;
+  if (qs.winner === '1') return `✓ Gana ${n1} (${scoreTxt})`;
+  if (w0 > w1) return `✓ Gana ${n0} (${w0}-${w1} sets · ${scoreTxt})`;
+  if (w1 > w0) return `✓ Gana ${n1} (${w1}-${w0} sets · ${scoreTxt})`;
+  return `Empate ${w0}-${w1} en sets (${scoreTxt}) — Agregá otro set o elegí ganador`;
+}
+
+function updateQuickScorePreviewDom() {
+  const qs = ui.quickScoreState;
+  if (!qs) return;
+  syncQuickScoreStateFromDom();
+  const prevEl = document.getElementById('qs-preview');
+  if (prevEl) prevEl.textContent = formatQuickScorePreview(qs);
+}
+
 function renderCompetitionModals() {
   if (!ui.compModal) return '';
 
@@ -9117,60 +9394,124 @@ function renderCompetitionModals() {
     </div>`;
   }
 
-  if (ui.compModal === 'quick-score' && ui.quickScoreFixtureId) {
-    const [cid, fxid] = String(ui.quickScoreFixtureId).split(':');
-    const comp = getCompById(cid);
-    const fx = (comp?.fixtures || []).find(f => f.id === fxid);
-    if (!comp || !fx) return '';
-    const n0 = fx.team0?.label || formatPairLabel(fx.team0?.players?.[0], fx.team0?.players?.[1]);
-    const n1 = fx.team1?.label || formatPairLabel(fx.team1?.players?.[0], fx.team1?.players?.[1]);
+  if (ui.compModal === 'quick-score' && (ui.quickScoreState || ui.quickScoreFixtureId)) {
+    if (!ui.quickScoreState && ui.quickScoreFixtureId) {
+      ui.quickScoreState = buildQuickScoreState({ mode: 'fixture', fixtureKey: ui.quickScoreFixtureId });
+    }
+    const qs = ui.quickScoreState;
+    const comp = qs.compId ? getCompById(qs.compId) : null;
+    const pairParts = comp ? (comp.participants || []).filter(pt => pt.type === 'pair') : [];
+    const compPlayerSuggestions = comp
+      ? Array.from(new Set([
+          ...(comp.participants || []).flatMap(pt => pt.type === 'pair' ? (pt.players || []) : [pt.name]).filter(Boolean),
+          ...getKnownPlayerNames()
+        ]))
+      : getKnownPlayerNames();
+    const n0 = formatPairLabel(qs.teams[0]?.players?.[0] || 'DRIVE 1', qs.teams[0]?.players?.[1] || 'REVÉS 1');
+    const n1 = formatPairLabel(qs.teams[1]?.players?.[0] || 'DRIVE 2', qs.teams[1]?.players?.[1] || 'REVÉS 2');
+    const titleSuffix = qs.mode === 'fixture'
+      ? ` (${esc(qs.stageLabel || 'Cruce')})`
+      : (comp ? ` · ${esc(comp.name)}` : ' · Partido del Día');
+    const showQuickTen = (sIdx) => sIdx >= 2;
+
     return `
     <div class="scrim" data-close-comp-modal="1">
-      <div class="sheet" style="max-width:480px">
-        <h2>Cargar Resultado (${esc(fx.roundLabel)})</h2>
-        <p class="muted" style="margin-bottom:12px"><b>${esc(n0)}</b> vs <b>${esc(n1)}</b></p>
-
-        <div class="field" style="margin-bottom:10px">
-          <label>Set 1</label>
-          <div class="row">
-            <input type="number" class="inp" id="qs-s1-0" min="0" max="20" value="6" placeholder="P1">
-            <span style="align-self:center;font-weight:800">-</span>
-            <input type="number" class="inp" id="qs-s1-1" min="0" max="20" value="4" placeholder="P2">
-          </div>
-        </div>
-        <div class="field" style="margin-bottom:10px">
-          <label>Set 2 (dejar vacío si fue a 1 set)</label>
-          <div class="row">
-            <input type="number" class="inp" id="qs-s2-0" min="0" max="20" value="6" placeholder="P1">
-            <span style="align-self:center;font-weight:800">-</span>
-            <input type="number" class="inp" id="qs-s2-1" min="0" max="20" value="3" placeholder="P2">
-          </div>
-        </div>
-        <div class="field" style="margin-bottom:12px">
-          <label>Set 3 / Súper TB (opcional)</label>
-          <div class="row">
-            <input type="number" class="inp" id="qs-s3-0" min="0" max="30" value="" placeholder="P1">
-            <span style="align-self:center;font-weight:800">-</span>
-            <input type="number" class="inp" id="qs-s3-1" min="0" max="30" value="" placeholder="P2">
-          </div>
+      <div class="sheet" style="max-width:520px">
+        ${qs.mode === 'comp-adhoc' ? `<datalist id="qs-known-players">${compPlayerSuggestions.map(nm => `<option value="${esc(nm)}">`).join('')}</datalist>` : ''}
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+          <h2 style="margin:0;font-size:20px">⚡ Cargar Resultado${titleSuffix}</h2>
+          <button class="icon-btn" data-close-comp-modal="1" title="Cerrar" style="font-size:16px;font-weight:700">✕</button>
         </div>
 
-        <div class="tog" style="border:none;padding:6px 0">
+        ${qs.mode === 'comp-adhoc' ? `
+          <div class="field" style="margin-bottom:10px">
+            <label>Etapa / Ronda (opcional)</label>
+            <input class="inp" id="qs-round" value="${esc(qs.stageLabel || '')}" placeholder="Ej: Fecha 2 / Grupo A / Libre">
+          </div>
+          ${pairParts.length >= 2 && !qs.useManualTeams ? `
+            <div class="row wrap" style="margin-bottom:8px">
+              <div class="field">
+                <label>Pareja 1</label>
+                <select class="inp" id="qs-sel0">
+                  ${pairParts.map(pt => `<option value="${esc(pt.id)}" ${qs.selPartIds?.[0]===pt.id?'selected':''}>${esc(formatPairLabel(pt.players?.[0], pt.players?.[1]))}</option>`).join('')}
+                </select>
+              </div>
+              <div class="field">
+                <label>Pareja 2</label>
+                <select class="inp" id="qs-sel1">
+                  ${pairParts.map(pt => `<option value="${esc(pt.id)}" ${qs.selPartIds?.[1]===pt.id?'selected':''}>${esc(formatPairLabel(pt.players?.[0], pt.players?.[1]))}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+            <div style="margin-bottom:12px">
+              <button type="button" class="pill sm" data-act="qs-toggle-manual-teams">✏️ Escribir nombres / Armar parejas libres</button>
+            </div>
+          ` : `
+            <div class="row wrap" style="margin-bottom:8px">
+              <div class="field"><label>Pareja 1 · Drive</label><input class="inp" id="qs-t0p0" list="qs-known-players" value="${esc(qs.teams[0].players[0]||'')}" placeholder="DRIVE 1"></div>
+              <div class="field"><label>Pareja 1 · Revés</label><input class="inp" id="qs-t0p1" list="qs-known-players" value="${esc(qs.teams[0].players[1]||'')}" placeholder="REVÉS 1"></div>
+            </div>
+            <div class="row wrap" style="margin-bottom:10px">
+              <div class="field"><label>Pareja 2 · Drive</label><input class="inp" id="qs-t1p0" list="qs-known-players" value="${esc(qs.teams[1].players[0]||'')}" placeholder="DRIVE 2"></div>
+              <div class="field"><label>Pareja 2 · Revés</label><input class="inp" id="qs-t1p1" list="qs-known-players" value="${esc(qs.teams[1].players[1]||'')}" placeholder="REVÉS 2"></div>
+            </div>
+            ${pairParts.length >= 2 ? `<div style="margin-bottom:12px"><button type="button" class="pill sm" data-act="qs-toggle-manual-teams">👥 Elegir parejas inscriptas</button></div>` : ''}
+          `}
+        ` : `
+          <p class="muted" style="margin-bottom:12px"><b>${esc(n0)}</b> vs <b>${esc(n1)}</b> · Tocá los games de cada set sin anotar punto por punto.</p>
+        `}
+
+        ${qs.sets.map((sVals, sIdx) => {
+          const gChoices = showQuickTen(sIdx) ? [0,1,2,3,4,5,6,7,10] : [0,1,2,3,4,5,6,7];
+          const isStbHint = sIdx === 2 && qs.hasSuperTbFinal;
+          return `
+          <div class="qs-set-card">
+            <div class="qs-set-hdr">
+              <b>Set ${sIdx + 1}${isStbHint ? ' / Súper TB' : (sIdx >= 2 ? ' (Opcional)' : '')}</b>
+              <button type="button" class="pill sm" data-qs-clear-set="${sIdx}" style="min-height:26px;padding:2px 8px;font-size:11px">Limpiar</button>
+            </div>
+            ${[0, 1].map(side => {
+              const tCol = qs.teams[side]?.color || (side === 0 ? '#d4af37' : '#2f8cff');
+              const tName = side === 0 ? n0 : n1;
+              const val = sVals[side];
+              const strVal = (val === null || val === undefined) ? '' : String(val);
+              return `
+              <div class="qs-team-row">
+                <div class="qs-team-top">
+                  <span class="qs-team-lbl" style="--c:${esc(tCol)}"><span class="dot"></span>${esc(tName)}</span>
+                  <input type="number" class="inp qs-num" id="qs-s${sIdx+1}-${side}" min="0" max="30" value="${esc(strVal)}" placeholder="–">
+                </div>
+                <div class="qs-pills" data-qs-row="${sIdx}:${side}">
+                  ${gChoices.map(g => `<button type="button" class="qs-g-pill ${val===g?'on':''}" style="--c:${esc(tCol)};--f:${fgFor(tCol)}" data-qs-pick="${sIdx}:${side}:${g}">${g}</button>`).join('')}
+                </div>
+              </div>`;
+            }).join('')}
+          </div>`;
+        }).join('')}
+
+        ${qs.sets.length < 5 ? `
+          <button type="button" class="btn sm block" data-act="qs-add-set" style="margin-bottom:8px">
+            ${ICONS.plus} Agregar Set ${qs.sets.length + 1}${qs.sets.length === 2 ? ' / Súper TB' : ''}
+          </button>` : ''}
+
+        <div class="qs-preview" id="qs-preview">${esc(formatQuickScorePreview(qs))}</div>
+
+        <div class="tog" style="border:none;padding:4px 0">
           <div><b>Victoria por Walkover (W.O.)</b><small>Otorga puntos de tabla y avanza sin alterar ELO</small></div>
-          <label class="sw"><input type="checkbox" id="qs-wo"><span></span></label>
+          <label class="sw"><input type="checkbox" id="qs-wo" ${qs.wo?'checked':''}><span></span></label>
         </div>
 
         <div class="field" style="margin:8px 0 14px">
           <label>Ganador (si empatan sets o en W.O.)</label>
           <select class="inp" id="qs-winner">
-            <option value="auto">Automático por sets</option>
-            <option value="0">${esc(n0)}</option>
-            <option value="1">${esc(n1)}</option>
+            <option value="auto" ${qs.winner==='auto'?'selected':''}>Automático por sets</option>
+            <option value="0" ${qs.winner==='0'?'selected':''}>${esc(n0)}</option>
+            <option value="1" ${qs.winner==='1'?'selected':''}>${esc(n1)}</option>
           </select>
         </div>
 
         <div class="btn-row">
-          <button class="btn primary block" data-act="save-quick-score" data-target="${esc(ui.quickScoreFixtureId)}">Guardar Resultado</button>
+          <button class="btn primary block" data-act="save-quick-score" data-target="${esc(qs.fixtureKey || ui.quickScoreFixtureId || '')}">${ICONS.check} Guardar Resultado</button>
           <button class="btn block" data-close-comp-modal="1">Cancelar</button>
         </div>
       </div>
@@ -9993,9 +10334,42 @@ document.addEventListener('click', (ev) => {
 
   const qsFxEl = t.closest('[data-quick-score]');
   if (qsFxEl) {
-    ui.quickScoreFixtureId = qsFxEl.getAttribute('data-quick-score');
-    ui.compModal = 'quick-score';
-    render();
+    openQuickScoreModal({ mode: 'fixture', fixtureKey: qsFxEl.getAttribute('data-quick-score') });
+    return;
+  }
+
+  const qsPickEl = t.closest('[data-qs-pick]');
+  if (qsPickEl) {
+    const [sIdxStr, sideStr, gValStr] = qsPickEl.getAttribute('data-qs-pick').split(':');
+    const sIdx = Number(sIdxStr), side = Number(sideStr), gVal = Number(gValStr);
+    const inp = document.getElementById(`qs-s${sIdx + 1}-${side}`);
+    if (inp) inp.value = String(gVal);
+    if (ui.quickScoreState?.sets?.[sIdx]) {
+      ui.quickScoreState.sets[sIdx][side] = gVal;
+    }
+    const row = qsPickEl.closest('.qs-pills');
+    if (row && row.querySelectorAll) {
+      row.querySelectorAll('.qs-g-pill').forEach(btn => {
+        btn.classList.toggle('on', btn === qsPickEl);
+      });
+    }
+    updateQuickScorePreviewDom();
+    return;
+  }
+
+  const qsClrEl = t.closest('[data-qs-clear-set]');
+  if (qsClrEl) {
+    const sIdx = Number(qsClrEl.getAttribute('data-qs-clear-set'));
+    const i0 = document.getElementById(`qs-s${sIdx + 1}-0`);
+    const i1 = document.getElementById(`qs-s${sIdx + 1}-1`);
+    if (i0) i0.value = '';
+    if (i1) i1.value = '';
+    if (ui.quickScoreState?.sets?.[sIdx]) ui.quickScoreState.sets[sIdx] = [null, null];
+    const card = qsClrEl.closest('.qs-set-card');
+    if (card && card.querySelectorAll) {
+      card.querySelectorAll('.qs-g-pill.on').forEach(btn => btn.classList.remove('on'));
+    }
+    updateQuickScorePreviewDom();
     return;
   }
 
@@ -10053,6 +10427,8 @@ document.addEventListener('click', (ev) => {
   const closeCompModalEl = t.closest('[data-close-comp-modal]');
   if (closeCompModalEl && (closeCompModalEl.tagName === 'BUTTON' || !t.closest('.sheet'))) {
     ui.compModal = null;
+    ui.quickScoreState = null;
+    ui.quickScoreFixtureId = null;
     render();
     return;
   }
@@ -10781,22 +11157,46 @@ document.addEventListener('click', (ev) => {
         }
         break;
       }
+      case 'open-preset-quick-score':
+        openQuickScoreModal({ mode: 'preset' });
+        break;
+      case 'open-comp-quick-score':
+        openQuickScoreModal({ mode: 'comp-adhoc', compId: actEl.getAttribute('data-comp') || ui.compId });
+        break;
+      case 'qs-add-set':
+        if (ui.quickScoreState && ui.quickScoreState.sets.length < 5) {
+          syncQuickScoreStateFromDom();
+          ui.quickScoreState.sets.push([null, null]);
+          render();
+        }
+        break;
+      case 'qs-toggle-manual-teams':
+        if (ui.quickScoreState && ui.quickScoreState.mode === 'comp-adhoc') {
+          syncQuickScoreStateFromDom();
+          ui.quickScoreState.useManualTeams = !ui.quickScoreState.useManualTeams;
+          render();
+        }
+        break;
       case 'save-quick-score': {
-        const target = actEl.getAttribute('data-target') || ui.quickScoreFixtureId;
+        syncQuickScoreStateFromDom();
+        const qs = ui.quickScoreState;
+        const target = actEl.getAttribute('data-target') || qs?.fixtureKey || ui.quickScoreFixtureId;
         const [cid, fxid] = String(target || '').split(':');
         const isWo = !!document.getElementById('qs-wo')?.checked;
         const winSel = document.getElementById('qs-winner')?.value || 'auto';
         const setsArr = [];
         if (!isWo) {
-          for (let i = 1; i <= 3; i++) {
-            const v0 = document.getElementById(`qs-s${i}-0`)?.value;
-            const v1 = document.getElementById(`qs-s${i}-1`)?.value;
+          for (let i = 1; i <= 5; i++) {
+            const el0 = document.getElementById(`qs-s${i}-0`);
+            const el1 = document.getElementById(`qs-s${i}-1`);
+            const v0 = el0?.value;
+            const v1 = el1?.value;
             if (v0 !== '' && v0 !== undefined && v1 !== '' && v1 !== undefined) {
               setsArr.push([Math.max(0, Number(v0) || 0), Math.max(0, Number(v1) || 0)]);
             }
           }
           if (!setsArr.length) {
-            showToast('Ingresá al menos el resultado de un set o activá W.O.');
+            showToast('Seleccioná al menos el resultado de un set o activá W.O.');
             break;
           }
         }
@@ -10815,11 +11215,61 @@ document.addEventListener('click', (ev) => {
           }
           winnerSide = w0 > w1 ? 0 : 1;
         }
-        submitQuickFixtureResult(cid, fxid, setsArr, winnerSide, isWo);
+
+        let savedMatch = null;
+        const mode = qs?.mode || (cid && fxid ? 'fixture' : 'preset');
+        if (mode === 'fixture' && cid && fxid) {
+          savedMatch = submitQuickFixtureResult(cid, fxid, setsArr, winnerSide, isWo);
+        } else if (mode === 'comp-adhoc' && (qs?.compId || cid)) {
+          const comp = getCompById(qs?.compId || cid);
+          if (!comp) break;
+          if (!qs.useManualTeams && qs.selPartIds?.[0] && qs.selPartIds?.[0] === qs.selPartIds?.[1]) {
+            showToast('Elegí dos parejas distintas');
+            break;
+          }
+          savedMatch = submitQuickMatchResult({
+            comp,
+            stageLabel: qs.stageLabel || '',
+            teams: qs.teams,
+            setsArr,
+            winnerSide,
+            isWalkover: isWo
+          });
+        } else {
+          const kind = preset.matchContext || 'daily';
+          const comp = (kind === 'league' || kind === 'tournament') && preset.compId ? getCompById(preset.compId) : null;
+          savedMatch = submitQuickMatchResult({
+            kind,
+            comp,
+            fixtureId: comp && preset.fixtureId ? preset.fixtureId : '',
+            stageLabel: qs?.stageLabel || preset.stageLabel || '',
+            teams: qs?.teams || preset.teams,
+            rules: preset,
+            setsArr,
+            winnerSide,
+            isWalkover: isWo
+          });
+          preset.fixtureId = '';
+          saveJSON(LS_PRESET, preset);
+        }
+
         ui.compModal = null;
+        ui.quickScoreState = null;
         ui.quickScoreFixtureId = null;
-        render();
-        showToast(isWo ? 'W.O. registrado' : 'Resultado guardado');
+        if (mode === 'preset' && savedMatch) {
+          const sCompId = getMatchCompId(savedMatch);
+          if (sCompId && getCompById(sCompId)) {
+            ui.compId = sCompId;
+            ui.compTab = 'standings';
+            navigate('comp-detail');
+          } else {
+            ui.statsId = savedMatch.id;
+            navigate('stats');
+          }
+        } else {
+          render();
+        }
+        showToast(isWo ? 'W.O. registrado' : '✓ Resultado guardado');
         break;
       }
       case 'share-comp-rank': {
@@ -10995,11 +11445,36 @@ document.addEventListener('input', (ev) => {
     render();
     const inp = document.getElementById('hist-search-inp');
     if (inp) { inp.focus(); inp.setSelectionRange(pos, pos); }
+    return;
+  }
+  if (t.id && t.id.startsWith('qs-') && ui.quickScoreState) {
+    const mSet = t.id.match(/^qs-s(\d+)-([01])$/);
+    if (mSet) {
+      const sIdx = Number(mSet[1]) - 1;
+      const side = Number(mSet[2]);
+      const val = t.value === '' ? null : Math.max(0, Number(t.value) || 0);
+      const row = document.querySelector?.(`[data-qs-row="${sIdx}:${side}"]`);
+      if (row && row.querySelectorAll) {
+        row.querySelectorAll('.qs-g-pill').forEach(btn => {
+          btn.classList.toggle('on', val !== null && Number(btn.textContent) === val);
+        });
+      }
+    }
+    updateQuickScorePreviewDom();
   }
 });
 
 document.addEventListener('change', (ev) => {
   const t = ev.target;
+  if (t.id === 'qs-sel0' || t.id === 'qs-sel1') {
+    syncQuickScoreStateFromDom();
+    render();
+    return;
+  }
+  if (t.id === 'qs-wo' || t.id === 'qs-winner') {
+    updateQuickScorePreviewDom();
+    return;
+  }
   if (t.hasAttribute('data-preset-bool')) {
     const k = t.getAttribute('data-preset-bool');
     preset[k] = t.checked;
