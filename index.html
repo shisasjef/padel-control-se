@@ -385,11 +385,12 @@ a{color:inherit}
 }
 .pill.sm{padding:5px 11px;font-size:12px;min-height:30px;min-width:auto;border-radius:999px;cursor:pointer}
 .pill.sm:hover{background:rgba(212,175,55,.18);border-color:var(--gold);color:#fff}
-.row{display:flex;gap:12px;margin-bottom:16px}
+.row{display:flex;gap:12px;margin-bottom:16px;align-items:flex-end}
 .row:last-child{margin-bottom:0}
 .row>.field{margin-bottom:0}
 .row>*{flex:1;min-width:0}
-@media(max-width:480px){.row.wrap{flex-direction:column;gap:14px}}
+.row.pts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:10px;align-items:end}
+@media(max-width:480px){.row.wrap{flex-direction:column;align-items:stretch;gap:12px}.row.pts-grid{grid-template-columns:1fr 1fr;gap:10px}}
 .team-card{
   border-left:0;
   background:linear-gradient(135deg, color-mix(in srgb,var(--c) 18%,var(--card-solid)) 0%, var(--card) 65%);
@@ -661,25 +662,34 @@ table.keys td{padding:10px 4px;border-bottom:1px solid var(--line);vertical-alig
 .display .sb-top{justify-content:center}
 
 /* ---------- Glass Sheets / Overlays ---------- */
+html:has(.scrim),body:has(.scrim){overflow:hidden}
+body:has(.scrim) .tabbar{pointer-events:none}
 .scrim{
   position:fixed;inset:0;
-  background:rgba(4, 8, 18, 0.68);
+  background:rgba(4, 8, 18, 0.72);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  z-index:50;display:flex;align-items:flex-end;justify-content:center;animation:fade .18s var(--ease);
+  z-index:120;display:flex;align-items:flex-end;justify-content:center;animation:fade .18s var(--ease);
 }
 .sheet{
   width:100%;max-width:560px;
   background:linear-gradient(180deg, rgba(20, 20, 28, 0.98) 0%, rgba(10, 10, 14, 0.99) 100%);
   color:#faf7f0;
-  border-radius:30px 30px 0 0;
-  padding:24px 22px calc(22px + var(--safe-b));
-  max-height:92dvh;overflow:auto;
+  border-radius:28px 28px 0 0;
+  padding:20px 20px calc(22px + var(--safe-b));
+  max-height:calc(100dvh - 16px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
   animation:up .26s var(--ease);
   border:1px solid rgba(212,175,55,.28);
   box-shadow:0 -20px 60px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,229,143,.25);
 }
-@media(min-width:700px){.scrim{align-items:center;padding:18px}.sheet{border-radius:28px;box-shadow:0 30px 80px rgba(0,0,0,.88), inset 0 1px 0 rgba(255,229,143,.25)}}
-.sheet h2{font-family:var(--cond);font-size:30px;font-weight:800;font-style:italic;text-transform:uppercase;letter-spacing:.7px;line-height:1.05;margin-bottom:4px;color:var(--acc-ink)}
+@media(min-width:700px){.scrim{align-items:center;padding:16px}.sheet{border-radius:26px;max-height:calc(100dvh - 32px);box-shadow:0 30px 80px rgba(0,0,0,.88), inset 0 1px 0 rgba(255,229,143,.25)}}
+.sheet h2{font-family:var(--cond);font-size:clamp(24px,4vw,28px);font-weight:800;font-style:italic;text-transform:uppercase;letter-spacing:.7px;line-height:1.05;margin-bottom:4px;color:var(--acc-ink)}
+.sheet .field{margin-bottom:10px}
+.sheet .inp{height:44px;border-radius:14px;font-size:15px}
+.sheet .pills button{min-height:36px;padding:6px 12px;font-size:13px}
+.sheet .btn-row{margin-top:14px}
 .opt-sec{font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--tx2);margin:16px 0 8px}
 .opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .opt{
@@ -695,7 +705,6 @@ table.keys td{padding:10px 4px;border-bottom:1px solid var(--line);vertical-alig
 .opt.wide{grid-column:1/-1;width:100%;margin-top:10px}
 .opt .k,.btn .k{position:absolute;top:6px;right:8px;font-size:10px;font-family:ui-monospace,monospace;color:rgba(255,255,255,.45);background:rgba(0,0,0,.28);padding:1px 6px;border-radius:6px;display:none}
 @media(hover:hover){.opt .k,.btn .k{display:block}}
-.sheet .btn-row{margin-top:18px}
 .sheet .btn{position:relative}
 .menu-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .menu-list button{
@@ -714,7 +723,7 @@ table.keys td{padding:10px 4px;border-bottom:1px solid var(--line);vertical-alig
 @keyframes fade{from{opacity:0}}
 @keyframes up{from{transform:translateY(32px) scale(.98);opacity:0}}
 .overlay{
-  position:fixed;inset:0;z-index:60;
+  position:fixed;inset:0;z-index:130;
   background:radial-gradient(circle at 50% 30%, rgba(30,24,10,.96), rgba(5,5,7,.98));
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
@@ -735,7 +744,7 @@ table.keys td{padding:10px 4px;border-bottom:1px solid var(--line);vertical-alig
 .toast{
   position:fixed;left:50%;top:calc(76px + var(--safe-t));transform:translateX(-50%);
   background:linear-gradient(135deg,#ffe58f,#d4af37);color:#080600;
-  padding:12px 22px;border-radius:999px;font-weight:800;z-index:80;
+  padding:12px 22px;border-radius:999px;font-weight:800;z-index:200;
   box-shadow:0 16px 40px rgba(0,0,0,.65);animation:toast 2.4s var(--ease) forwards;
   white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;font-size:14.5px;
 }
@@ -7731,7 +7740,7 @@ function downloadAppQR() {
 function renderQRModal() {
   const url = getAppShareUrl();
   return `
-  <div class="scrim" data-close-qr="1" style="z-index:95">
+  <div class="scrim" data-close-qr="1" style="z-index:125">
     <div class="sheet" style="max-width:460px;text-align:center">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:10px">
@@ -7916,7 +7925,7 @@ function renderOBSModal() {
   const { localUrl, remoteUrl, remoteCode } = getOBSUrls(pos);
 
   return `
-  <div class="scrim" data-close-obs-modal="1" style="z-index:96">
+  <div class="scrim" data-close-obs-modal="1" style="z-index:126">
     <div class="sheet" style="max-width:560px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:10px">
@@ -9643,7 +9652,10 @@ function renderCompetitionModals() {
     return `
     <div class="scrim" data-close-comp-modal="1">
       <div class="sheet" style="max-width:560px">
-        <h2>${ui.compModal === 'edit' ? 'Editar' : 'Crear'} ${isTourn ? 'Torneo' : 'Liga'}</h2>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+          <h2 style="margin:0">${ui.compModal === 'edit' ? 'Editar' : 'Crear'} ${isTourn ? 'Torneo' : 'Liga'}</h2>
+          <button type="button" class="icon-btn" data-close-comp-modal="1" title="Cerrar" style="width:36px;height:36px;border-radius:12px;font-size:15px;font-weight:700">✕</button>
+        </div>
 
         <div class="field" style="margin-bottom:10px">
           <label>Tipo</label>
@@ -9699,7 +9711,7 @@ function renderCompetitionModals() {
           </div>
         ` : ''}
 
-        <div class="row wrap" style="margin-bottom:10px">
+        <div class="row pts-grid" style="margin-bottom:10px">
           <div class="field">
             <label>Pts Victoria</label>
             <input type="number" class="inp" id="cf-wpts" min="0" max="50" value="${Number(f.winPts ?? 3)}">
@@ -9716,12 +9728,12 @@ function renderCompetitionModals() {
           </div>
           ${isPP ? `
             <div class="field">
-              <label>Pts/Game ganado</label>
+              <label>Pts / Game</label>
               <input type="number" class="inp" id="cf-gpts" min="0" max="20" value="${Number(f.gameBonusPts ?? 1)}">
             </div>
           ` : `
             <div class="field">
-              <label>Bonus/Set ganado</label>
+              <label>Bonus / Set</label>
               <input type="number" class="inp" id="cf-spts" min="0" max="10" value="${Number(f.setBonusPts ?? 0)}">
             </div>
           `}
