@@ -4269,7 +4269,15 @@ async function updateWakeLock() {
   } catch {}
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') updateWakeLock();
+  if (document.visibilityState === 'visible') {
+    updateWakeLock();
+    if (activeMatch && activeMatch.status === 'playing') publishLiveMatchState(activeMatch, true);
+    if ((ui.route === 'live' || ui.route === 'obs') && ui.liveId) {
+      const tpc = cleanLiveTopic(ui.liveId);
+      if (!liveEvtSource || liveEvtSource.readyState === 2) openLiveEventSource(tpc);
+      pollLiveChannelOnce(tpc);
+    }
+  }
 });
 
 // Hands-Free Speech Recognition
@@ -4957,6 +4965,24 @@ const SUB_TYPES = ['winner', 'smash', 'volea', 'bandeja', 'bajada', 'dejada', 'p
 function encodeMatchShare(m) {
   try {
     // Compact payload for URL sharing & real-time live broadcast
+    const TMAP_REV = { pt: 0, winner: 1, ue: 2, fe: 3, df: 4 };
+    const evList = m.events || [];
+    let canPack = true;
+    const packedTokens = [];
+    for (let i = 0; i < evList.length; i++) {
+      const ev = evList[i];
+      const w = ev.w === 1 ? 1 : 0;
+      const tCode = TMAP_REV[ev.type || 'pt'] || 0;
+      const by0 = ev.by ? Number(ev.by[0]) : -1;
+      const by1 = ev.by ? Number(ev.by[1]) : -1;
+      const fsBit = ev.fs === false ? 0 : 1;
+      const subIdx = ev.sub ? Math.max(0, SUB_TYPES.indexOf(ev.sub)) : 0;
+      if ((by0 !== -1 && (by0 < 0 || by0 > 1)) || (by1 !== -1 && (by1 < 0 || by1 > 1)) || subIdx > 8) {
+        canPack = false;
+        break;
+      }
+      packedTokens.push(`${w}${tCode}${by0 < 0 ? 9 : by0}${by1 < 0 ? 9 : by1}${fsBit}${subIdx}`);
+    }
     const compact = {
       id: m.id,
       ts: Date.now(),
@@ -4975,18 +5001,20 @@ function encodeMatchShare(m) {
       ss: m.secondServerIdx,
       fl: m.flipped ? 1 : 0,
       pf: m.pendingFault ? 1 : 0,
-      // Pack events into compact array: [w, typeCode, byTeam, byPlayer, fsBit, subCode]
-      e: (m.events || []).map(ev => {
-        const subIdx = ev.sub ? SUB_TYPES.indexOf(ev.sub) : 0;
-        return [
-          ev.w,
-          {pt:0, winner:1, ue:2, fe:3, df:4}[ev.type || 'pt'] || 0,
-          ev.by ? ev.by[0] : -1,
-          ev.by ? ev.by[1] : -1,
-          ev.fs === false ? 0 : 1,
-          subIdx > 0 ? subIdx : 0
-        ];
-      })
+      // Pack events as compact 6-char string when possible (>2x smaller than JSON nested arrays)
+      e: canPack
+        ? packedTokens.join('')
+        : evList.map(ev => {
+            const subIdx = ev.sub ? SUB_TYPES.indexOf(ev.sub) : 0;
+            return [
+              ev.w,
+              TMAP_REV[ev.type || 'pt'] || 0,
+              ev.by ? ev.by[0] : -1,
+              ev.by ? ev.by[1] : -1,
+              ev.fs === false ? 0 : 1,
+              subIdx > 0 ? subIdx : 0
+            ];
+          })
     };
     const json = JSON.stringify(compact);
     const b64 = btoa(unescape(encodeURIComponent(json))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -5001,6 +5029,22 @@ function decodeMatchShare(b64) {
     const json = decodeURIComponent(escape(atob(norm)));
     const c = JSON.parse(json);
     const TMAP = ['pt','winner','ue','fe','df'];
+    let rawEvs = [];
+    if (Array.isArray(c.e)) {
+      rawEvs = c.e;
+    } else if (typeof c.e === 'string' && c.e.length >= 6) {
+      for (let i = 0; i + 6 <= c.e.length; i += 6) {
+        const s = c.e;
+        rawEvs.push([
+          Number(s[i]),
+          Number(s[i + 1]),
+          s[i + 2] === '9' ? -1 : Number(s[i + 2]),
+          s[i + 3] === '9' ? -1 : Number(s[i + 3]),
+          Number(s[i + 4]),
+          Number(s[i + 5])
+        ]);
+      }
+    }
     return {
       id: c.id || ('shared_' + (c.c || Date.now())),
       _ts: c.ts || 0,
@@ -5020,7 +5064,7 @@ function decodeMatchShare(b64) {
       shotPrompt: true,
       flipped: !!c.fl,
       pendingFault: !!c.pf,
-      events: (c.e || []).map(a => ({
+      events: rawEvs.map(a => ({
         w: a[0],
         type: TMAP[a[1]] || 'pt',
         by: a[2] >= 0 ? [a[2], a[3]] : null,
@@ -5034,10 +5078,21 @@ function decodeMatchShare(b64) {
 
 // Serverless Real-Time Live Broadcast (Pub/Sub via ntfy.sh SSE + JSON cache)
 let livePubTimer = null;
+let livePubRetryTimer = null;
 let liveEvtSource = null;
 let livePollTimer = null;
-let lastPublishedB64 = '';
+let livePollBusy = false;
+let liveLastPollAt = 0;
+let liveLastMsgTime = 0;
+let livePollBackoffUntil = 0;
+let lastPublishedSig = '';
 let lastAppliedSig = '';
+let livePubInFlight = false;
+let livePubQueued = false;
+let livePubLastSentAt = 0;
+let livePubRetryCount = 0;
+let livePubBackoffUntil = 0;
+let livePubTargetMatch = null;
 
 function shortMatchCode(id) {
   const clean = String(id || 'default').replace(/^m_/, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -5055,39 +5110,103 @@ function matchStateSignature(m) {
     m.id,
     m.status,
     m.events ? m.events.length : 0,
-    lastEv ? `${lastEv.w}:${lastEv.type}:${lastEv.fs}` : '',
+    lastEv ? `${lastEv.w}:${lastEv.type}:${lastEv.fs}:${lastEv.sub || ''}:${lastEv.by ? lastEv.by.join(',') : ''}` : '',
     m.pendingFault ? 1 : 0,
     m.flipped ? 1 : 0,
     m.firstServer ? m.firstServer.join(',') : '',
     m.secondServerIdx ?? '',
-    m.teams ? m.teams.map(t => t.players.join(',') + ':' + t.color).join('|') : ''
+    m.teams ? m.teams.map(t => t.players.join(',') + ':' + t.color).join('|') : '',
+    m.rules ? `${m.rules.totalSets}:${m.rules.gamesPerSet}:${m.rules.deuceRule}:${m.rules.finalSet}:${m.rules.changeoverRule}` : ''
   ].join('#');
 }
 
-function publishLiveMatchState(m, immediate = false) {
-  if (!m || !m.id) return;
-  const sendNow = () => {
-    const b64 = encodeMatchShare(m);
-    if (!b64 || (!immediate && b64 === lastPublishedB64)) return;
-    lastPublishedB64 = b64;
-    const topic = cleanLiveTopic(m.id);
-    fetch(`https://ntfy.sh/${topic}`, {
-      method: 'POST',
-      body: b64,
-      headers: { 'Title': 'Padel Control SE Live', 'Cache': 'yes' }
-    }).catch(() => {});
-  };
-  clearTimeout(livePubTimer);
-  if (immediate) {
-    sendNow();
-  } else {
-    livePubTimer = setTimeout(sendNow, 120);
+function scheduleLivePublishRetry(retryAfterSec = 0) {
+  livePubRetryCount++;
+  const backoff = retryAfterSec > 0
+    ? Math.min(20000, retryAfterSec * 1000)
+    : Math.min(12000, Math.round(1400 * Math.pow(1.6, livePubRetryCount - 1)));
+  livePubBackoffUntil = Date.now() + backoff;
+  livePubInFlight = false;
+  clearTimeout(livePubRetryTimer);
+  livePubRetryTimer = setTimeout(() => {
+    flushLiveMatchPublish(false);
+  }, backoff);
+}
+
+async function flushLiveMatchPublish(force = false) {
+  if (livePubInFlight) {
+    livePubQueued = true;
+    return false;
   }
+  const m = livePubTargetMatch || activeMatch;
+  if (!m || !m.id) return false;
+  const sig = matchStateSignature(m);
+  if (!force && sig && sig === lastPublishedSig) {
+    livePubQueued = false;
+    return true;
+  }
+  const b64 = encodeMatchShare(m);
+  if (!b64) return false;
+
+  livePubInFlight = true;
+  livePubQueued = false;
+  clearTimeout(livePubRetryTimer);
+  const topic = cleanLiveTopic(m.id);
+
+  try {
+    // Simple CORS POST (no custom headers) avoids doubling traffic with preflight OPTIONS
+    const res = await fetch(`https://ntfy.sh/${topic}`, {
+      method: 'POST',
+      body: b64
+    });
+    if (res && res.ok) {
+      lastPublishedSig = sig;
+      livePubLastSentAt = Date.now();
+      livePubRetryCount = 0;
+      livePubBackoffUntil = 0;
+      livePubInFlight = false;
+      const latest = livePubTargetMatch || activeMatch;
+      if (livePubQueued || (latest && latest.id === m.id && matchStateSignature(latest) !== lastPublishedSig)) {
+        publishLiveMatchState(latest, false);
+      }
+      return true;
+    }
+    const retryHdr = Number(res?.headers?.get?.('Retry-After')) || 0;
+    scheduleLivePublishRetry(retryHdr);
+    return false;
+  } catch {
+    scheduleLivePublishRetry(0);
+    return false;
+  }
+}
+
+function publishLiveMatchState(m, immediate = false, force = false) {
+  if (!m || !m.id) return;
+  if (livePubTargetMatch && livePubTargetMatch.id !== m.id) {
+    lastPublishedSig = '';
+    livePubRetryCount = 0;
+    livePubBackoffUntil = 0;
+  }
+  if (force) lastPublishedSig = '';
+  livePubTargetMatch = m;
+  const sig = matchStateSignature(m);
+  if (!force && !immediate && sig && sig === lastPublishedSig) return;
+
+  clearTimeout(livePubTimer);
+  const now = Date.now();
+  if (immediate && !livePubInFlight && (force || now >= livePubBackoffUntil)) {
+    flushLiveMatchPublish(force);
+    return;
+  }
+  const elapsed = now - livePubLastSentAt;
+  const backoffWait = Math.max(0, livePubBackoffUntil - now);
+  const delay = Math.max(backoffWait, immediate ? 80 : Math.max(260, 650 - elapsed));
+  livePubTimer = setTimeout(() => flushLiveMatchPublish(force), delay);
 }
 
 async function shareLiveMatchLink(m) {
   if (!m) return;
-  publishLiveMatchState(m, true);
+  publishLiveMatchState(m, true, true);
   const code = shortMatchCode(m.id);
   const baseUrl = location.href.split('#')[0];
   const url = `${baseUrl}#v=${code}`;
@@ -5116,14 +5235,21 @@ function applyIncomingLiveSnapshot(b64, isInitial = false) {
   if (!incoming || !incoming.teams) return;
   if (ui.liveId && incoming.id && shortMatchCode(incoming.id) !== shortMatchCode(ui.liveId)) return;
 
-  const sig = matchStateSignature(incoming);
   const prev = ui.liveMatch;
+  // Ignore out-of-order stale HTTP poll responses that are strictly older than applied state
+  if (prev && prev.id === incoming.id && incoming._ts > 0 && prev._ts > 0 && incoming._ts < prev._ts) {
+    return;
+  }
+
+  const sig = matchStateSignature(incoming);
   const prevSig = matchStateSignature(prev);
 
   if (prev && sig === prevSig) {
-    // Sync clock if incoming timestamp is newer
     if (incoming.durationMs > (prev.durationMs || 0)) {
       prev.durationMs = incoming.durationMs;
+    }
+    if (incoming._ts > (prev._ts || 0)) {
+      prev._ts = incoming._ts;
     }
     return;
   }
@@ -5179,9 +5305,19 @@ function applyIncomingLiveSnapshot(b64, isInitial = false) {
   }
 }
 
-async function pollLiveChannelOnce(topic) {
+async function pollLiveChannelOnce(topic, forceFull = false) {
+  if (!topic || livePollBusy) return;
+  const now = Date.now();
+  if (!forceFull && now < livePollBackoffUntil) return;
+  livePollBusy = true;
+  liveLastPollAt = now;
+  const sinceParam = (!forceFull && liveLastMsgTime > 0) ? String(Math.max(0, liveLastMsgTime - 3)) : '12h';
   try {
-    const res = await fetch(`https://ntfy.sh/${topic}/json?poll=1&since=12h`, { cache: 'no-store' });
+    const res = await fetch(`https://ntfy.sh/${topic}/json?poll=1&since=${encodeURIComponent(sinceParam)}`, { cache: 'no-store' });
+    if (res.status === 429) {
+      livePollBackoffUntil = Date.now() + 10000;
+      return;
+    }
     if (!res.ok) return;
     const txt = await res.text();
     const lines = txt.trim().split('\n').filter(Boolean);
@@ -5189,6 +5325,7 @@ async function pollLiveChannelOnce(topic) {
     for (const line of lines) {
       try {
         const obj = JSON.parse(line);
+        if (obj && obj.time) liveLastMsgTime = Math.max(liveLastMsgTime, Number(obj.time) || 0);
         if (obj && obj.event === 'message' && obj.message) {
           latestMsg = obj.message;
         }
@@ -5197,6 +5334,36 @@ async function pollLiveChannelOnce(topic) {
     if (latestMsg) {
       applyIncomingLiveSnapshot(latestMsg, false);
     }
+  } catch {} finally {
+    livePollBusy = false;
+  }
+}
+
+function openLiveEventSource(topic) {
+  if (!topic || !('EventSource' in window)) return;
+  if (liveEvtSource) {
+    try { liveEvtSource.close(); } catch {}
+    liveEvtSource = null;
+  }
+  try {
+    liveEvtSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
+    liveEvtSource.onopen = () => {
+      ui.liveConnected = true;
+      pollLiveChannelOnce(topic);
+    };
+    liveEvtSource.onmessage = (ev) => {
+      try {
+        const data = JSON.parse(ev.data);
+        if (data && data.time) liveLastMsgTime = Math.max(liveLastMsgTime, Number(data.time) || 0);
+        if (data && (data.event === 'message' || !data.event) && data.message) {
+          ui.liveConnected = true;
+          applyIncomingLiveSnapshot(data.message, false);
+        }
+      } catch {}
+    };
+    liveEvtSource.onerror = () => {
+      ui.liveConnected = false;
+    };
   } catch {}
 }
 
@@ -5207,7 +5374,7 @@ function connectLiveSpectator(rawParam) {
   const matchId = decodeURIComponent(dotIdx >= 0 ? cleanRaw.slice(0, dotIdx) : cleanRaw);
   const initialSnap = dotIdx >= 0 ? cleanRaw.slice(dotIdx + 1) : '';
 
-  const isSameChannel = (ui.liveId === matchId && liveEvtSource);
+  const isSameChannel = (ui.liveId === matchId && liveEvtSource && liveEvtSource.readyState !== 2);
   ui.liveId = matchId;
   if (ui.route !== 'obs') ui.route = 'live';
 
@@ -5223,33 +5390,19 @@ function connectLiveSpectator(rawParam) {
   const topic = cleanLiveTopic(matchId);
 
   // 1. Immediate fetch of latest cached message from channel
-  pollLiveChannelOnce(topic);
+  pollLiveChannelOnce(topic, true);
 
   // 2. Real-time Server-Sent Events (SSE) stream
-  if ('EventSource' in window) {
-    try {
-      liveEvtSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
-      liveEvtSource.onopen = () => {
-        ui.liveConnected = true;
-      };
-      liveEvtSource.onmessage = (ev) => {
-        try {
-          const data = JSON.parse(ev.data);
-          if (data && (data.event === 'message' || !data.event) && data.message) {
-            ui.liveConnected = true;
-            applyIncomingLiveSnapshot(data.message, false);
-          }
-        } catch {}
-      };
-      liveEvtSource.onerror = () => {
-        ui.liveConnected = false;
-      };
-    } catch {}
-  }
+  openLiveEventSource(topic);
 
-  // 3. Fallback polling every 3.5s for strict mobile networks/firewalls
+  // 3. Adaptive polling: 3.5s when SSE is down, light 18s heartbeat when SSE is live (saves ntfy.sh IP quota)
   livePollTimer = setInterval(() => {
     if (!ui.liveId) return;
+    if (liveEvtSource && liveEvtSource.readyState === 2) {
+      openLiveEventSource(topic);
+    }
+    const elapsed = Date.now() - liveLastPollAt;
+    if (ui.liveConnected && elapsed < 18000) return;
     pollLiveChannelOnce(topic);
   }, 3500);
 }
@@ -5263,6 +5416,10 @@ function disconnectLiveStreamOnly() {
     clearInterval(livePollTimer);
     livePollTimer = null;
   }
+  livePollBusy = false;
+  liveLastPollAt = 0;
+  liveLastMsgTime = 0;
+  livePollBackoffUntil = 0;
   ui.liveConnected = false;
 }
 
@@ -5307,7 +5464,7 @@ async function openShortSharedMatch(rawCode) {
 
 async function shareMatchLink(m) {
   if (!m) return;
-  publishLiveMatchState(m, true);
+  publishLiveMatchState(m, true, true);
   const code = shortMatchCode(m.id);
   const baseUrl = location.href.split('#')[0];
   const url = `${baseUrl}#s=${code}`;
@@ -5537,7 +5694,15 @@ async function flushCompSyncOutbox() {
 }
 
 if (typeof window.addEventListener === 'function') {
-  window.addEventListener('online', () => { flushCompSyncOutbox(); });
+  window.addEventListener('online', () => {
+    flushCompSyncOutbox();
+    if (activeMatch && activeMatch.status === 'playing') publishLiveMatchState(activeMatch, true);
+    if ((ui.route === 'live' || ui.route === 'obs') && ui.liveId) {
+      const tpc = cleanLiveTopic(ui.liveId);
+      if (!liveEvtSource || liveEvtSource.readyState === 2) openLiveEventSource(tpc);
+      pollLiveChannelOnce(tpc);
+    }
+  });
 }
 
 function encodeCompSyncMatch(comp, m) {
@@ -7933,7 +8098,7 @@ function getOBSUrls(pos = 'tl') {
   const m = activeMatch || ui.liveMatch;
   let remoteCode = '';
   if (m) {
-    publishLiveMatchState(m, true);
+    publishLiveMatchState(m, true, true);
     remoteCode = shortMatchCode(m.id);
   }
   const remoteUrl = remoteCode ? `${baseUrl}#obs&v=${remoteCode}${posParam}` : `${baseUrl}#obs${posParam}`;
