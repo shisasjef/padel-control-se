@@ -16,7 +16,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23fff3bd'/%3E%3Cstop offset='45%25' stop-color='%23d4af37'/%3E%3Cstop offset='100%25' stop-color='%238a6208'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='120' height='120' rx='28' fill='%23060609' stroke='url(%23g)' stroke-width='5'/%3E%3Cpath d='M60 14 L98 28 V62 C98 86 80 102 60 108 C40 102 22 86 22 62 V28 Z' fill='%230d0b07' stroke='url(%23g)' stroke-width='2.5'/%3E%3Cg transform='rotate(-26 60 56)'%3E%3Cpath d='M60 22 C76 22 84 34 82 52 C80 65 70 73 64 78 L63 96 H57 L56 78 C50 73 40 65 38 52 C36 34 44 22 60 22 Z' fill='url(%23g)'/%3E%3Cellipse cx='60' cy='48' rx='16' ry='19' fill='%23080705'/%3E%3Cg fill='%23d4af37'%3E%3Ccircle cx='53' cy='40' r='2.2'/%3E%3Ccircle cx='60' cy='40' r='2.2'/%3E%3Ccircle cx='67' cy='40' r='2.2'/%3E%3Ccircle cx='50' cy='48' r='2.2'/%3E%3Ccircle cx='57' cy='48' r='2.2'/%3E%3Ccircle cx='63' cy='48' r='2.2'/%3E%3Ccircle cx='70' cy='48' r='2.2'/%3E%3Ccircle cx='53' cy='56' r='2.2'/%3E%3Ccircle cx='60' cy='56' r='2.2'/%3E%3Ccircle cx='67' cy='56' r='2.2'/%3E%3C/g%3E%3C/g%3E%3Ccircle cx='80' cy='76' r='14' fill='url(%23g)' stroke='%23060609' stroke-width='2'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,700;1,800&family=Great+Vibes&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Chakra+Petch:wght@600;700&family=Great+Vibes&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#050507;
@@ -2182,7 +2182,7 @@ html.obs-mode #app, body.obs-mode #app {
 .pc-theme-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   padding: 9px 11px;
   border-radius: 12px;
   background: var(--card2);
@@ -2191,18 +2191,29 @@ html.obs-mode #app, body.obs-mode #app {
   font-weight: 700;
   color: var(--tx2);
   text-align: left;
+  transition: transform .15s var(--ease), border-color .15s, background .15s;
 }
 .pc-theme-btn.on {
   border-color: #c084fc;
   color: #ffffff;
-  background: rgba(168, 85, 247, 0.16);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(56, 189, 248, 0.14));
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.22);
 }
 .pc-theme-swatch {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   flex: none;
-  border: 2px solid rgba(255, 255, 255, 0.65);
+  border: 2px solid rgba(255, 255, 255, 0.78);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+.pc-metal-swatch {
+  width: 22px;
+  height: 18px;
+  border-radius: 5px;
+  flex: none;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 6px rgba(0,0,0,0.5);
 }
 .pc-logos-grid {
   display: grid;
@@ -7533,73 +7544,192 @@ async function exportRankingImage(overrideCtx = null) {
 
 // ==================== PLAYER CARD STUDIO (TARJETAS DE JUGADOR) ====================
 const PLAYER_CARD_THEMES = {
-  purple: {
-    id: 'purple',
-    label: 'Violeta Tour',
-    bgTop: '#070611',
-    bgMid: '#180c30',
-    bgBot: '#07060e',
-    accent: '#a855f7',
-    accentBright: '#e879f9',
-    accentSoft: '#d8b4fe',
-    badgeStops: ['#3b0764', '#6b21a8', '#a855f7'],
-    courtGlow: '#7c3aed',
-    courtGlow2: '#3b82f6',
-    frameLight: '#f8fafc',
+  diamond: {
+    id: 'diamond',
+    label: 'Diamante Negro',
+    bgTop: '#04060b',
+    bgMid: '#0e1726',
+    bgBot: '#030509',
+    accent: '#38bdf8',
+    accentBright: '#e0f2fe',
+    accentSoft: '#bae6fd',
+    badgeStops: ['#08101f', '#1e293b', '#0f4c81', '#7dd3fc'],
+    courtGlow: '#0ea5e9',
+    courtGlow2: '#6366f1',
+    frameLight: '#ffffff',
     frameMid: '#94a3b8',
-    frameDark: '#334155',
-    ribbonFill: ['#070710', '#160b2b', '#070710']
-  },
-  gold: {
-    id: 'gold',
-    label: 'Obsidian & Oro SÉ',
-    bgTop: '#060608',
-    bgMid: '#171207',
-    bgBot: '#08070a',
-    accent: '#d4af37',
-    accentBright: '#ffe58f',
-    accentSoft: '#fef08a',
-    badgeStops: ['#452d03', '#92650a', '#d4af37'],
-    courtGlow: '#d4af37',
-    courtGlow2: '#f59e0b',
-    frameLight: '#fff8dc',
-    frameMid: '#d4af37',
-    frameDark: '#4a3608',
-    ribbonFill: ['#080705', '#1c1507', '#080705']
+    frameDark: '#1e293b',
+    ribbonFill: ['#04070f', '#111c33', '#04070f'],
+    defaultMetal: 'chrome'
   },
   blue: {
     id: 'blue',
     label: 'Azul Premier',
-    bgTop: '#050812',
-    bgMid: '#0a1c3f',
-    bgBot: '#050914',
-    accent: '#3b82f6',
+    bgTop: '#030714',
+    bgMid: '#091f4d',
+    bgBot: '#020510',
+    accent: '#2563eb',
     accentBright: '#38bdf8',
     accentSoft: '#bae6fd',
-    badgeStops: ['#172554', '#1d4ed8', '#0ea5e9'],
+    badgeStops: ['#08153b', '#1d4ed8', '#0284c7', '#7dd3fc'],
     courtGlow: '#2563eb',
     courtGlow2: '#06b6d4',
-    frameLight: '#f8fafc',
+    frameLight: '#ffffff',
     frameMid: '#94a3b8',
-    frameDark: '#334155',
-    ribbonFill: ['#050914', '#0b1e40', '#050914']
+    frameDark: '#1e293b',
+    ribbonFill: ['#030816', '#0d2659', '#030816'],
+    defaultMetal: 'chrome'
+  },
+  purple: {
+    id: 'purple',
+    label: 'Violeta Tour',
+    bgTop: '#060410',
+    bgMid: '#1a0a36',
+    bgBot: '#05040c',
+    accent: '#a855f7',
+    accentBright: '#e879f9',
+    accentSoft: '#e9d5ff',
+    badgeStops: ['#2e0652', '#6b21a8', '#9333ea', '#f0abfc'],
+    courtGlow: '#7c3aed',
+    courtGlow2: '#2563eb',
+    frameLight: '#ffffff',
+    frameMid: '#94a3b8',
+    frameDark: '#27273a',
+    ribbonFill: ['#070512', '#1d0d3d', '#070512'],
+    defaultMetal: 'chrome'
+  },
+  gold: {
+    id: 'gold',
+    label: 'Obsidian & Oro 24K',
+    bgTop: '#050507',
+    bgMid: '#1c1506',
+    bgBot: '#050507',
+    accent: '#d4af37',
+    accentBright: '#fde68a',
+    accentSoft: '#fef08a',
+    badgeStops: ['#261802', '#785006', '#ca8a04', '#fef08a'],
+    courtGlow: '#d4af37',
+    courtGlow2: '#f59e0b',
+    frameLight: '#fffdf2',
+    frameMid: '#d4af37',
+    frameDark: '#3f2a04',
+    ribbonFill: ['#070604', '#211805', '#070604'],
+    defaultMetal: 'gold'
   },
   green: {
     id: 'green',
-    label: 'Esmeralda Club',
-    bgTop: '#050c09',
-    bgMid: '#07281e',
-    bgBot: '#050b09',
+    label: 'Esmeralda Tour',
+    bgTop: '#030b08',
+    bgMid: '#062c20',
+    bgBot: '#030907',
     accent: '#10b981',
     accentBright: '#34d399',
     accentSoft: '#a7f3d0',
-    badgeStops: ['#064e3b', '#047857', '#10b981'],
+    badgeStops: ['#042f22', '#047857', '#059669', '#6ee7b7'],
     courtGlow: '#10b981',
     courtGlow2: '#06b6d4',
-    frameLight: '#f8fafc',
+    frameLight: '#ffffff',
     frameMid: '#94a3b8',
-    frameDark: '#334155',
-    ribbonFill: ['#050b09', '#09261d', '#050b09']
+    frameDark: '#1e293b',
+    ribbonFill: ['#030c09', '#073022', '#030c09'],
+    defaultMetal: 'chrome'
+  },
+  crimson: {
+    id: 'crimson',
+    label: 'Rubí & Titanio',
+    bgTop: '#090306',
+    bgMid: '#2b0915',
+    bgBot: '#070305',
+    accent: '#ef4444',
+    accentBright: '#fb7185',
+    accentSoft: '#fecdd3',
+    badgeStops: ['#380612', '#991b1b', '#e11d48', '#fda4af'],
+    courtGlow: '#e11d48',
+    courtGlow2: '#f97316',
+    frameLight: '#ffffff',
+    frameMid: '#94a3b8',
+    frameDark: '#27272a',
+    ribbonFill: ['#0a0306', '#260813', '#0a0306'],
+    defaultMetal: 'chrome'
+  }
+};
+
+const PLAYER_CARD_METALS = {
+  chrome: {
+    id: 'chrome',
+    label: 'Cromo Diamante',
+    swatch: 'linear-gradient(180deg,#ffffff 0%,#e2e8f0 44%,#334155 50%,#cbd5e1 85%,#64748b 100%)',
+    extrudeDark: '#050811',
+    extrudeMid: '#334155',
+    bevelTop: '#ffffff',
+    bevelBot: '#1e293b',
+    stops: [
+      [0.00, '#ffffff'],
+      [0.24, '#f1f5f9'],
+      [0.47, '#ffffff'],
+      [0.50, '#475569'],
+      [0.56, '#94a3b8'],
+      [0.76, '#ffffff'],
+      [0.92, '#e2e8f0'],
+      [1.00, '#64748b']
+    ]
+  },
+  gold: {
+    id: 'gold',
+    label: 'Oro 24K Pulido',
+    swatch: 'linear-gradient(180deg,#fffbeb 0%,#fde68a 44%,#713f12 50%,#facc15 85%,#92400e 100%)',
+    extrudeDark: '#1c0f00',
+    extrudeMid: '#7c4d04',
+    bevelTop: '#fffdf5',
+    bevelBot: '#422006',
+    stops: [
+      [0.00, '#fffdf5'],
+      [0.24, '#fef08a'],
+      [0.47, '#ffffff'],
+      [0.50, '#92400e'],
+      [0.56, '#d97706'],
+      [0.76, '#fde047'],
+      [0.92, '#fef9c3'],
+      [1.00, '#b45309']
+    ]
+  },
+  ice: {
+    id: 'ice',
+    label: 'Platino Zafiro',
+    swatch: 'linear-gradient(180deg,#ffffff 0%,#bae6fd 44%,#0c4a6e 50%,#7dd3fc 85%,#0369a1 100%)',
+    extrudeDark: '#031124',
+    extrudeMid: '#1e3a8a',
+    bevelTop: '#ffffff',
+    bevelBot: '#082f49',
+    stops: [
+      [0.00, '#ffffff'],
+      [0.24, '#e0f2fe'],
+      [0.47, '#ffffff'],
+      [0.50, '#1d4ed8'],
+      [0.56, '#38bdf8'],
+      [0.76, '#f0f9ff'],
+      [0.92, '#bae6fd'],
+      [1.00, '#0284c7']
+    ]
+  },
+  titanium: {
+    id: 'titanium',
+    label: 'Titanio Ahumado',
+    swatch: 'linear-gradient(180deg,#f8fafc 0%,#94a3b8 44%,#0f172a 50%,#64748b 85%,#1e293b 100%)',
+    extrudeDark: '#020408',
+    extrudeMid: '#1e293b',
+    bevelTop: '#f8fafc',
+    bevelBot: '#090d16',
+    stops: [
+      [0.00, '#ffffff'],
+      [0.24, '#cbd5e1'],
+      [0.47, '#f8fafc'],
+      [0.50, '#1e293b'],
+      [0.56, '#64748b'],
+      [0.76, '#e2e8f0'],
+      [0.92, '#cbd5e1'],
+      [1.00, '#475569']
+    ]
   }
 };
 
@@ -7676,7 +7806,8 @@ async function savePlayerCardToIDB(cardObj) {
     position: cardObj.position || 'Drive',
     hand: cardObj.hand || 'Diestro',
     bestShot: cardObj.bestShot || 'Víbora',
-    theme: cardObj.theme || 'purple',
+    theme: cardObj.theme || 'diamond',
+    metalFinish: cardObj.metalFinish || 'chrome',
     bgMode: cardObj.bgMode || 'ai',
     showAppBrand: cardObj.showAppBrand !== false,
     zoom: Number(cardObj.zoom) || 1,
@@ -7729,7 +7860,9 @@ async function saveCardLogosToIDB() {
 }
 
 function createDefaultPlayerCardDraft(overrides = {}) {
-  const prevTheme = ui.playerCardDraft?.theme || 'purple';
+  const prevTheme = ui.playerCardDraft?.theme || 'diamond';
+  const thObj = PLAYER_CARD_THEMES[prevTheme] || PLAYER_CARD_THEMES.diamond;
+  const prevMetal = ui.playerCardDraft?.metalFinish || thObj.defaultMetal || 'chrome';
   const prevCat = ui.playerCardDraft?.category || '6ta';
   const prevBrand = ui.playerCardDraft ? ui.playerCardDraft.showAppBrand !== false : true;
   return {
@@ -7741,6 +7874,7 @@ function createDefaultPlayerCardDraft(overrides = {}) {
     hand: 'Diestro',
     bestShot: 'Víbora',
     theme: prevTheme,
+    metalFinish: prevMetal,
     bgMode: 'ai',
     showAppBrand: prevBrand,
     zoom: 1,
@@ -8191,28 +8325,249 @@ function drawPadelControlEmblemCanvas(ctx, cx, cy, size, theme) {
   ctx.restore();
 }
 
-function drawCardIconCalendar(ctx, cx, cy) {
+let pcCarbonCanvasCache = null;
+function getCarbonPattern(ctx) {
+  if (!pcCarbonCanvasCache) {
+    const c = document.createElement('canvas');
+    c.width = 16;
+    c.height = 16;
+    const x = c.getContext('2d');
+    x.fillStyle = '#05070d';
+    x.fillRect(0, 0, 16, 16);
+    // 2x2 diagonal twill carbon weave
+    x.fillStyle = '#0e1422';
+    x.fillRect(0, 0, 8, 8);
+    x.fillRect(8, 8, 8, 8);
+    x.fillStyle = 'rgba(255,255,255,0.065)';
+    x.fillRect(0, 0, 8, 3);
+    x.fillRect(8, 8, 8, 3);
+    x.fillStyle = '#090d16';
+    x.fillRect(8, 0, 8, 8);
+    x.fillRect(0, 8, 8, 8);
+    x.fillStyle = 'rgba(255,255,255,0.03)';
+    x.fillRect(8, 4, 8, 2);
+    x.fillRect(0, 12, 8, 2);
+    pcCarbonCanvasCache = c;
+  }
+  return ctx.createPattern(pcCarbonCanvasCache, 'repeat');
+}
+
+function getMetalPalette(metalKey, theme) {
+  return PLAYER_CARD_METALS[metalKey] || PLAYER_CARD_METALS[theme?.defaultMetal] || PLAYER_CARD_METALS.chrome;
+}
+
+function drawDiamondGlint(ctx, cx, cy, size, tint = '#ffffff') {
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.strokeStyle = '#ffffff';
+  const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.9);
+  glow.addColorStop(0, '#ffffff');
+  glow.addColorStop(0.28, tint + 'cc');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.9, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Sharp 4-point star flare
   ctx.fillStyle = '#ffffff';
+  const drawRays = (len, thick) => {
+    ctx.beginPath();
+    ctx.moveTo(0, -len);
+    ctx.quadraticCurveTo(thick * 0.4, -thick * 0.4, len, 0);
+    ctx.quadraticCurveTo(thick * 0.4, thick * 0.4, 0, len);
+    ctx.quadraticCurveTo(-thick * 0.4, thick * 0.4, -len, 0);
+    ctx.quadraticCurveTo(-thick * 0.4, -thick * 0.4, 0, -len);
+    ctx.closePath();
+    ctx.fill();
+  };
+  drawRays(size, size * 0.14);
+  ctx.rotate(Math.PI / 4);
+  ctx.globalAlpha = 0.55;
+  drawRays(size * 0.46, size * 0.10);
+  ctx.restore();
+}
+
+function drawMetallicText(ctx, text, x, y, opts = {}) {
+  const metal = getMetalPalette(opts.metalKey, opts.theme);
+  const fontSize = opts.fontSize || 48;
+  const extrude = opts.extrude ?? Math.max(3, Math.round(fontSize * 0.08));
+  const bevelWidth = opts.bevelWidth ?? Math.max(1.2, fontSize * 0.025);
+  const isItalic = /italic/i.test(ctx.font || '');
+
+  const m = ctx.measureText(text);
+  const asc = m.actualBoundingBoxAscent || fontSize * 0.72;
+  const desc = m.actualBoundingBoxDescent || fontSize * 0.08;
+  const tb = ctx.textBaseline || 'alphabetic';
+  let yTop, yBot;
+  if (tb === 'middle') {
+    yTop = y - asc * 0.54;
+    yBot = y + asc * 0.54;
+  } else if (tb === 'top' || tb === 'hanging') {
+    yTop = y;
+    yBot = y + asc;
+  } else {
+    yTop = y - asc;
+    yBot = y + Math.max(2, desc);
+  }
+  if (yBot - yTop < 12) {
+    yTop = y - fontSize * 0.5;
+    yBot = y + fontSize * 0.5;
+  }
+
+  ctx.save();
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  // 1. Deep Ambient Drop Shadow + Optional Theme Rim Glow
+  if (extrude > 0) {
+    for (let s = extrude; s >= 1; s--) {
+      ctx.save();
+      if (s === extrude) {
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.90)';
+        ctx.shadowBlur = Math.max(8, extrude * 3.2);
+        ctx.shadowOffsetX = extrude * 0.45;
+        ctx.shadowOffsetY = extrude * 1.1;
+      } else {
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+      }
+      ctx.fillStyle = s > extrude * 0.45 ? metal.extrudeDark : metal.extrudeMid;
+      ctx.fillText(text, x + s * 0.46, y + s * 0.96);
+      ctx.restore();
+    }
+  }
+
+  // 2. Subtle outer glow for electric diamond separation
+  if (opts.glowColor) {
+    ctx.save();
+    ctx.shadowColor = opts.glowColor;
+    ctx.shadowBlur = opts.glowBlur || 22;
+    ctx.fillStyle = 'rgba(255,255,255,0.01)';
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+
+  // 3. Machined Bevel Stroke around characters
+  if (bevelWidth > 0) {
+    const bGrad = ctx.createLinearGradient(x, yTop, x + (isItalic ? 18 : 0), yBot);
+    bGrad.addColorStop(0, metal.bevelTop);
+    bGrad.addColorStop(0.5, metal.extrudeMid);
+    bGrad.addColorStop(1, metal.bevelBot);
+    ctx.lineWidth = bevelWidth * 2;
+    ctx.strokeStyle = bGrad;
+    ctx.strokeText(text, x, y);
+  }
+
+  // 4. Multi-stop Specular Horizon Metallic Face
+  const xShift = isItalic ? Math.round((yBot - yTop) * 0.16) : 0;
+  const fGrad = ctx.createLinearGradient(x, yTop, x + xShift, yBot);
+  metal.stops.forEach(([pos, col]) => fGrad.addColorStop(pos, col));
+  ctx.fillStyle = fGrad;
+  ctx.fillText(text, x, y);
+
+  // 5. Crisp top inner highlight sheen
+  ctx.save();
+  ctx.globalAlpha = 0.34;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(text, x - 0.6, y - 0.9);
+  ctx.restore();
+
+  ctx.restore();
+}
+
+function traceArmorPlatePath(ctx, x, y, w, h, cut = 20) {
+  const r = 8;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - cut, y);
+  ctx.lineTo(x + w, y + cut);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + cut, y + h);
+  ctx.lineTo(x, y + h - cut);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function traceDiamondShieldPath(ctx, x, y, w, h) {
+  ctx.beginPath();
+  ctx.moveTo(x + 26, y);
+  ctx.lineTo(x + w - 26, y);
+  ctx.lineTo(x + w, y + 26);
+  ctx.lineTo(x + w - 12, y + h * 0.72);
+  ctx.lineTo(x + w * 0.50, y + h);
+  ctx.lineTo(x + 12, y + h * 0.74);
+  ctx.lineTo(x, y + 26);
+  ctx.closePath();
+}
+
+function traceHexagonPath(ctx, cx, cy, rad) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i - Math.PI / 6;
+    const px = cx + Math.cos(a) * rad;
+    const py = cy + Math.sin(a) * rad;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+}
+
+function drawIconMedallion(ctx, cx, cy, theme) {
+  ctx.save();
+  traceHexagonPath(ctx, cx, cy, 34);
+  const bg = ctx.createLinearGradient(cx - 28, cy - 30, cx + 28, cy + 30);
+  bg.addColorStop(0, '#162038');
+  bg.addColorStop(0.55, '#070b15');
+  bg.addColorStop(1, '#0d1527');
+  ctx.fillStyle = bg;
+  ctx.fill();
+
+  const brd = ctx.createLinearGradient(cx - 28, cy - 30, cx + 28, cy + 30);
+  brd.addColorStop(0, '#ffffff');
+  brd.addColorStop(0.45, theme.accentBright);
+  brd.addColorStop(1, theme.accent + '66');
+  ctx.lineWidth = 2.2;
+  ctx.strokeStyle = brd;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCardIconCalendar(ctx, cx, cy, theme) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(0.84, 0.84);
+  const met = ctx.createLinearGradient(0, -24, 0, 24);
+  met.addColorStop(0, '#ffffff');
+  met.addColorStop(0.5, '#cbd5e1');
+  met.addColorStop(1, '#94a3b8');
+  ctx.strokeStyle = met;
+  ctx.fillStyle = met;
   ctx.lineWidth = 3.2;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  drawRoundedPath(ctx, -23, -19, 46, 42, 7);
+  drawRoundedPath(ctx, -22, -18, 44, 40, 7);
   ctx.stroke();
+
+  // Accent header strip
+  ctx.fillStyle = theme.accentBright + '66';
+  ctx.fillRect(-20, -16, 40, 10);
+
   ctx.beginPath();
-  ctx.moveTo(-23, -7);
-  ctx.lineTo(23, -7);
-  ctx.moveTo(-11, -26);
-  ctx.lineTo(-11, -15);
-  ctx.moveTo(11, -26);
-  ctx.lineTo(11, -15);
+  ctx.moveTo(-22, -6);
+  ctx.lineTo(22, -6);
+  ctx.moveTo(-10, -25);
+  ctx.lineTo(-10, -14);
+  ctx.moveTo(10, -25);
+  ctx.lineTo(10, -14);
   ctx.stroke();
+
+  ctx.fillStyle = '#ffffff';
   for (let r = 0; r < 3; r++) {
     for (let c = 0; c < 4; c++) {
       ctx.beginPath();
-      ctx.arc(-13.5 + c * 9, 2 + r * 7.5, 2.1, 0, Math.PI * 2);
+      ctx.arc(-13.5 + c * 9, 2.5 + r * 7.2, 2.1, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -8222,25 +8577,24 @@ function drawCardIconCalendar(ctx, cx, cy) {
 function drawCardIconPadelCourt(ctx, cx, cy, pos, theme) {
   ctx.save();
   ctx.translate(cx, cy);
-  // Perspective court trapezoid
-  const tlx = -22, trx = 22, blx = -29, brx = 29, ty = -20, by = 20;
-  // Highlight Drive (right) or Revés (left) or Ambos
+  ctx.scale(0.84, 0.84);
+  const tlx = -21, trx = 21, blx = -28, brx = 28, ty = -19, by = 19;
   const p = String(pos || '').toLowerCase();
   if (p.includes('drive') || p.includes('ambos')) {
     ctx.beginPath();
     ctx.moveTo(0, ty); ctx.lineTo(trx, ty); ctx.lineTo(brx, by); ctx.lineTo(0, by); ctx.closePath();
-    ctx.fillStyle = theme.accentBright + '44';
+    ctx.fillStyle = theme.accentBright + '77';
     ctx.fill();
   }
   if (p.includes('rev') || p.includes('ambos')) {
     ctx.beginPath();
     ctx.moveTo(tlx, ty); ctx.lineTo(0, ty); ctx.lineTo(0, by); ctx.lineTo(blx, by); ctx.closePath();
-    ctx.fillStyle = theme.accentBright + '44';
+    ctx.fillStyle = theme.accentBright + '77';
     ctx.fill();
   }
 
   ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 2.8;
   ctx.lineJoin = 'round';
   ctx.beginPath();
   ctx.moveTo(tlx, ty);
@@ -8250,25 +8604,28 @@ function drawCardIconPadelCourt(ctx, cx, cy, pos, theme) {
   ctx.closePath();
   ctx.stroke();
 
-  // Net horizontal middle & center line
-  ctx.lineWidth = 2.6;
+  ctx.lineWidth = 2.3;
   ctx.beginPath();
-  ctx.moveTo(-25.5, 0); ctx.lineTo(25.5, 0);
+  ctx.moveTo(-24.5, 0); ctx.lineTo(24.5, 0);
   ctx.moveTo(0, ty); ctx.lineTo(0, by);
-  ctx.moveTo(-23.8, -10); ctx.lineTo(23.8, -10);
-  ctx.moveTo(-27.2, 11); ctx.lineTo(27.2, 11);
+  ctx.moveTo(-22.8, -9.5); ctx.lineTo(22.8, -9.5);
+  ctx.moveTo(-26.2, 10.5); ctx.lineTo(26.2, 10.5);
   ctx.stroke();
   ctx.restore();
 }
 
-function drawCardIconHand(ctx, cx, cy, hand) {
+function drawCardIconHand(ctx, cx, cy, hand, theme) {
   ctx.save();
   ctx.translate(cx, cy);
+  ctx.scale(0.84, 0.84);
   const isLeft = /zurd/i.test(String(hand || ''));
   if (!isLeft) ctx.scale(-1, 1);
-  ctx.fillStyle = '#ffffff';
+  const met = ctx.createLinearGradient(0, -26, 0, 24);
+  met.addColorStop(0, '#ffffff');
+  met.addColorStop(0.55, '#cbd5e1');
+  met.addColorStop(1, theme.accentSoft);
+  ctx.fillStyle = met;
   ctx.beginPath();
-  // Palm + fingers clean silhouette
   ctx.moveTo(-14, 18);
   ctx.quadraticCurveTo(-18, 6, -24, -2);
   ctx.quadraticCurveTo(-27, -7, -21, -9);
@@ -8296,24 +8653,29 @@ function drawCardIconHand(ctx, cx, cy, hand) {
   ctx.restore();
 }
 
-function drawCardIconRacket(ctx, cx, cy) {
+function drawCardIconRacket(ctx, cx, cy, theme) {
   ctx.save();
   ctx.translate(cx, cy);
+  ctx.scale(0.86, 0.86);
   ctx.rotate(-0.62);
-  ctx.strokeStyle = '#ffffff';
+  const met = ctx.createLinearGradient(-15, -30, 15, 26);
+  met.addColorStop(0, '#ffffff');
+  met.addColorStop(0.5, theme.accentBright);
+  met.addColorStop(1, '#94a3b8');
+  ctx.strokeStyle = met;
   ctx.fillStyle = '#ffffff';
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 3.2;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  // Head
   ctx.beginPath();
-  ctx.ellipse(0, -10, 16, 20, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, -10, 15.5, 19.5, 0, 0, Math.PI * 2);
+  ctx.fillStyle = theme.accent + '35';
+  ctx.fill();
   ctx.stroke();
-  // Throat + handle
   ctx.beginPath();
   ctx.moveTo(-5, 9); ctx.lineTo(-3, 25); ctx.lineTo(3, 25); ctx.lineTo(5, 9);
   ctx.stroke();
-  // Holes
+  ctx.fillStyle = '#ffffff';
   const holes = [[-5,-19],[0,-20],[5,-19],[-8,-12],[-2.7,-12],[2.7,-12],[8,-12],[-7,-5],[0,-5],[7,-5],[-4,1],[4,1]];
   holes.forEach(([hx, hy]) => {
     ctx.beginPath();
@@ -8323,70 +8685,126 @@ function drawCardIconRacket(ctx, cx, cy) {
   ctx.restore();
 }
 
-function drawPadelPlayerSilhouette(ctx, x, y, scale) {
+function drawProPadelEmblem(ctx, cx, cy, scale, theme, metalKey) {
+  const metal = getMetalPalette(metalKey, theme);
   ctx.save();
-  ctx.translate(x, y);
+  ctx.translate(cx, cy);
   ctx.scale(scale, scale);
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-  ctx.shadowBlur = 16;
+
+  // 1. Solid armored diamond crest backdrop behind silhouette (hides ribbon lines passing behind)
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(0, -82);
+  ctx.lineTo(74, -44);
+  ctx.lineTo(62, 54);
+  ctx.lineTo(0, 92);
+  ctx.lineTo(-62, 54);
+  ctx.lineTo(-74, -44);
+  ctx.closePath();
+  ctx.fillStyle = '#04070f';
+  ctx.shadowColor = 'rgba(0,0,0,0.85)';
+  ctx.shadowBlur = 20;
+  ctx.fill();
+
+  const cGrad = ctx.createLinearGradient(-60, -80, 60, 80);
+  cGrad.addColorStop(0, theme.accent + '58');
+  cGrad.addColorStop(0.5, 'rgba(8, 13, 28, 0.92)');
+  cGrad.addColorStop(1, theme.courtGlow2 + '48');
+  ctx.shadowColor = theme.accent;
+  ctx.shadowBlur = 22;
+  ctx.fillStyle = cGrad;
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.lineWidth = 2.6;
+  const fRim = ctx.createLinearGradient(-70, -80, 70, 80);
+  fRim.addColorStop(0, '#ffffff');
+  fRim.addColorStop(0.5, theme.accentBright);
+  fRim.addColorStop(1, metal.extrudeMid);
+  ctx.strokeStyle = fRim;
+  ctx.stroke();
+  ctx.restore();
+
+  // 2. Dynamic Kinetic Speed Arc
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(-64, 18);
+  ctx.quadraticCurveTo(10, -78, 72, -36);
+  ctx.quadraticCurveTo(8, -56, -54, 24);
+  ctx.closePath();
+  ctx.fillStyle = theme.accentBright + 'aa';
+  ctx.shadowColor = theme.accentBright;
+  ctx.shadowBlur = 14;
+  ctx.fill();
+  ctx.restore();
+
+  // 3. Smooth Athletic Pro Padel Player Silhouette in metallic finish
+  const sGrad = ctx.createLinearGradient(0, -56, 20, 66);
+  metal.stops.forEach(([pos, col]) => sGrad.addColorStop(pos, col));
+
+  ctx.save();
+  ctx.fillStyle = sGrad;
+  ctx.shadowColor = 'rgba(0,0,0,0.85)';
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetY = 5;
 
   // Head
   ctx.beginPath();
-  ctx.arc(46, 20, 14, 0, Math.PI * 2);
+  ctx.arc(-6, -34, 11.5, 0, Math.PI * 2);
   ctx.fill();
 
-  // Dynamic athletic lunging body + limbs
+  // Flowing athletic body in smash/bandeja lunge
   ctx.beginPath();
-  ctx.moveTo(35, 36);
-  ctx.lineTo(58, 36);
-  ctx.lineTo(74, 52);
-  // Right arm swinging racket forward-right
-  ctx.lineTo(106, 56);
-  ctx.lineTo(118, 53);
-  ctx.lineTo(118, 61);
-  ctx.lineTo(102, 66);
-  ctx.lineTo(66, 62);
-  // Torso right
-  ctx.lineTo(58, 92);
-  // Lunging front right leg
-  ctx.lineTo(92, 118);
-  ctx.lineTo(86, 152);
-  ctx.lineTo(100, 158);
-  ctx.lineTo(82, 164);
-  ctx.lineTo(74, 156);
-  ctx.lineTo(78, 124);
-  ctx.lineTo(44, 102);
-  // Trailing back left leg
-  ctx.lineTo(16, 134);
-  ctx.lineTo(-8, 158);
-  ctx.lineTo(-22, 164);
-  ctx.lineTo(-26, 156);
-  ctx.lineTo(4, 125);
-  ctx.lineTo(28, 86);
-  ctx.lineTo(26, 58);
-  // Back balance left arm
-  ctx.lineTo(4, 72);
-  ctx.lineTo(-8, 65);
-  ctx.lineTo(18, 46);
+  ctx.moveTo(-18, -18);
+  // Left shoulder to extended balance arm
+  ctx.quadraticCurveTo(-34, -12, -52, 4);
+  ctx.quadraticCurveTo(-56, 8, -48, 12);
+  ctx.quadraticCurveTo(-32, 0, -21, -4);
+  // Left waist to trailing leg
+  ctx.quadraticCurveTo(-24, 14, -26, 24);
+  ctx.quadraticCurveTo(-40, 42, -58, 56);
+  ctx.quadraticCurveTo(-63, 60, -54, 64);
+  ctx.quadraticCurveTo(-34, 52, -12, 26);
+  // Hips into forward lunging knee & foot
+  ctx.quadraticCurveTo(14, 34, 24, 54);
+  ctx.quadraticCurveTo(27, 63, 38, 63);
+  ctx.quadraticCurveTo(42, 60, 35, 52);
+  ctx.quadraticCurveTo(28, 30, 8, 14);
+  // Right waist up through shoulder into raised smashing arm
+  ctx.quadraticCurveTo(12, -2, 16, -14);
+  ctx.quadraticCurveTo(32, -26, 46, -42);
+  ctx.quadraticCurveTo(48, -48, 41, -49);
+  ctx.quadraticCurveTo(26, -35, 8, -22);
+  ctx.quadraticCurveTo(-4, -22, -18, -18);
   ctx.closePath();
   ctx.fill();
 
-  // Racket extended in front hand
+  // Padel Racket in raised hand (with authentic perforated holes)
   ctx.save();
-  ctx.translate(132, 50);
-  ctx.rotate(0.45);
+  ctx.translate(55, -55);
+  ctx.rotate(0.65);
   ctx.beginPath();
-  ctx.ellipse(0, -14, 13, 17, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 12.5, 16.5, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillRect(-2.5, 2, 5, 14);
+  ctx.fillRect(-2.4, 14, 4.8, 12);
+  ctx.fillStyle = '#070b15';
+  const rHoles = [[-4.5,-6],[0,-7],[4.5,-6],[-5.5,0],[0,0],[5.5,0],[-3.8,6],[3.8,6]];
+  rHoles.forEach(([hx, hy]) => {
+    ctx.beginPath();
+    ctx.arc(hx, hy, 1.55, 0, Math.PI * 2);
+    ctx.fill();
+  });
   ctx.restore();
 
-  // Small padel ball in air
+  // Padel ball
   ctx.beginPath();
-  ctx.arc(106, 28, 5, 0, Math.PI * 2);
+  ctx.arc(24, -64, 5.2, 0, Math.PI * 2);
+  ctx.fillStyle = theme.accentBright;
+  ctx.shadowColor = theme.accentBright;
+  ctx.shadowBlur = 12;
   ctx.fill();
 
+  ctx.restore();
   ctx.restore();
 }
 
@@ -8401,9 +8819,205 @@ function drawLogoFit(ctx, img, boxX, boxY, boxW, boxH) {
   const dx = boxX + (boxW - dw) / 2;
   const dy = boxY + (boxH - dh) / 2;
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.65)';
-  ctx.shadowBlur = 16;
+  // Soft radial backing light so dark or metallic logos pop clearly
+  const halo = ctx.createRadialGradient(dx + dw / 2, dy + dh / 2, 10, dx + dw / 2, dy + dh / 2, Math.max(dw, dh) * 0.68);
+  halo.addColorStop(0, 'rgba(255, 255, 255, 0.14)');
+  halo.addColorStop(1, 'transparent');
+  ctx.fillStyle = halo;
+  ctx.fillRect(boxX - 18, boxY - 14, boxW + 36, boxH + 28);
+
+  ctx.shadowColor = 'rgba(0,0,0,0.85)';
+  ctx.shadowBlur = 18;
   ctx.drawImage(img, dx, dy, dw, dh);
+  ctx.restore();
+}
+
+function drawFacetedDiamondBackdrop(ctx, W, H, theme) {
+  const facets = [
+    [[24, 24], [380, 24], [190, 280], 'rgba(255,255,255,0.035)'],
+    [[380, 24], [690, 24], [520, 240], 'rgba(255,255,255,0.018)'],
+    [[690, 24], [1056, 24], [880, 310], 'rgba(255,255,255,0.045)'],
+    [[24, 280], [190, 280], [340, 560], 'rgba(255,255,255,0.025)'],
+    [[190, 280], [520, 240], [340, 560], 'rgba(0,0,0,0.18)'],
+    [[520, 240], [880, 310], [640, 620], 'rgba(255,255,255,0.03)'],
+    [[880, 310], [1056, 360], [1056, 740], 'rgba(0,0,0,0.22)'],
+    [[24, 580], [340, 560], [210, 920], 'rgba(255,255,255,0.032)'],
+    [[340, 560], [640, 620], [510, 960], 'rgba(255,255,255,0.02)'],
+    [[640, 620], [1056, 740], [820, 1020], 'rgba(255,255,255,0.038)'],
+    [[24, 920], [510, 960], [290, 1140], 'rgba(0,0,0,0.20)']
+  ];
+  ctx.save();
+  facets.forEach(([p1, p2, p3, fill]) => {
+    ctx.beginPath();
+    ctx.moveTo(p1[0], p1[1]);
+    ctx.lineTo(p2[0], p2[1]);
+    ctx.lineTo(p3[0], p3[1]);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = theme.accentBright + '1c';
+    ctx.stroke();
+  });
+
+  // Volumetric angled stadium light shafts
+  const beams = [
+    { x0: 140, x1: 420, bx0: 360, bx1: 680, alpha: 0.14 },
+    { x0: 520, x1: 780, bx0: 200, bx1: 540, alpha: 0.11 },
+    { x0: 760, x1: 990, bx0: 560, bx1: 940, alpha: 0.09 }
+  ];
+  beams.forEach((b) => {
+    const bg = ctx.createLinearGradient((b.x0 + b.x1) / 2, 40, (b.bx0 + b.bx1) / 2, 980);
+    bg.addColorStop(0, theme.accentBright + Math.round(b.alpha * 255).toString(16).padStart(2, '0'));
+    bg.addColorStop(0.65, theme.accent + '14');
+    bg.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.moveTo(b.x0, 20);
+    ctx.lineTo(b.x1, 20);
+    ctx.lineTo(b.bx1, 1020);
+    ctx.lineTo(b.bx0, 1020);
+    ctx.closePath();
+    ctx.fillStyle = bg;
+    ctx.fill();
+  });
+
+  // Deterministic diamond dust & micro sparkle particles
+  for (let i = 0; i < 34; i++) {
+    const px = 48 + ((i * 197 + 43) % 984);
+    const py = 210 + ((i * 151 + 89) % 860);
+    const sz = 2.2 + (i % 4) * 1.4;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(Math.PI / 4);
+    ctx.globalAlpha = 0.18 + (i % 5) * 0.09;
+    ctx.fillStyle = i % 3 === 0 ? '#ffffff' : theme.accentBright;
+    ctx.fillRect(-sz / 2, -sz / 2, sz, sz);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawMachinedDiamondFrame(ctx, W, H, framePad, innerCut, theme, metalKey) {
+  const metal = getMetalPalette(metalKey, theme);
+  const ox = framePad - 10, oy = framePad - 10, ow = W - ox * 2, oh = H - oy * 2, oCut = innerCut + 4;
+  const ix = framePad + 6, iy = framePad + 6, iw = W - ix * 2, ih = H - iy * 2, iCut = innerCut - 3;
+
+  const outerPts = [
+    [ox + oCut, oy],
+    [ox + ow - oCut, oy],
+    [ox + ow, oy + oCut],
+    [ox + ow, oy + oh - oCut],
+    [ox + ow - oCut, oy + oh],
+    [ox + oCut, oy + oh],
+    [ox, oy + oh - oCut],
+    [ox, oy + oCut]
+  ];
+  const innerPts = [
+    [ix + iCut, iy],
+    [ix + iw - iCut, iy],
+    [ix + iw, iy + iCut],
+    [ix + iw, iy + ih - iCut],
+    [ix + iw - iCut, iy + ih],
+    [ix + iCut, iy + ih],
+    [ix, iy + ih - iCut],
+    [ix, iy + iCut]
+  ];
+
+  // Beveled directional lighting per each of the 8 machined edge facets
+  const edgeColors = [
+    ['#ffffff', '#cbd5e1', '#94a3b8'], // top
+    ['#e2e8f0', '#64748b', '#475569'], // top-right chamfer
+    ['#94a3b8', '#475569', '#1e293b'], // right
+    ['#475569', '#1e293b', '#0f172a'], // bot-right chamfer
+    ['#64748b', '#334155', '#94a3b8'], // bottom
+    ['#cbd5e1', '#64748b', '#334155'], // bot-left chamfer
+    ['#f8fafc', '#94a3b8', '#64748b'], // left
+    ['#ffffff', '#e2e8f0', '#94a3b8']  // top-left chamfer
+  ];
+  const goldEdgeColors = [
+    ['#fffdf2', '#facc15', '#b47409'],
+    ['#fef08a', '#b47409', '#784805'],
+    ['#ca8a04', '#713f12', '#422006'],
+    ['#784805', '#422006', '#261302'],
+    ['#a16207', '#713f12', '#d4af37'],
+    ['#fde68a', '#a16207', '#713f12'],
+    ['#fffbeb', '#d4af37', '#92400e'],
+    ['#ffffff', '#fef08a', '#ca8a04']
+  ];
+  const paletteFaces = metal.id === 'gold' || theme.id === 'gold' ? goldEdgeColors : edgeColors;
+
+  ctx.save();
+  for (let i = 0; i < 8; i++) {
+    const n = (i + 1) % 8;
+    const p1 = outerPts[i], p2 = outerPts[n], p3 = innerPts[n], p4 = innerPts[i];
+    ctx.beginPath();
+    ctx.moveTo(p1[0], p1[1]);
+    ctx.lineTo(p2[0], p2[1]);
+    ctx.lineTo(p3[0], p3[1]);
+    ctx.lineTo(p4[0], p4[1]);
+    ctx.closePath();
+
+    const g = ctx.createLinearGradient(p1[0], p1[1], p3[0], p3[1]);
+    const stops = paletteFaces[i];
+    g.addColorStop(0, stops[0]);
+    g.addColorStop(0.55, stops[1]);
+    g.addColorStop(1, stops[2]);
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    // Subtle crisp CNC miter seam line between adjacent frame facets
+    ctx.beginPath();
+    ctx.moveTo(p1[0], p1[1]);
+    ctx.lineTo(p4[0], p4[1]);
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Outer perimeter razor outline
+  traceChamferedRect(ctx, ox, oy, ow, oh, oCut);
+  ctx.lineWidth = 2.2;
+  ctx.strokeStyle = 'rgba(255,255,255,0.42)';
+  ctx.stroke();
+
+  // Inner recessed dark channel + glowing theme neon pinstripe
+  traceChamferedRect(ctx, ix, iy, iw, ih, iCut);
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = '#03050a';
+  ctx.stroke();
+
+  traceChamferedRect(ctx, ix + 1.5, iy + 1.5, iw - 3, ih - 3, iCut - 1);
+  ctx.lineWidth = 2.4;
+  ctx.strokeStyle = theme.accentBright;
+  ctx.shadowColor = theme.accent;
+  ctx.shadowBlur = 16;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // 4 Diamond Corner Rivets at the chamfer midpoints
+  const corners = [
+    [(outerPts[7][0] + outerPts[0][0]) / 2, (outerPts[7][1] + outerPts[0][1]) / 2],
+    [(outerPts[1][0] + outerPts[2][0]) / 2, (outerPts[1][1] + outerPts[2][1]) / 2],
+    [(outerPts[3][0] + outerPts[4][0]) / 2, (outerPts[3][1] + outerPts[4][1]) / 2],
+    [(outerPts[5][0] + outerPts[6][0]) / 2, (outerPts[5][1] + outerPts[6][1]) / 2]
+  ];
+  corners.forEach(([cx, cy]) => {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = '#050811';
+    ctx.fillRect(-7, -7, 14, 14);
+    ctx.fillStyle = theme.accentBright;
+    ctx.fillRect(-4.5, -4.5, 9, 9);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(-2, -2, 4, 4);
+    ctx.restore();
+  });
+
+  // High-grade diamond flares on key metallic edges (kept cleanly inside canvas bounds)
+  drawDiamondGlint(ctx, ox + oCut + 16, oy + 12, 20, theme.accentBright);
+  drawDiamondGlint(ctx, ox + ow - oCut - 10, oy + oh - 12, 18, theme.accentBright);
+
   ctx.restore();
 }
 
@@ -8415,9 +9029,11 @@ function drawPlayerCardCanvas(canvas, draft, preloadedImgs = null) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  const theme = PLAYER_CARD_THEMES[draft.theme] || PLAYER_CARD_THEMES.purple;
+  const theme = PLAYER_CARD_THEMES[draft.theme] || PLAYER_CARD_THEMES.diamond;
+  const metalKey = draft.metalFinish || theme.defaultMetal || 'chrome';
+  const metal = getMetalPalette(metalKey, theme);
+  const carbonPat = getCarbonPattern(ctx);
 
-  // Resolve images (sync cache for live preview, or preloaded map for export)
   const getImg = (src) => {
     if (!src) return null;
     if (preloadedImgs && preloadedImgs.has(src)) return preloadedImgs.get(src);
@@ -8431,74 +9047,72 @@ function drawPlayerCardCanvas(canvas, draft, preloadedImgs = null) {
 
   ctx.clearRect(0, 0, W, H);
 
-  // Outer backing matching chamfered metallic frame
-  traceChamferedRect(ctx, 6, 6, W - 12, H - 12, 54);
-  ctx.fillStyle = '#050509';
+  // Outer dark chassis backing
+  traceChamferedRect(ctx, 8, 8, W - 16, H - 16, 52);
+  ctx.fillStyle = '#03050a';
   ctx.fill();
 
-  // Inner chamfered card clip
+  // Inner chamfered card artwork clip
   const framePad = 24;
   const innerCut = 44;
   ctx.save();
-  traceChamferedRect(ctx, framePad, framePad, W - framePad * 2, H - framePad * 2, innerCut);
+  traceChamferedRect(ctx, framePad + 4, framePad + 4, W - (framePad + 4) * 2, H - (framePad + 4) * 2, innerCut - 2);
   ctx.clip();
 
-  // 1. Arena / Court Background Gradient
-  const bgG = ctx.createLinearGradient(0, 0, W, H);
-  bgG.addColorStop(0, theme.bgTop);
-  bgG.addColorStop(0.52, theme.bgMid);
+  // 1. Deep Arena Gradient + Carbon Texture + Faceted Diamond Backdrop
+  const bgG = ctx.createRadialGradient(390, 520, 40, 540, 640, 920);
+  bgG.addColorStop(0, theme.bgMid);
+  bgG.addColorStop(0.55, theme.bgTop);
   bgG.addColorStop(1, theme.bgBot);
   ctx.fillStyle = bgG;
   ctx.fillRect(0, 0, W, H);
 
-  // Stadium spotlight blooms
-  const bloom1 = ctx.createRadialGradient(310, 560, 20, 310, 560, 500);
-  bloom1.addColorStop(0, theme.courtGlow + '58');
-  bloom1.addColorStop(0.55, theme.courtGlow2 + '22');
+  if (carbonPat) {
+    ctx.save();
+    ctx.globalAlpha = 0.36;
+    ctx.fillStyle = carbonPat;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
+  // Dual electric atmosphere blooms
+  const bloom1 = ctx.createRadialGradient(320, 540, 15, 320, 540, 480);
+  bloom1.addColorStop(0, theme.courtGlow + '68');
+  bloom1.addColorStop(0.5, theme.courtGlow2 + '24');
   bloom1.addColorStop(1, 'transparent');
   ctx.fillStyle = bloom1;
   ctx.fillRect(0, 0, W, H);
 
-  const bloom2 = ctx.createRadialGradient(840, 240, 20, 840, 240, 420);
-  bloom2.addColorStop(0, theme.accentBright + '44');
+  const bloom2 = ctx.createRadialGradient(840, 220, 10, 840, 220, 440);
+  bloom2.addColorStop(0, theme.accentBright + '42');
   bloom2.addColorStop(1, 'transparent');
   ctx.fillStyle = bloom2;
   ctx.fillRect(0, 0, W, H);
 
-  // Procedural indoor padel court mesh & perspective lines
-  ctx.save();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.045)';
-  ctx.lineWidth = 1.5;
-  for (let gx = 40; gx < W; gx += 32) {
-    ctx.beginPath();
-    ctx.moveTo(gx, 180);
-    ctx.lineTo(gx, 860);
-    ctx.stroke();
-  }
-  for (let gy = 200; gy < 840; gy += 32) {
-    ctx.beginPath();
-    ctx.moveTo(24, gy);
-    ctx.lineTo(W - 24, gy);
-    ctx.stroke();
-  }
-  // Glass reflections & court blue/violet floor perspective
-  const floorG = ctx.createLinearGradient(0, 830, 0, H);
+  // Perspective indoor court floor + crisp perspective court lines
+  const floorG = ctx.createLinearGradient(0, 810, 0, H);
   floorG.addColorStop(0, 'rgba(0,0,0,0)');
-  floorG.addColorStop(0.35, theme.courtGlow2 + '38');
+  floorG.addColorStop(0.32, theme.courtGlow2 + '3a');
   floorG.addColorStop(1, theme.bgBot);
   ctx.fillStyle = floorG;
-  ctx.fillRect(0, 830, W, H - 830);
+  ctx.fillRect(0, 810, W, H - 810);
 
-  ctx.strokeStyle = theme.accentSoft + '33';
-  ctx.lineWidth = 3;
+  ctx.save();
+  ctx.strokeStyle = theme.accentBright + '34';
+  ctx.lineWidth = 2.6;
   ctx.beginPath();
-  ctx.moveTo(24, 860); ctx.lineTo(W - 24, 860);
-  ctx.moveTo(540, 860); ctx.lineTo(540, 1180);
-  ctx.moveTo(24, 1020); ctx.lineTo(W - 24, 1020);
+  ctx.moveTo(24, 855); ctx.lineTo(W - 24, 855);
+  ctx.moveTo(540, 855); ctx.lineTo(540, 1180);
+  ctx.moveTo(180, 855); ctx.lineTo(-40, 1160);
+  ctx.moveTo(900, 855); ctx.lineTo(1120, 1160);
+  ctx.moveTo(24, 985); ctx.lineTo(W - 24, 985);
   ctx.stroke();
   ctx.restore();
 
-  // 2. Player Portrait Layer (positioned left/center behind stats & bottom banner)
+  // Diamond cut crystalline facets & stadium volumetric spotlights
+  drawFacetedDiamondBackdrop(ctx, W, H, theme);
+
+  // 2. Player Portrait Layer
   if (photoImg) {
     const iw = photoImg.naturalWidth || photoImg.width;
     const ih = photoImg.naturalHeight || photoImg.height;
@@ -8513,23 +9127,22 @@ function drawPlayerCardCanvas(canvas, draft, preloadedImgs = null) {
 
     const isCutout = (draft.bgMode === 'ai' && !!draft.cutoutPhoto) || draft.origHasAlpha;
 
-    // Backlight halo behind player
-    const halo = ctx.createRadialGradient(cx, cy - 60, 30, cx, cy - 40, Math.max(dw, dh) * 0.52);
-    halo.addColorStop(0, theme.accentBright + '60');
-    halo.addColorStop(0.55, theme.accent + '22');
+    // Electric Rim Halo behind Player
+    const halo = ctx.createRadialGradient(cx, cy - 60, 20, cx, cy - 40, Math.max(dw, dh) * 0.54);
+    halo.addColorStop(0, theme.accentBright + '78');
+    halo.addColorStop(0.42, theme.accent + '2a');
     halo.addColorStop(1, 'transparent');
     ctx.fillStyle = halo;
     ctx.fillRect(24, 170, 740, 960);
 
     if (isCutout) {
-      // Softly fade the very bottom edge of the portrait so it never shows a hard horizontal cut above the ribbon
       const pCanvas = document.createElement('canvas');
       pCanvas.width = W;
       pCanvas.height = H;
       const pCtx = pCanvas.getContext('2d');
       pCtx.drawImage(photoImg, dx, dy, dw, dh);
       const bottomEdge = dy + dh;
-      const fadeStart = Math.max(dy, bottomEdge - 80);
+      const fadeStart = Math.max(dy, bottomEdge - 86);
       if (bottomEdge > fadeStart + 1) {
         pCtx.globalCompositeOperation = 'destination-in';
         const bMask = pCtx.createLinearGradient(0, fadeStart, 0, bottomEdge);
@@ -8540,12 +9153,11 @@ function drawPlayerCardCanvas(canvas, draft, preloadedImgs = null) {
       }
 
       ctx.save();
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.72)';
-      ctx.shadowBlur = 28;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+      ctx.shadowBlur = 34;
       ctx.drawImage(pCanvas, 0, 0);
       ctx.restore();
     } else {
-      // Instant mode with opaque background: smooth studio vignette mask so it blends seamlessly
       const pCanvas = document.createElement('canvas');
       pCanvas.width = 720;
       pCanvas.height = 960;
@@ -8561,146 +9173,247 @@ function drawPlayerCardCanvas(canvas, draft, preloadedImgs = null) {
       ctx.drawImage(pCanvas, 24, 180);
     }
   } else {
-    // Elegant placeholder silhouette when no photo uploaded yet
+    // Holographic Diamond Placeholder when no photo uploaded yet
     ctx.save();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    // Stylized holographic silhouette with luminous outline
+    const holoG = ctx.createLinearGradient(320, 340, 320, 960);
+    holoG.addColorStop(0, theme.accentBright + '28');
+    holoG.addColorStop(0.55, theme.accent + '14');
+    holoG.addColorStop(1, 'transparent');
+    ctx.fillStyle = holoG;
+    ctx.strokeStyle = theme.accentBright + '52';
+    ctx.lineWidth = 2.4;
+
     ctx.beginPath();
-    ctx.arc(330, 460, 96, 0, Math.PI * 2);
+    ctx.arc(322, 462, 86, 0, Math.PI * 2);
     ctx.fill();
+    ctx.stroke();
+
     ctx.beginPath();
-    ctx.moveTo(155, 990);
-    ctx.quadraticCurveTo(175, 620, 330, 600);
-    ctx.quadraticCurveTo(485, 620, 505, 990);
+    ctx.moveTo(156, 975);
+    ctx.quadraticCurveTo(176, 616, 322, 588);
+    ctx.quadraticCurveTo(468, 616, 488, 975);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = theme.accentSoft;
-    ctx.font = '700 28px "Plus Jakarta Sans", sans-serif';
+    ctx.stroke();
+
+    // Target scanner brackets
+    const bx = 148, by = 338, bw = 348, bh = 580, bLen = 28;
+    ctx.strokeStyle = theme.accentBright + '7a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(bx, by + bLen); ctx.lineTo(bx, by); ctx.lineTo(bx + bLen, by);
+    ctx.moveTo(bx + bw - bLen, by); ctx.lineTo(bx + bw, by); ctx.lineTo(bx + bw, by + bLen);
+    ctx.moveTo(bx, by + bh - bLen); ctx.lineTo(bx, by + bh); ctx.lineTo(bx + bLen, by + bh);
+    ctx.moveTo(bx + bw - bLen, by + bh); ctx.lineTo(bx + bw, by + bh); ctx.lineTo(bx + bw, by + bh - bLen);
+    ctx.stroke();
+
+    drawRoundedPath(ctx, 210, 742, 224, 54, 12);
+    ctx.fillStyle = 'rgba(4, 8, 18, 0.72)';
+    ctx.fill();
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = theme.accentBright + '88';
+    ctx.stroke();
+
     ctx.textAlign = 'center';
-    ctx.fillText('SUBÍ TU FOTO', 330, 790);
+    ctx.textBaseline = 'middle';
+    ctx.font = '700 22px "Chakra Petch", "Plus Jakarta Sans", sans-serif';
+    drawMetallicText(ctx, 'SUBÍ TU FOTO', 322, 769, { metalKey, theme, fontSize: 22, extrude: 2, bevelWidth: 0.9 });
     ctx.restore();
   }
 
-  // 3. Top Header Carbon Wedge
+  // 3. Top Header Armored Carbon Crown
   ctx.save();
   ctx.beginPath();
   ctx.moveTo(20, 20);
   ctx.lineTo(1060, 20);
-  ctx.lineTo(1060, 148);
-  ctx.lineTo(20, 290);
+  ctx.lineTo(1060, 152);
+  ctx.lineTo(20, 294);
   ctx.closePath();
-  const hdrG = ctx.createLinearGradient(0, 20, 680, 270);
-  hdrG.addColorStop(0, '#090910');
-  hdrG.addColorStop(0.6, '#141322');
-  hdrG.addColorStop(1, '#08080f');
+
+  const hdrG = ctx.createLinearGradient(0, 20, 760, 270);
+  hdrG.addColorStop(0, '#04060c');
+  hdrG.addColorStop(0.55, '#0e1324');
+  hdrG.addColorStop(1, '#05070e');
   ctx.fillStyle = hdrG;
   ctx.fill();
 
-  // Subtle carbon weave diagonal streaks inside header
   ctx.save();
   ctx.clip();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
-  ctx.lineWidth = 4;
-  for (let s = -200; s < W + 200; s += 16) {
-    ctx.beginPath();
-    ctx.moveTo(s, 20);
-    ctx.lineTo(s + 160, 300);
-    ctx.stroke();
+  if (carbonPat) {
+    ctx.globalAlpha = 0.75;
+    ctx.fillStyle = carbonPat;
+    ctx.fillRect(0, 0, W, 310);
   }
+  // Angled specular shard reflection inside header crown
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  ctx.moveTo(20, 20);
+  ctx.lineTo(540, 20);
+  ctx.lineTo(360, 250);
+  ctx.lineTo(20, 250);
+  ctx.closePath();
+  const sheen = ctx.createLinearGradient(20, 20, 420, 240);
+  sheen.addColorStop(0, 'rgba(255,255,255,0.08)');
+  sheen.addColorStop(1, 'transparent');
+  ctx.fillStyle = sheen;
+  ctx.fill();
   ctx.restore();
 
-  // Glowing diagonal accent line below header
+  // Dual Razor Accent Beams along header cut
   ctx.beginPath();
-  ctx.moveTo(20, 290);
-  ctx.lineTo(680, 200);
+  ctx.moveTo(20, 294);
+  ctx.lineTo(682, 202);
   ctx.strokeStyle = theme.accentBright;
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 6;
   ctx.shadowColor = theme.accent;
-  ctx.shadowBlur = 18;
+  ctx.shadowBlur = 22;
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+  ctx.beginPath();
+  ctx.moveTo(20, 286);
+  ctx.lineTo(678, 194);
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+  ctx.lineWidth = 1.6;
   ctx.stroke();
   ctx.restore();
 
-  // 4. Header Logos (Uploaded Logos OR Pádel Control SÉ App Emblem)
+  // 4. Header Logos (Uploaded Logos OR Pádel Control SÉ Metallic Emblem)
   const subTxt = (playerCardLogos.subTitle || '').trim() ||
-    ((prefs.rankingName && prefs.rankingName !== 'Mi Ranking') ? prefs.rankingName : 'PLAYER CARD · OFICIAL');
+    ((prefs.rankingName && prefs.rankingName !== 'Mi Ranking') ? prefs.rankingName : 'DIAMOND SERIES · PRO');
 
   if (logo1Img && logo2Img) {
-    drawLogoFit(ctx, logo1Img, 62, 48, 255, 160);
-    drawLogoFit(ctx, logo2Img, 342, 44, 300, 142);
+    drawLogoFit(ctx, logo1Img, 54, 42, 266, 168);
+    // Crisp slanted crystal divider between both logos
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(338, 72);
+    ctx.lineTo(324, 174);
+    ctx.strokeStyle = theme.accentBright + '55';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+    drawLogoFit(ctx, logo2Img, 350, 38, 306, 146);
   } else if (logo1Img) {
-    drawLogoFit(ctx, logo1Img, 66, 48, 300, 160);
+    drawLogoFit(ctx, logo1Img, 60, 44, 306, 166);
     if (draft.showAppBrand) {
-      drawPadelControlEmblemCanvas(ctx, 450, 108, 92, theme);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '800 22px "Barlow Condensed", sans-serif';
+      drawPadelControlEmblemCanvas(ctx, 446, 110, 96, theme);
+      ctx.save();
       ctx.textAlign = 'left';
-      ctx.fillText('PÁDEL CONTROL SÉ', 508, 102);
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = 'italic 900 26px "Barlow Condensed", sans-serif';
+      drawMetallicText(ctx, 'PÁDEL CONTROL SÉ', 504, 108, { metalKey, theme, fontSize: 26, extrude: 3, bevelWidth: 0.9 });
       ctx.fillStyle = theme.accentSoft;
-      ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText(subTxt.toUpperCase().slice(0, 22), 508, 126);
+      ctx.font = '700 14px "Chakra Petch", "Plus Jakarta Sans", sans-serif';
+      ctx.fillText(subTxt.toUpperCase().slice(0, 22), 506, 131);
+      ctx.restore();
     }
   } else if (logo2Img) {
-    drawPadelControlEmblemCanvas(ctx, 134, 128, 128, theme);
-    drawLogoFit(ctx, logo2Img, 232, 44, 410, 144);
+    drawPadelControlEmblemCanvas(ctx, 134, 128, 132, theme);
+    drawLogoFit(ctx, logo2Img, 232, 40, 418, 150);
   } else {
-    // Default App Branding
-    drawPadelControlEmblemCanvas(ctx, 142, 134, 146, theme);
+    drawPadelControlEmblemCanvas(ctx, 142, 134, 150, theme);
     ctx.save();
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'italic 800 44px "Barlow Condensed", sans-serif';
-    ctx.fillText('PÁDEL CONTROL SÉ', 238, 114);
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = 'italic 900 48px "Barlow Condensed", sans-serif';
+    drawMetallicText(ctx, 'PÁDEL CONTROL SÉ', 236, 122, { metalKey, theme, fontSize: 48, extrude: 4, bevelWidth: 1.2, glowColor: theme.accent + '66', glowBlur: 18 });
     ctx.fillStyle = theme.accentBright;
-    ctx.font = '700 20px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText(subTxt.toUpperCase().slice(0, 26), 240, 148);
+    ctx.font = '700 19px "Chakra Petch", "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(subTxt.toUpperCase().slice(0, 26), 238, 156);
     ctx.restore();
   }
 
-  // 5. Top-Right Category Badge ("CATEGORÍA / 6ta")
+  // 5. Top-Right Diamond Crest Category Shield ("CATEGORÍA / 5ta")
   ctx.save();
-  const catX = 668, catY = 52, catW = 342, catH = 262;
-  ctx.beginPath();
-  ctx.moveTo(catX + 18, catY);
-  ctx.lineTo(catX + catW - 26, catY);
-  ctx.lineTo(catX + catW, catY + 26);
-  ctx.lineTo(catX + catW - 20, catY + catH - 20);
-  ctx.quadraticCurveTo(catX + catW - 24, catY + catH, catX + catW - 44, catY + catH);
-  ctx.lineTo(catX + 38, catY + catH - 22);
-  ctx.quadraticCurveTo(catX + 18, catY + catH - 24, catX + 14, catY + catH - 46);
-  ctx.lineTo(catX, catY + 22);
-  ctx.quadraticCurveTo(catX, catY, catX + 18, catY);
-  ctx.closePath();
+  const catX = 670, catY = 48, catW = 342, catH = 266;
+  traceDiamondShieldPath(ctx, catX, catY, catW, catH);
 
   const catG = ctx.createLinearGradient(catX, catY, catX + catW, catY + catH);
-  catG.addColorStop(0, theme.badgeStops[0]);
-  catG.addColorStop(0.45, theme.badgeStops[1]);
-  catG.addColorStop(1, theme.badgeStops[2]);
+  theme.badgeStops.forEach((col, idx) => catG.addColorStop(idx / (theme.badgeStops.length - 1), col));
   ctx.shadowColor = theme.accent;
-  ctx.shadowBlur = 34;
+  ctx.shadowBlur = 38;
   ctx.fillStyle = catG;
   ctx.fill();
 
+  // Internal crystal facets + sheen clipped to shield
+  ctx.save();
+  ctx.clip();
   ctx.shadowBlur = 0;
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-  ctx.stroke();
+  if (carbonPat) {
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = carbonPat;
+    ctx.fillRect(catX, catY, catW, catH);
+  }
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  ctx.moveTo(catX, catY);
+  ctx.lineTo(catX + catW, catY);
+  ctx.lineTo(catX + catW * 0.42, catY + catH * 0.56);
+  ctx.lineTo(catX, catY + catH * 0.34);
+  ctx.closePath();
+  const shGloss = ctx.createLinearGradient(catX, catY, catX + catW, catY + catH * 0.6);
+  shGloss.addColorStop(0, 'rgba(255,255,255,0.28)');
+  shGloss.addColorStop(1, 'rgba(255,255,255,0.02)');
+  ctx.fillStyle = shGloss;
+  ctx.fill();
 
-  // Category text
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#f5f3ff';
-  ctx.font = '700 28px "Plus Jakarta Sans", sans-serif';
-  ctx.fillText('CATEGORÍA', catX + catW / 2 + 2, catY + 58);
-
-  const catVal = (draft.category || '—').trim();
-  fitCanvasFontSize(ctx, catVal, catW - 64, 134, 48, (sz) => `italic 800 ${sz}px "Barlow Condensed", sans-serif`);
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = 'rgba(0,0,0,0.55)';
-  ctx.shadowBlur = 14;
-  ctx.shadowOffsetY = 5;
-  ctx.fillText(catVal, catX + catW / 2 - 4, catY + 178);
+  ctx.beginPath();
+  ctx.moveTo(catX + catW * 0.42, catY + catH * 0.56);
+  ctx.lineTo(catX + catW, catY + 26);
+  ctx.lineTo(catX + catW, catY + catH);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(0,0,0,0.22)';
+  ctx.fill();
   ctx.restore();
 
-  // 6. Four Right-Side Stat Capsules
+  // Double Metallic Frame around Category Shield (re-trace full shield path after clipped facets)
+  ctx.shadowBlur = 0;
+  traceDiamondShieldPath(ctx, catX, catY, catW, catH);
+  const shieldRim = ctx.createLinearGradient(catX, catY, catX + catW, catY + catH);
+  shieldRim.addColorStop(0, '#ffffff');
+  shieldRim.addColorStop(0.48, metal.stops[2][1]);
+  shieldRim.addColorStop(0.52, metal.extrudeMid);
+  shieldRim.addColorStop(1, '#ffffff');
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = shieldRim;
+  ctx.stroke();
+
+  // Inner thin hairline inside shield
+  traceDiamondShieldPath(ctx, catX + 9, catY + 9, catW - 18, catH - 20);
+  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = 'rgba(255,255,255,0.38)';
+  ctx.stroke();
+
+  // "CATEGORÍA" with technical flank lines
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '700 25px "Chakra Petch", "Plus Jakarta Sans", sans-serif';
+  drawMetallicText(ctx, 'CATEGORÍA', catX + catW / 2, catY + 52, { metalKey, theme, fontSize: 25, extrude: 2, bevelWidth: 0.8 });
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(catX + 42, catY + 74); ctx.lineTo(catX + catW - 42, catY + 74);
+  ctx.stroke();
+
+  // Hero Metallic Category Value ("5ta", "6ta")
+  const catVal = (draft.category || '—').trim();
+  const catFontSz = fitCanvasFontSize(ctx, catVal, catW - 74, 138, 52, (sz) => `italic 900 ${sz}px "Barlow Condensed", sans-serif`);
+  drawMetallicText(ctx, catVal, catX + catW / 2 - 4, catY + 162, {
+    metalKey,
+    theme,
+    fontSize: catFontSz,
+    extrude: 7,
+    bevelWidth: 2.2,
+    glowColor: theme.accentBright + '77',
+    glowBlur: 24
+  });
+  drawDiamondGlint(ctx, catX + catW - 18, catY + 18, 28, theme.accentBright);
+  ctx.restore();
+
+  // 6. Four Armored Metallic Stat Plates
   const ageRaw = String(draft.age || '').trim();
   const ageVal = !ageRaw ? '—' : (/^\d+$/.test(ageRaw) ? `${ageRaw} años` : ageRaw);
   const posVal = (draft.position || 'Drive').trim();
@@ -8708,63 +9421,103 @@ function drawPlayerCardCanvas(canvas, draft, preloadedImgs = null) {
   const shotVal = (draft.bestShot || 'Víbora').trim();
 
   const pills = [
-    { label: 'EDAD', value: ageVal, drawIcon: (x, y) => drawCardIconCalendar(ctx, x, y) },
+    { label: 'EDAD', value: ageVal, drawIcon: (x, y) => drawCardIconCalendar(ctx, x, y, theme) },
     { label: 'POSICIÓN', value: posVal, drawIcon: (x, y) => drawCardIconPadelCourt(ctx, x, y, posVal, theme) },
-    { label: 'PERFIL', value: handVal, drawIcon: (x, y) => drawCardIconHand(ctx, x, y, handVal) },
-    { label: 'MEJOR GOLPE', value: shotVal, drawIcon: (x, y) => drawCardIconRacket(ctx, x, y) }
+    { label: 'PERFIL', value: handVal, drawIcon: (x, y) => drawCardIconHand(ctx, x, y, handVal, theme) },
+    { label: 'MEJOR GOLPE', value: shotVal, drawIcon: (x, y) => drawCardIconRacket(ctx, x, y, theme) }
   ];
 
-  const pillX = 562;
-  const pillW = 468;
+  const pillX = 556;
+  const pillW = 474;
   const pillH = 128;
-  const pillStartY = 354;
+  const pillStartY = 352;
   const pillGap = 24;
 
   pills.forEach((pill, i) => {
     const py = pillStartY + i * (pillH + pillGap);
     ctx.save();
-    drawRoundedPath(ctx, pillX, py, pillW, pillH, 26);
+    traceArmorPlatePath(ctx, pillX, py, pillW, pillH, 22);
 
     const pBg = ctx.createLinearGradient(pillX, py, pillX + pillW, py + pillH);
-    pBg.addColorStop(0, 'rgba(8, 9, 20, 0.90)');
-    pBg.addColorStop(1, 'rgba(20, 16, 40, 0.92)');
-    ctx.shadowColor = theme.accent + '66';
-    ctx.shadowBlur = 20;
+    pBg.addColorStop(0, 'rgba(7, 10, 22, 0.94)');
+    pBg.addColorStop(0.55, 'rgba(13, 20, 42, 0.92)');
+    pBg.addColorStop(1, 'rgba(5, 8, 18, 0.95)');
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.72)';
+    ctx.shadowBlur = 22;
+    ctx.shadowOffsetY = 6;
     ctx.fillStyle = pBg;
     ctx.fill();
 
+    // Inner carbon + diagonal top glass highlight clipped to plate
+    ctx.save();
+    ctx.clip();
+    ctx.shadowBlur = 0;
+    if (carbonPat) {
+      ctx.globalAlpha = 0.42;
+      ctx.fillStyle = carbonPat;
+      ctx.fillRect(pillX, py, pillW, pillH);
+    }
+    ctx.globalAlpha = 1;
+    // Left neon energy glow inside plate
+    const leftGlow = ctx.createRadialGradient(pillX + 20, py + pillH / 2, 4, pillX + 20, py + pillH / 2, 130);
+    leftGlow.addColorStop(0, theme.accent + '48');
+    leftGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = leftGlow;
+    ctx.fillRect(pillX, py, 160, pillH);
+
+    // Top crystal reflection sheen
+    ctx.fillStyle = 'rgba(255,255,255,0.055)';
+    ctx.fillRect(pillX, py, pillW, pillH * 0.40);
+
+    // Glowing vertical laser bar on left edge
+    ctx.fillStyle = theme.accentBright;
+    ctx.shadowColor = theme.accentBright;
+    ctx.shadowBlur = 12;
+    ctx.fillRect(pillX, py + 12, 6, pillH - 28);
+    ctx.restore();
+
+    // Machined metallic beveled border
     ctx.shadowBlur = 0;
     const pBorder = ctx.createLinearGradient(pillX, py, pillX + pillW, py + pillH);
-    pBorder.addColorStop(0, 'rgba(255, 255, 255, 0.92)');
-    pBorder.addColorStop(0.5, 'rgba(203, 213, 225, 0.7)');
-    pBorder.addColorStop(1, 'rgba(255, 255, 255, 0.85)');
-    ctx.lineWidth = 3;
+    pBorder.addColorStop(0, '#ffffff');
+    pBorder.addColorStop(0.32, metal.stops[2][1]);
+    pBorder.addColorStop(0.50, theme.accentBright);
+    pBorder.addColorStop(0.75, '#cbd5e1');
+    pBorder.addColorStop(1, metal.extrudeMid);
+    ctx.lineWidth = 2.6;
     ctx.strokeStyle = pBorder;
     ctx.stroke();
 
-    // Icon on left
+    // Hexagonal Medallion + Icon
+    drawIconMedallion(ctx, pillX + 58, py + pillH / 2, theme);
     pill.drawIcon(pillX + 58, py + pillH / 2);
 
-    // Label + Value
+    // Technical Label + Metallic Stat Value
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '700 21px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText(pill.label, pillX + 116, py + 44);
+    ctx.fillStyle = theme.accentSoft;
+    ctx.font = '700 19px "Chakra Petch", "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(pill.label, pillX + 114, py + 41);
 
-    fitCanvasFontSize(ctx, pill.value, pillW - 138, 54, 28, (sz) => `italic 800 ${sz}px "Barlow Condensed", sans-serif`);
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowColor = 'rgba(0,0,0,0.65)';
-    ctx.shadowBlur = 8;
-    ctx.fillText(pill.value, pillX + 116, py + 102);
+    // Crisp separator micro-tick
+    ctx.fillStyle = theme.accentBright + '66';
+    ctx.fillRect(pillX + 114, py + 48, 34, 2);
+
+    const valSz = fitCanvasFontSize(ctx, pill.value, pillW - 140, 56, 30, (sz) => `italic 900 ${sz}px "Barlow Condensed", sans-serif`);
+    drawMetallicText(ctx, pill.value, pillX + 114, py + 104, {
+      metalKey,
+      theme,
+      fontSize: valSz,
+      extrude: 4,
+      bevelWidth: 1.2
+    });
 
     ctx.restore();
   });
 
-  // 7. Bottom Diagonal Name Ribbon + Player Silhouette
+  // 7. Bottom Armored Diagonal Ribbon + Metallic Name + Pro Padel Diamond Emblem
   ctx.save();
-  // Ribbon polygon sloping slightly upward from left to right
-  const rTopL = 1110, rTopR = 966;
+  const rTopL = 1106, rTopR = 962;
   const rBotL = 1286, rBotR = 1142;
 
   ctx.beginPath();
@@ -8776,86 +9529,115 @@ function drawPlayerCardCanvas(canvas, draft, preloadedImgs = null) {
 
   const ribG = ctx.createLinearGradient(0, rTopR, W, rBotL);
   ribG.addColorStop(0, theme.ribbonFill[0]);
-  ribG.addColorStop(0.5, theme.ribbonFill[1]);
+  ribG.addColorStop(0.45, theme.ribbonFill[1]);
   ribG.addColorStop(1, theme.ribbonFill[2]);
   ctx.fillStyle = ribG;
   ctx.fill();
 
-  // Fill area below ribbon cleanly in dark carbon so no gaps show at corners
+  // Clip interior textures for ribbon (carbon weave + metallic sheen + speed chevrons)
+  ctx.save();
+  ctx.clip();
+  if (carbonPat) {
+    ctx.globalAlpha = 0.65;
+    ctx.fillStyle = carbonPat;
+    ctx.fillRect(0, 940, W, 380);
+  }
+  ctx.globalAlpha = 1;
+  // Kinetic diagonal slashes in ribbon
+  for (let k = 0; k < 4; k++) {
+    const sx = 640 + k * 28;
+    ctx.beginPath();
+    ctx.moveTo(sx, 950);
+    ctx.lineTo(sx + 14, 950);
+    ctx.lineTo(sx - 56, 1280);
+    ctx.lineTo(sx - 70, 1280);
+    ctx.closePath();
+    ctx.fillStyle = theme.accentBright + '14';
+    ctx.fill();
+  }
+  // Upper glassy sweep across ribbon
+  const rSheen = ctx.createLinearGradient(0, rTopR, 0, rBotL);
+  rSheen.addColorStop(0, 'rgba(255,255,255,0.09)');
+  rSheen.addColorStop(0.48, 'rgba(255,255,255,0.01)');
+  rSheen.addColorStop(0.50, 'rgba(0,0,0,0.35)');
+  rSheen.addColorStop(1, 'transparent');
+  ctx.fillStyle = rSheen;
+  ctx.fillRect(0, 950, W, 360);
+  ctx.restore();
+
+  // Fill deep carbon corner triangle below ribbon
   ctx.beginPath();
   ctx.moveTo(20, rBotL);
   ctx.lineTo(W - 20, rBotR);
   ctx.lineTo(W - 20, H - 20);
   ctx.lineTo(20, H - 20);
   ctx.closePath();
-  ctx.fillStyle = '#07070c';
+  ctx.fillStyle = '#04060c';
   ctx.fill();
+  if (carbonPat) {
+    ctx.save();
+    ctx.clip();
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = carbonPat;
+    ctx.fillRect(0, 1130, W, 240);
+    ctx.restore();
+  }
 
-  // Glowing top and bottom neon borders on ribbon
+  // Dual Armored Rails on Ribbon Borders (Neon + Machined Metal)
   ctx.strokeStyle = theme.accentBright;
-  ctx.lineWidth = 6;
+  ctx.lineWidth = 7;
   ctx.shadowColor = theme.accent;
-  ctx.shadowBlur = 22;
+  ctx.shadowBlur = 24;
   ctx.beginPath();
   ctx.moveTo(20, rTopL); ctx.lineTo(W - 20, rTopR);
   ctx.moveTo(20, rBotL); ctx.lineTo(W - 20, rBotR);
   ctx.stroke();
 
   ctx.shadowBlur = 0;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-  ctx.lineWidth = 1.6;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(20, rTopL); ctx.lineTo(W - 20, rTopR);
   ctx.moveTo(20, rBotL); ctx.lineTo(W - 20, rBotR);
   ctx.stroke();
 
-  // Rotated Player Name inside diagonal ribbon
+  // Hero Rotated Metallic Player Name inside Diagonal Ribbon
   const angle = Math.atan2(rTopR - rTopL, (W - 20) - 20);
   const nameTxt = ((draft.name || '').trim() || 'TU NOMBRE').toUpperCase();
   ctx.save();
-  ctx.translate(78, 1188);
+  ctx.translate(74, 1188);
   ctx.rotate(angle);
-  fitCanvasFontSize(ctx, nameTxt, 650, 88, 38, (sz) => `italic 800 ${sz}px "Barlow Condensed", sans-serif`);
+  const nameSz = fitCanvasFontSize(ctx, nameTxt, 668, 102, 42, (sz) => `italic 900 ${sz}px "Barlow Condensed", sans-serif`);
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = 'rgba(0,0,0,0.85)';
-  ctx.shadowBlur = 12;
-  ctx.fillText(nameTxt, 0, 0);
+  drawMetallicText(ctx, nameTxt, 0, 0, {
+    metalKey,
+    theme,
+    fontSize: nameSz,
+    extrude: 7,
+    bevelWidth: 2.1,
+    glowColor: theme.accent + '66',
+    glowBlur: 20
+  });
+  drawDiamondGlint(ctx, -4, -nameSz * 0.44, 17, theme.accentBright);
   ctx.restore();
 
-  // Padel Player White Silhouette on Bottom Right
-  drawPadelPlayerSilhouette(ctx, 782, 1002, 1.38);
+  // Pro Athletic Padel Emblem + Diamond Crest on Bottom Right
+  drawProPadelEmblem(ctx, 888, 1094, 1.30, theme, metalKey);
 
   if (draft.showAppBrand) {
-    ctx.fillStyle = 'rgba(226, 232, 240, 0.55)';
-    ctx.font = '600 18px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('PÁDEL CONTROL SÉ', 78, H - 46);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = 'rgba(226, 232, 240, 0.52)';
+    ctx.font = '700 15px "Chakra Petch", "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('PÁDEL CONTROL SÉ · DIAMOND EDITION', 74, H - 44);
   }
   ctx.restore();
 
-  ctx.restore(); // End inner chamfered clip
+  ctx.restore(); // End inner card clip
 
-  // 8. Metallic Outer Silver/Chrome Chamfered Frame
-  ctx.save();
-  traceChamferedRect(ctx, framePad, framePad, W - framePad * 2, H - framePad * 2, innerCut);
-  const fGrad = ctx.createLinearGradient(0, 0, W, H);
-  fGrad.addColorStop(0, theme.frameLight);
-  fGrad.addColorStop(0.25, theme.frameMid);
-  fGrad.addColorStop(0.5, theme.frameDark);
-  fGrad.addColorStop(0.75, theme.frameLight);
-  fGrad.addColorStop(1, theme.frameMid);
-  ctx.lineWidth = 14;
-  ctx.strokeStyle = fGrad;
-  ctx.stroke();
-
-  // Thin crisp inner highlight bezel
-  traceChamferedRect(ctx, framePad + 6, framePad + 6, W - (framePad + 6) * 2, H - (framePad + 6) * 2, innerCut - 4);
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-  ctx.stroke();
-  ctx.restore();
+  // 8. Multi-Facet Machined Metallic Outer Diamond Frame
+  drawMachinedDiamondFrame(ctx, W, H, framePad, innerCut, theme, metalKey);
 }
 
 function refreshPlayerCardPreview() {
@@ -8946,6 +9728,9 @@ function renderPlayerCardView() {
   const draft = getActivePlayerCardDraft();
   const known = getKnownPlayerNames();
   const themeList = Object.values(PLAYER_CARD_THEMES);
+  const metalList = Object.values(PLAYER_CARD_METALS);
+  const activeTheme = PLAYER_CARD_THEMES[draft.theme] || PLAYER_CARD_THEMES.diamond;
+  const activeMetal = draft.metalFinish || activeTheme.defaultMetal || 'chrome';
   const backRoute = ui.playerCardReturnRoute && ui.playerCardReturnRoute !== 'player-card' ? ui.playerCardReturnRoute : 'home';
 
   return `
@@ -9066,14 +9851,25 @@ function renderPlayerCardView() {
 
         <!-- 3. Style & Logos -->
         <div class="card">
-          <h3>🎨 Estilo y Logos</h3>
+          <h3>🎨 Estilo Diamond y Logos</h3>
           <div class="field">
             <label>Tema de tarjeta</label>
             <div class="pc-themes">
               ${themeList.map(th => `
-                <button class="pc-theme-btn ${draft.theme===th.id?'on':''}" data-pc-theme="${esc(th.id)}">
+                <button class="pc-theme-btn ${activeTheme.id===th.id?'on':''}" data-pc-theme="${esc(th.id)}">
                   <span class="pc-theme-swatch" style="background:linear-gradient(135deg,${th.accentBright},${th.accent})"></span>
                   <span>${esc(th.label)}</span>
+                </button>`).join('')}
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:14px">
+            <label>Acabado metálico 3D (Letras y Marco)</label>
+            <div class="pc-themes">
+              ${metalList.map(mt => `
+                <button class="pc-theme-btn ${activeMetal===mt.id?'on':''}" data-pc-metal="${esc(mt.id)}">
+                  <span class="pc-metal-swatch" style="background:${mt.swatch}"></span>
+                  <span>${esc(mt.label)}</span>
                 </button>`).join('')}
             </div>
           </div>
@@ -12840,7 +13636,22 @@ document.addEventListener('click', (ev) => {
 
   const pcThemeEl = t.closest('[data-pc-theme]');
   if (pcThemeEl) {
-    getActivePlayerCardDraft().theme = pcThemeEl.getAttribute('data-pc-theme');
+    const d = getActivePlayerCardDraft();
+    const newThemeId = pcThemeEl.getAttribute('data-pc-theme');
+    d.theme = newThemeId;
+    if (!d.metalCustom) {
+      const thObj = PLAYER_CARD_THEMES[newThemeId] || PLAYER_CARD_THEMES.diamond;
+      d.metalFinish = thObj.defaultMetal || 'chrome';
+    }
+    render();
+    return;
+  }
+
+  const pcMetalEl = t.closest('[data-pc-metal]');
+  if (pcMetalEl) {
+    const d = getActivePlayerCardDraft();
+    d.metalFinish = pcMetalEl.getAttribute('data-pc-metal');
+    d.metalCustom = true;
     render();
     return;
   }
