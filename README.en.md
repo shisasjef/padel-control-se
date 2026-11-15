@@ -25,11 +25,13 @@ Pick the match mode before starting any match so every ranking, points table, an
   * Configurable table points (`+3` Win / `+1` Loss by default) alongside an isolated daily ELO rating.
   * Instant filters in the **Ranking** tab: **Today (`Hoy`)** vs **All-Time (`Acumulado`)**, in either **Individual** or **Pairs (`Por Parejas`)** view.
 * **🏅 Leagues & 🏆 Tournaments**:
-  * Every League or Tournament maintains its own standings table, customizable scoring (**Win Pts**, **Loss Pts**, and **Set Won Bonus**), default match rules, and **isolated ELO** so results never leak across competitions.
+  * Every League or Tournament maintains its own standings table, customizable scoring (**Win Pts**, **Draw Pts** in Proyecto Pádel, **Loss Pts**, and **Set or Game Won Bonus**), default match rules, and **isolated ELO** so results never leak across competitions.
   * Selectable ranking mode per competition: **Fixed Pairs**, **Individual**, or **Both**.
   * **League Formats**: *Round Robin* (auto-generated matchdays), *Double Round Robin* (home & away), or *Open League*.
-  * **Tournament Formats**: *Single Elimination Bracket* (with automatic BYEs and round progression), *Groups + Playoffs* (group draw, configurable qualifiers per group, and automatic seeding into knockout brackets), and *Open / Americano* (rotating partners when set to individual mode).
-  * **Fixtures, Quick Sets & Games Entry & Walkovers (W.O.)**: Built for events **without court umpires**: from **New Match** (`Ya terminó · Cargar Sets y Games`), any scheduled **Fixture** (`Resultado`), or directly inside a League/Tournament (**Cargar Resultado / Cargar Sets / Games**), pick the pairs or players and tap the game counts per set with **quick tactile pills (`0–7` plus `10` for Super Tie-Breaks, up to 5 sets)** — no point-by-point tracking required. Also supports **Walkover (W.O.)** wins that award table points and advance bracket slots without affecting ELO.
+  * **Tournament Formats**:
+    * **⚡ Proyecto Pádel**: Specialized time-block desk format (no live umpire tracking or rigid bracket) built for direct final-score entry (e.g. `Lucía-Juan vs Marcos-Noelia 4-2` or a `3-3` draw) with free partner rotation and an **Individual ELO-first ranking** (+ secondary **Games + Bonus** scoring: `+3` Win / `+2` Draw / `+1` Loss + `+1` per game won, tiebreak order `Pts → Games Won → Games Diff → ELO`).
+    * *Single Elimination Bracket* (with automatic BYEs and round progression), *Groups + Playoffs* (group draw, configurable qualifiers per group, and automatic seeding into knockout brackets), and *Open / Americano* (rotating partners when set to individual mode).
+  * **Fixtures, Quick Sets & Games Entry & Walkovers (W.O.)**: Built for events **without court umpires**: from **New Match** (`Ya terminó · Cargar Sets y Games`), any scheduled **Fixture** (`Resultado`), or directly inside a League/Tournament (**Cargar Resultado Final / Sets / Games**), pick or quick-tap player chips and select game counts with **tactile pills (`0–7` plus `10` for Super Tie-Breaks)** — no point-by-point tracking required. Supports **official draws (`3-3`, `2-2`) with ELO adjustment ($S=0.5$)** in Proyecto Pádel and **Walkover (W.O.)** wins elsewhere without affecting ELO.
 
 ---
 
@@ -68,8 +70,8 @@ Built for tournaments and leagues running **multiple matches simultaneously**, a
 ---
 
 ### 🏆 5. Combined Table Points + Zero-Sum ELO & Playtomic Level (1.00 to 7.00)
-* **Dual Scoring Per Scope**: Each scope (*Match of the Day*, every *League*, and every *Tournament*) tracks both configurable **table points** and its own **isolated ELO ladder**.
-* **Deterministic Zero-Sum Replay**: Chronologically replays valid finished matches (excluding W.O.) so all synced devices converge on identical numbers.
+* **Dual Scoring Per Scope**: Each scope (*Match of the Day*, every *League*, and every *Tournament*) tracks both configurable **table points** and its own **isolated ELO ladder** (in *Torneo Proyecto Pádel*, ELO is promoted as the primary display metric and default sort).
+* **Deterministic Zero-Sum Replay**: Chronologically replays valid finished matches (excluding W.O., and including official draws with $S = 0.5$) so all synced devices converge on identical numbers.
 * **Starting Rating**: Players and pairs begin at **1000 ELO** (mapped to **Playtomic Level 2.50**).
 * **Pair Average Formula**: Computes team average rating ($R_{\text{pair}} = \frac{R(p_1) + R(p_2)}{2}$) to derive expected win probability:
   $$E_A = \frac{1}{1 + 10^{(R_B - R_A) / 400}}$$

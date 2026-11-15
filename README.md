@@ -25,11 +25,13 @@ Elegí el contexto antes de iniciar cualquier partido para mantener cada ranking
   * Puntos configurables por defecto (`+3` Victoria / `+1` Derrota), con ELO independiente.
   * Filtros instantáneos en la pestaña **Ranking**: **☀️ Hoy** (solo partidos del día) vs **📅 Acumulado**, en vista **👤 Individual** o **👥 Por Parejas**.
 * **🏅 Ligas y 🏆 Torneos Independientes**:
-  * Cada Liga o Torneo tiene su propia tabla de posiciones, puntaje personalizado (**Pts Victoria**, **Pts Derrota** y **Bonus por Set ganado**) y su propio **ELO aislado** (los partidos de una liga o torneo no alteran el ranking del día ni el de otras competencias).
+  * Cada Liga o Torneo tiene su propia tabla de posiciones, puntaje personalizado (**Pts Victoria**, **Pts Empate** en Proyecto Pádel, **Pts Derrota** y **Bonus por Set o Game ganado**) y su propio **ELO aislado** (los partidos de una liga o torneo no alteran el ranking del día ni el de otras competencias).
   * Modo de ranking seleccionable por competencia: **Parejas Fijas**, **Individual** o **Ambos**.
   * **Formatos de Liga**: *Todos contra Todos* (fixture por fechas), *Ida y Vuelta* o *Liga Libre*.
-  * **Formatos de Torneo**: *Eliminación Directa* (llaves con BYEs automáticos), *Grupos + Playoffs* (sorteo por grupos, clasificación configurable y generación de cuadro eliminatorio desde las tablas) y *Libre / Americano* (rotación automática de compañeros cuando el modo es individual).
-  * **Fixture, Carga Directa por Sets/Games y W.O.**: Ideal para torneos o jornadas **sin fiscalizadores**: desde **Nuevo Partido** (`Ya terminó · Cargar Sets y Games`), desde un cruce del **Fixture** (`Resultado`) o desde **Cargar Sets / Games** dentro de una Liga o Torneo, podés elegir las parejas/jugadores y seleccionar directamente los games de cada set con **botones táctiles (`0–7` y `10` para Súper TB, hasta 5 sets)** sin anotar punto por punto. Incluye también **Victoria por Walkover (W.O.)** que asigna puntos de tabla y hace avanzar las llaves sin alterar el rating ELO.
+  * **Formatos de Torneo**:
+    * **⚡ Proyecto Pádel**: Formato especial por bloques/tiempo (sin fiscalización en pista ni fixture rígido) pensado para carga directa de resultados finales (ej. `Lucía-Juan vs Marcos-Noelia 4-2` o empate `3-3`) con rotación libre de parejas y ranking **Individual con ELO como métrica principal** (+ puntaje secundario por **Games + Bonus**: `+3` Victoria / `+2` Empate / `+1` Derrota + `+1` por game ganado, desempate `Pts → Games a favor → Dif. Games → ELO`).
+    * *Eliminación Directa* (llaves con BYEs automáticos), *Grupos + Playoffs* (sorteo por grupos, clasificación configurable y generación de cuadro eliminatorio desde las tablas) y *Libre / Americano* (rotación automática de compañeros cuando el modo es individual).
+  * **Fixture, Carga Directa por Sets/Games y W.O.**: Ideal para torneos o jornadas **sin fiscalizadores**: desde **Nuevo Partido** (`Ya terminó · Cargar Sets y Games`), desde un cruce del **Fixture** (`Resultado`) o desde **Cargar Resultado Final / Sets / Games** dentro de una Liga o Torneo, podés elegir o tocar chips de jugadores y seleccionar directamente los games con **botones táctiles (`0–7` y `10` para Súper TB)** sin anotar punto por punto. Incluye **empates oficiales (`3-3`, `2-2`) con ajuste ELO ($S=0.5$)** en Proyecto Pádel y **Victoria por Walkover (W.O.)** en el resto de formatos.
 
 ---
 
@@ -70,8 +72,8 @@ Ideal para torneos o ligas donde se juegan **varios partidos en paralelo** y cad
 ---
 
 ### 🏆 5. Sistema de Ranking Combinado: Puntos de Tabla + ELO y Nivel Playtomic (1.00 a 7.00)
-* **Sistema Mixto (Tabla + ELO Aislado)**: Cada ámbito (*Partido del Día*, cada *Liga* y cada *Torneo*) calcula tanto los **puntos de tabla** por victoria/derrota/bonus como un **ELO independiente** sobre los partidos de esa competencia.
-* **Cálculo ELO de Suma Cero Determinista**: Replay ordenado cronológicamente sobre los partidos válidos (excluyendo W.O.), produciendo resultados idénticos entre dispositivos sincronizados.
+* **Sistema Mixto (Tabla + ELO Aislado)**: Cada ámbito (*Partido del Día*, cada *Liga* y cada *Torneo*) calcula tanto los **puntos de tabla** por victoria/empate/derrota/bonus como un **ELO independiente** sobre los partidos de esa competencia (en *Torneo Proyecto Pádel*, el ELO pasa al frente como métrica y orden principal).
+* **Cálculo ELO de Suma Cero Determinista**: Replay ordenado cronológicamente sobre los partidos válidos (excluyendo W.O. e incluyendo empates oficiales con $S = 0.5$), produciendo resultados idénticos entre dispositivos sincronizados.
 * **Punto de Partida**: Todos los jugadores o parejas inician con **1000 puntos base** (equivalente exacto a **Nivel Playtomic 2.50**).
 * **Promedio de la Pareja**: Antes de cada partido se calcula el promedio ELO de cada pareja ($R_{\text{pareja}} = \frac{R(p_1) + R(p_2)}{2}$) para determinar la probabilidad matemática esperada de victoria:
   $$E_A = \frac{1}{1 + 10^{(R_B - R_A) / 400}}$$

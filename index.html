@@ -1904,6 +1904,47 @@ html.obs-mode #app, body.obs-mode #app {
   margin: 10px 0 12px;
   text-align: center;
 }
+.badge.pp {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.24), rgba(168, 85, 247, 0.2));
+  border: 1px solid rgba(212, 175, 55, 0.48);
+  color: var(--gold2);
+}
+.pp-hero-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border-radius: 16px;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(16, 16, 22, 0.96) 72%);
+  border: 1px solid rgba(212, 175, 55, 0.42);
+}
+.qs-slot-inp.active-slot {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.24);
+}
+.qs-player-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.qs-p-chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card2);
+  color: var(--tx);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.qs-p-chip.used {
+  opacity: 0.42;
+  border-color: rgba(212, 175, 55, 0.35);
+}
 
 </style>
 </head>
@@ -2174,6 +2215,7 @@ const ui = {
   selectedTournId: null,
   selectedGroupFilter: 'all',
   playerSort: 'pts', // 'pts' | 'elo' | 'wins' | 'matches'
+  playerSortScope: null,
   compFilter: 'all', // 'all' | 'league' | 'tournament'
   compId: null,
   compTab: 'standings', // 'standings' | 'fixtures' | 'matches' | 'participants'
@@ -2440,20 +2482,23 @@ function isSetPointFor(m, st, curSet, isTB, isSuperTB, p0, p1, team) {
 }
 
 function computeMatch(m) {
-  if ((Array.isArray(m.manualSets) && m.manualSets.length) || (m.manualWinner !== undefined && m.manualWinner !== null)) {
+  if ((Array.isArray(m.manualSets) && m.manualSets.length) || (m.manualWinner !== undefined && m.manualWinner !== null) || m.isDraw) {
     const sets = (Array.isArray(m.manualSets) ? m.manualSets : []).map(s => {
       const g0 = Number(s[0]) || 0;
       const g1 = Number(s[1]) || 0;
-      const w = (s[2] !== undefined && s[2] !== null) ? s[2] : (g0 > g1 ? 0 : (g1 > g0 ? 1 : null));
+      const w = (s[2] !== undefined && s[2] !== null && s[2] !== 'draw') ? s[2] : (g0 > g1 ? 0 : (g1 > g0 ? 1 : null));
       return { games: [g0, g1], history: [], winner: w, tbScore: s[3] || null, isSuperTB: !!s[4] };
     });
     const setsWon = [
       sets.filter(s => s.winner === 0).length,
       sets.filter(s => s.winner === 1).length
     ];
-    const mw = (m.manualWinner !== undefined && m.manualWinner !== null)
-      ? m.manualWinner
-      : (setsWon[0] > setsWon[1] ? 0 : (setsWon[1] > setsWon[0] ? 1 : null));
+    const explicitDraw = !!(m.isDraw || m.manualWinner === 'draw');
+    const mw = explicitDraw
+      ? null
+      : ((m.manualWinner !== undefined && m.manualWinner !== null)
+          ? m.manualWinner
+          : (setsWon[0] > setsWon[1] ? 0 : (setsWon[1] > setsWon[0] ? 1 : null)));
     const lastIdx = Math.max(0, sets.length - 1);
     return {
       sets,
@@ -2461,6 +2506,7 @@ function computeMatch(m) {
       curSet: sets[lastIdx] || { games: [0, 0], history: [], winner: null, tbScore: null, isSuperTB: false },
       setsWon,
       matchWinner: mw,
+      isDraw: explicitDraw,
       p: [0, 0],
       pointDisplay: ['0', '0'],
       srvTeam: 0,
@@ -2717,6 +2763,7 @@ function computeMatch(m) {
     curSet,
     setsWon,
     matchWinner,
+    isDraw: false,
     p,
     pointDisplay,
     srvTeam,
@@ -2806,6 +2853,7 @@ function getMatchEntities(m, t, entityMode = 'individual') {
 }
 
 function computeSingleMatchEloStep(m, st, ratingsMap, countMap, entityMode = 'individual') {
+  const isDraw = !!st.isDraw && st.matchWinner === null;
   const w = st.matchWinner ?? 0;
   const pair0 = getMatchEntities(m, 0, entityMode);
   const pair1 = getMatchEntities(m, 1, entityMode);
@@ -2825,17 +2873,20 @@ function computeSingleMatchEloStep(m, st, ratingsMap, countMap, entityMode = 'in
   const isBlowout = diffGames >= BLOWOUT_GAME_DIFF;
   const M = isBlowout ? BLOWOUT_MULTIPLIER : 1.0;
 
-  const S0 = w === 0 ? 1 : 0;
-  const S1 = w === 1 ? 1 : 0;
+  const S0 = isDraw ? 0.5 : (w === 0 ? 1 : 0);
+  const S1 = isDraw ? 0.5 : (w === 1 ? 1 : 0);
 
   const evalSide = (pair, rList, score, exp) => pair.map((p, i) => {
     const eloBefore = rList[i];
     const matchCount = countMap[p.key] || 0;
     const k = matchCount < CALIBRATION_MATCHES_THRESHOLD ? K_CALIBRATION : K_STANDARD;
     const rawDelta = m.isWalkover ? 0 : k * M * (score - exp);
-    const delta = m.isWalkover
-      ? 0
-      : (score === 1 ? Math.max(1, Math.round(rawDelta)) : Math.min(-1, Math.round(rawDelta)));
+    let delta = 0;
+    if (!m.isWalkover) {
+      if (score === 1) delta = Math.max(1, Math.round(rawDelta));
+      else if (score === 0) delta = Math.min(-1, Math.round(rawDelta));
+      else delta = Math.round(rawDelta);
+    }
     const eloAfter = Math.max(MIN_ELO, eloBefore + delta);
     return { name: p.name, key: p.key, eloBefore, delta, eloAfter, k };
   });
@@ -2843,6 +2894,7 @@ function computeSingleMatchEloStep(m, st, ratingsMap, countMap, entityMode = 'in
   return {
     matchId: m.id,
     winner: st.matchWinner,
+    isDraw,
     diffGames,
     isBlowout,
     multiplier: M,
@@ -2861,7 +2913,7 @@ function computeEloRatings(matchesList = historyList, opts = {}) {
 
   const finished = (matchesList || [])
     .map(m => ({ m, st: computeMatch(m) }))
-    .filter(({ st }) => st.matchWinner !== null)
+    .filter(({ st }) => st.matchWinner !== null || st.isDraw)
     .sort((a, b) => ((a.m.createdAt || 0) - (b.m.createdAt || 0)) || String(a.m.id).localeCompare(String(b.m.id)));
 
   finished.forEach(({ m, st }) => {
@@ -2897,19 +2949,41 @@ function calculateMatchEloPreview(m, eloState = null, opts = {}) {
   return computeSingleMatchEloStep(m, st, state.playerRatings, state.playerMatchCount, entityMode);
 }
 
+function isProyectoPadelComp(comp) {
+  return comp?.format === 'proyecto_padel';
+}
+
 function getCompetitionScoringConfig(comp) {
   if (!comp) {
     return {
       winPts: Number.isFinite(Number(prefs.dailyWinPts)) ? Number(prefs.dailyWinPts) : 3,
       lossPts: Number.isFinite(Number(prefs.dailyLossPts)) ? Number(prefs.dailyLossPts) : 1,
-      setBonusPts: 0
+      drawPts: 2,
+      setBonusPts: 0,
+      gameBonusPts: 0
     };
   }
+  const isPP = isProyectoPadelComp(comp);
   return {
     winPts: Number.isFinite(Number(comp.winPts)) ? Number(comp.winPts) : 3,
     lossPts: Number.isFinite(Number(comp.lossPts)) ? Number(comp.lossPts) : 1,
-    setBonusPts: Number.isFinite(Number(comp.setBonusPts)) ? Number(comp.setBonusPts) : 0
+    drawPts: Number.isFinite(Number(comp.drawPts)) ? Number(comp.drawPts) : 2,
+    setBonusPts: Number.isFinite(Number(comp.setBonusPts)) ? Number(comp.setBonusPts) : 0,
+    gameBonusPts: Number.isFinite(Number(comp.gameBonusPts)) ? Number(comp.gameBonusPts) : (isPP ? 1 : 0)
   };
+}
+
+function getCompScoringSummaryLabel(comp, sc = null, compact = false) {
+  const cfg = sc || getCompetitionScoringConfig(comp);
+  if (isProyectoPadelComp(comp) || (cfg.gameBonusPts || 0) > 0) {
+    return compact
+      ? `+${cfg.winPts}V / +${cfg.drawPts ?? 2}E / +${cfg.lossPts}D · +${cfg.gameBonusPts}/g`
+      : `ELO Principal · Sec: +${cfg.winPts}V / +${cfg.drawPts ?? 2}E / +${cfg.lossPts}D + ${cfg.gameBonusPts}/game`;
+  }
+  const sbTxt = cfg.setBonusPts ? ` · +${cfg.setBonusPts}/set` : '';
+  return compact
+    ? `+${cfg.winPts}V / +${cfg.lossPts}D${sbTxt}`
+    : `+${cfg.winPts}V / +${cfg.lossPts}D${sbTxt} + ELO`;
 }
 
 function createEmptyStandingRec(name, key, color, eloState) {
@@ -2923,6 +2997,7 @@ function createEmptyStandingRec(name, key, color, eloState) {
     pts: 0,
     matches: 0,
     wins: 0,
+    draws: 0,
     losses: 0,
     setsWon: 0,
     setsLost: 0,
@@ -2945,7 +3020,9 @@ function computeScopeStandings(matchesList, config = {}) {
   const entityMode = config.entityMode || 'individual';
   const winPts = Number.isFinite(Number(config.winPts)) ? Number(config.winPts) : 3;
   const lossPts = Number.isFinite(Number(config.lossPts)) ? Number(config.lossPts) : 1;
+  const drawPts = Number.isFinite(Number(config.drawPts)) ? Number(config.drawPts) : 2;
   const setBonusPts = Number.isFinite(Number(config.setBonusPts)) ? Number(config.setBonusPts) : 0;
+  const gameBonusPts = Number.isFinite(Number(config.gameBonusPts)) ? Number(config.gameBonusPts) : 0;
   const todayOnly = !!config.todayOnly;
   const todayKey = config.todayDateKey || getDateKey(Date.now());
   const seedParticipants = Array.isArray(config.seedParticipants) ? config.seedParticipants : [];
@@ -2985,7 +3062,8 @@ function computeScopeStandings(matchesList, config = {}) {
     const S = computeStats(m, 'all');
     const st = S.st;
     const w = st.matchWinner;
-    const isFinished = (w !== null);
+    const isDraw = !!st.isDraw && w === null;
+    const isFinished = (w !== null || isDraw);
     const matchElo = eloState.matchEloMap[m.id];
 
     // Sets & games summary per side
@@ -3017,12 +3095,16 @@ function computeScopeStandings(matchesList, config = {}) {
         const rec = map.get(ent.key);
         rec.matches++;
         if (isFinished) {
-          if (w === t) {
+          const bonusPts = (setsByTeam[t] * setBonusPts) + (gamesByTeam[t] * gameBonusPts);
+          if (isDraw) {
+            rec.draws++;
+            rec.pts += drawPts + bonusPts;
+          } else if (w === t) {
             rec.wins++;
-            rec.pts += winPts + (setsByTeam[t] * setBonusPts);
+            rec.pts += winPts + bonusPts;
           } else {
             rec.losses++;
-            rec.pts += lossPts + (setsByTeam[t] * setBonusPts);
+            rec.pts += lossPts + bonusPts;
           }
         }
         rec.setsWon += setsByTeam[t];
@@ -3427,7 +3509,7 @@ function resolveCompetitionFixtures(comp) {
         fx.winnerSide = null;
       } else {
         const st = computeMatch(m);
-        fx.winnerSide = st.matchWinner !== null ? st.matchWinner : null;
+        fx.winnerSide = st.isDraw ? 'draw' : (st.matchWinner !== null ? st.matchWinner : null);
       }
     }
   });
@@ -3475,7 +3557,7 @@ function syncCompetitionForMatch(m, opts = {}) {
   }
   resolveCompetitionFixtures(comp);
   saveCompetitions();
-  if (!opts.skipSyncPublish && comp.syncCode && (m.status === 'finished' || (m.manualWinner !== undefined && m.manualWinner !== null))) {
+  if (!opts.skipSyncPublish && comp.syncCode && (m.status === 'finished' || m.isDraw || m.manualWinner === 'draw' || (m.manualWinner !== undefined && m.manualWinner !== null))) {
     if (typeof publishCompMatch === 'function') publishCompMatch(comp, m);
   }
 }
@@ -3532,6 +3614,56 @@ function startFixtureMatch(compId, fixtureId) {
   navigate('board');
 }
 
+function getCompQuickPlayerPool(comp) {
+  if (!comp) return [];
+  const seen = new Map();
+  const skip = new Set(['DRIVE 1', 'REVÉS 1', 'REVES 1', 'DRIVE 2', 'REVÉS 2', 'REVES 2', 'DRIVE', 'REVÉS', 'REVES']);
+  const pushName = (raw) => {
+    const nm = String(raw || '').trim();
+    if (!nm) return;
+    const k = nm.toUpperCase();
+    if (skip.has(k) || seen.has(k)) return;
+    seen.set(k, nm);
+  };
+  (comp.participants || []).forEach(pt => {
+    if (!pt) return;
+    if (pt.type === 'pair') (pt.players || []).forEach(pushName);
+    else pushName(pt.name);
+  });
+  getCompetitionMatches(comp, false).forEach(m => {
+    (m.teams || []).forEach(tm => (tm.players || []).forEach(pushName));
+  });
+  return Array.from(seen.values()).sort((a, b) => a.localeCompare(b, 'es'));
+}
+
+function resolveQuickScoreOutcome(comp, setsArr, winSel = 'auto', isWo = false) {
+  if (isWo) {
+    if (winSel === '0' || winSel === '1') return { ok: true, winnerSide: Number(winSel), isDraw: false };
+    return { ok: false, error: 'Elegí qué pareja ganó por W.O.' };
+  }
+  if (winSel === '0' || winSel === '1') {
+    return { ok: true, winnerSide: Number(winSel), isDraw: false };
+  }
+  let w0 = 0, w1 = 0, g0 = 0, g1 = 0;
+  (setsArr || []).forEach(s => {
+    const a = Number(s[0]) || 0;
+    const b = Number(s[1]) || 0;
+    g0 += a; g1 += b;
+    if (a > b) w0++;
+    else if (b > a) w1++;
+  });
+  if (winSel === 'draw') {
+    if (w0 !== w1 || g0 !== g1) return { ok: false, error: 'Para guardar empate, ambos lados deben igualar el marcador' };
+    return { ok: true, winnerSide: 'draw', isDraw: true };
+  }
+  if (w0 > w1) return { ok: true, winnerSide: 0, isDraw: false };
+  if (w1 > w0) return { ok: true, winnerSide: 1, isDraw: false };
+  if (isProyectoPadelComp(comp) && g0 === g1) {
+    return { ok: true, winnerSide: 'draw', isDraw: true };
+  }
+  return { ok: false, error: 'Empate en sets: elegí manualmente la pareja ganadora' };
+}
+
 function buildQuickScoreState(opts = {}) {
   const mode = opts.mode || (opts.fixtureId ? 'fixture' : (opts.compId ? 'comp-adhoc' : 'preset'));
   let comp = opts.compId ? getCompById(opts.compId) : null;
@@ -3554,12 +3686,18 @@ function buildQuickScoreState(opts = {}) {
     defaultTotalSets = Number(comp?.defaultRules?.totalSets) || 3;
   } else if (mode === 'comp-adhoc' && comp) {
     const pairParts = (comp.participants || []).filter(pt => pt.type === 'pair');
-    defaultTotalSets = Number(comp.defaultRules?.totalSets) || 3;
-    teams = [
-      { players: [pairParts[0]?.players?.[0] || 'DRIVE 1', pairParts[0]?.players?.[1] || 'REVÉS 1'], color: pairParts[0]?.color || '#d4af37' },
-      { players: [pairParts[1]?.players?.[0] || 'DRIVE 2', pairParts[1]?.players?.[1] || 'REVÉS 2'], color: pairParts[1]?.color || '#2f8cff' }
-    ];
-    stageLabel = comp.kind === 'tournament' ? 'Cruce / Ronda' : 'Fecha';
+    const isInd = comp.rankingMode === 'individual' || pairParts.length < 2;
+    defaultTotalSets = isProyectoPadelComp(comp) ? 1 : (Number(comp.defaultRules?.totalSets) || 3);
+    teams = isInd
+      ? [
+          { players: ['', ''], color: '#d4af37' },
+          { players: ['', ''], color: '#2f8cff' }
+        ]
+      : [
+          { players: [pairParts[0]?.players?.[0] || 'DRIVE 1', pairParts[0]?.players?.[1] || 'REVÉS 1'], color: pairParts[0]?.color || '#d4af37' },
+          { players: [pairParts[1]?.players?.[0] || 'DRIVE 2', pairParts[1]?.players?.[1] || 'REVÉS 2'], color: pairParts[1]?.color || '#2f8cff' }
+        ];
+    stageLabel = isProyectoPadelComp(comp) ? '' : (comp.kind === 'tournament' ? 'Cruce / Ronda' : 'Fecha');
   } else if (mode === 'preset') {
     const p = preset;
     const ctx = p.matchContext || 'daily';
@@ -3573,7 +3711,7 @@ function buildQuickScoreState(opts = {}) {
     defaultTotalSets = Math.max(1, Number(p.totalSets) || (p.setsToWin ? (Number(p.setsToWin) * 2 - 1) : 3));
   }
 
-  const initialRows = defaultTotalSets === 1 ? 1 : 2;
+  const initialRows = (isProyectoPadelComp(comp) || defaultTotalSets === 1) ? 1 : 2;
   const pairParts = comp ? (comp.participants || []).filter(pt => pt.type === 'pair') : [];
   return {
     mode,
@@ -3587,6 +3725,7 @@ function buildQuickScoreState(opts = {}) {
     ],
     selPartIds: [pairParts[0]?.id || '', pairParts[1]?.id || ''],
     useManualTeams: mode === 'comp-adhoc' ? (pairParts.length < 2 || comp?.rankingMode === 'individual') : false,
+    activeSlot: 0,
     sets: Array.from({ length: initialRows }, () => [null, null]),
     wo: false,
     winner: 'auto',
@@ -3612,6 +3751,8 @@ function submitQuickMatchResult(cfg = {}) {
   const setsArr = Array.isArray(cfg.setsArr) ? cfg.setsArr : [];
   const dr = cfg.rules || comp?.defaultRules || preset;
   const totalSets = Math.max(1, setsArr.length || Number(dr.totalSets) || 3);
+  const isDraw = !!(cfg.isDraw || cfg.winnerSide === 'draw');
+  const resolvedWinner = isDraw ? 'draw' : cfg.winnerSide;
 
   const compMeta = comp
     ? {
@@ -3625,15 +3766,20 @@ function submitQuickMatchResult(cfg = {}) {
         ? { kind, compId: '', compName: kind === 'league' ? 'Liga' : 'Torneo', fixtureId: '', stageLabel: cfg.stageLabel || '' }
         : { kind: 'daily', compId: '', compName: 'Partido del Día', fixtureId: '', stageLabel: '' });
 
+  const nowTs = Date.now();
+  const topTs = Number(historyList[0]?.createdAt) || 0;
+  const matchTs = (topTs >= nowTs && topTs - nowTs < 5000) ? topTs + 1 : nowTs;
+
   const m = {
     id: fx?.matchId || newCompId('mq'),
-    createdAt: Date.now(),
+    createdAt: matchTs,
     durationMs: 0,
     status: 'finished',
     mode: 'doubles',
     isWalkover: !!cfg.isWalkover,
+    isDraw,
     manualSets: setsArr,
-    manualWinner: cfg.winnerSide,
+    manualWinner: resolvedWinner,
     competition: compMeta,
     teams: [
       { players: p0, color: t0?.color || '#d4af37' },
@@ -3660,7 +3806,7 @@ function submitQuickMatchResult(cfg = {}) {
 
   if (fx) {
     fx.matchId = m.id;
-    fx.winnerSide = cfg.winnerSide;
+    fx.winnerSide = resolvedWinner;
   }
   archiveMatchToHistory(m);
   if (comp) {
@@ -4781,7 +4927,8 @@ function encodeMatchShare(m) {
       m: m.mode,
       cp: m.competition || null,
       ms: m.manualSets || null,
-      mw: m.manualWinner ?? null,
+      mw: m.isDraw ? 'draw' : (m.manualWinner ?? null),
+      drw: m.isDraw ? 1 : 0,
       wo: m.isWalkover ? 1 : 0,
       t: m.teams,
       r: m.rules,
@@ -4825,6 +4972,7 @@ function decodeMatchShare(b64) {
       competition: c.cp || null,
       manualSets: c.ms || null,
       manualWinner: c.mw ?? null,
+      isDraw: !!(c.drw || c.mw === 'draw'),
       isWalkover: !!c.wo,
       teams: c.t,
       rules: c.r,
@@ -5220,8 +5368,10 @@ function buildCompactSetupData(comp, fixturesOverride = null) {
       f: comp.format,
       rm: comp.rankingMode,
       w: comp.winPts,
+      dp: comp.drawPts,
       l: comp.lossPts,
       sb: comp.setBonusPts,
+      gb: comp.gameBonusPts,
       ng: comp.numGroups,
       ag: comp.advancePerGroup,
       dr: comp.defaultRules
@@ -5393,7 +5543,8 @@ function encodeCompSyncMatch(comp, m) {
       tm: m.teams,
       r: m.rules,
       ms: played.map(s => [s.games[0], s.games[1], s.winner, s.tbScore || null, s.isSuperTB ? 1 : 0]),
-      mw: st.matchWinner,
+      mw: st.isDraw ? 'draw' : st.matchWinner,
+      drw: st.isDraw ? 1 : 0,
       ps: pStats
     }
   };
@@ -5414,6 +5565,7 @@ function decodeCompSyncMatch(evt, comp) {
       isWalkover: !!x.wo,
       manualSets: x.ms || [],
       manualWinner: x.mw ?? null,
+      isDraw: !!(x.drw || x.mw === 'draw'),
       manualPlayerStats: x.ps || null,
       competition: x.cp || null,
       teams: x.tm,
@@ -5597,8 +5749,10 @@ function upsertCompFromSetupData(setupData, ts = 0, forceReset = false) {
       format: meta.f || (meta.k === 'tournament' ? 'knockout' : 'league_rr'),
       rankingMode: meta.rm || 'pairs',
       winPts: Number.isFinite(Number(meta.w)) ? Number(meta.w) : 3,
+      drawPts: Number.isFinite(Number(meta.dp)) ? Number(meta.dp) : 2,
       lossPts: Number.isFinite(Number(meta.l)) ? Number(meta.l) : 1,
       setBonusPts: Number(meta.sb) || 0,
+      gameBonusPts: Number.isFinite(Number(meta.gb)) ? Number(meta.gb) : (meta.f === 'proyecto_padel' ? 1 : 0),
       numGroups: Number(meta.ng) || 2,
       advancePerGroup: Number(meta.ag) || 2,
       defaultRules: meta.dr || {},
@@ -5616,8 +5770,10 @@ function upsertCompFromSetupData(setupData, ts = 0, forceReset = false) {
       comp.format = meta.f || comp.format;
       comp.rankingMode = meta.rm || comp.rankingMode;
       comp.winPts = Number.isFinite(Number(meta.w)) ? Number(meta.w) : comp.winPts;
+      if (Number.isFinite(Number(meta.dp))) comp.drawPts = Number(meta.dp);
       comp.lossPts = Number.isFinite(Number(meta.l)) ? Number(meta.l) : comp.lossPts;
       comp.setBonusPts = Number(meta.sb) || 0;
+      if (Number.isFinite(Number(meta.gb))) comp.gameBonusPts = Number(meta.gb);
       comp.numGroups = Number(meta.ng) || comp.numGroups;
       comp.advancePerGroup = Number(meta.ag) || comp.advancePerGroup;
       if (meta.dr) comp.defaultRules = meta.dr;
@@ -6222,18 +6378,50 @@ function roundRect(ctx, x, y, w, h, r, fill) {
 
 function pct(a, b) { return b > 0 ? Math.round((a * 100) / b) : 0; }
 
-function sortStandingsRows(rows, sortKey = 'pts') {
+function getEffectiveSortKey(comp, scopeKey = 'daily') {
+  const tag = comp ? comp.id : scopeKey;
+  if (ui.playerSortScope === tag && ui.playerSort) return ui.playerSort;
+  return isProyectoPadelComp(comp) ? 'elo' : 'pts';
+}
+
+function getCompSubtitle(comp, entityMode, scoring, groupSub = '') {
+  const kindWord = comp.kind === 'league' ? 'Liga' : 'Torneo';
+  const modeWord = entityMode === 'pairs' ? 'Parejas' : 'Individual';
+  if (isProyectoPadelComp(comp)) {
+    return `Proyecto Pádel${groupSub} · ${modeWord} · ${getCompScoringSummaryLabel(comp, scoring, false)}`;
+  }
+  return `${kindWord}${groupSub} · ${modeWord} · ${getCompScoringSummaryLabel(comp, scoring, false)}`;
+}
+
+function sortStandingsRows(rows, sortKey = 'pts', opts = {}) {
   const list = [...(rows || [])];
   if (sortKey === 'pts') {
+    if (opts.tiebreakMode === 'games') {
+      list.sort((a, b) =>
+        ((b.pts || 0) - (a.pts || 0)) ||
+        ((b.gamesWon || 0) - (a.gamesWon || 0)) ||
+        ((b.gamesDiff || 0) - (a.gamesDiff || 0)) ||
+        ((b.elo || 0) - (a.elo || 0)) ||
+        (b.wins - a.wins)
+      );
+    } else {
+      list.sort((a, b) =>
+        ((b.pts || 0) - (a.pts || 0)) ||
+        ((b.setsDiff || 0) - (a.setsDiff || 0)) ||
+        ((b.gamesDiff || 0) - (a.gamesDiff || 0)) ||
+        (b.wins - a.wins) ||
+        (b.elo - a.elo)
+      );
+    }
+  } else if (sortKey === 'elo') {
     list.sort((a, b) =>
+      ((b.elo || 0) - (a.elo || 0)) ||
       ((b.pts || 0) - (a.pts || 0)) ||
-      ((b.setsDiff || 0) - (a.setsDiff || 0)) ||
+      ((b.gamesWon || 0) - (a.gamesWon || 0)) ||
       ((b.gamesDiff || 0) - (a.gamesDiff || 0)) ||
       (b.wins - a.wins) ||
-      (b.elo - a.elo)
+      (b.matches - a.matches)
     );
-  } else if (sortKey === 'elo') {
-    list.sort((a, b) => (b.elo - a.elo) || ((b.pts || 0) - (a.pts || 0)) || (b.wins - a.wins) || (b.matches - a.matches));
   } else if (sortKey === 'wins') {
     list.sort((a, b) => (b.wins - a.wins) || ((b.pts || 0) - (a.pts || 0)) || (b.elo - a.elo) || (b.matches - a.matches));
   } else if (sortKey === 'matches') {
@@ -6242,7 +6430,7 @@ function sortStandingsRows(rows, sortKey = 'pts') {
   return list;
 }
 
-function assignPlayerRanks(players, sortKey = 'pts') {
+function assignPlayerRanks(players, sortKey = 'pts', opts = {}) {
   let currentRank = 1;
   for (let i = 0; i < players.length; i++) {
     if (i > 0) {
@@ -6250,9 +6438,11 @@ function assignPlayerRanks(players, sortKey = 'pts') {
       const curr = players[i];
       let isSame = false;
       if (sortKey === 'pts') {
-        isSame = ((curr.pts || 0) === (prev.pts || 0) && (curr.setsDiff || 0) === (prev.setsDiff || 0) && (curr.gamesDiff || 0) === (prev.gamesDiff || 0) && curr.wins === prev.wins);
+        isSame = opts.tiebreakMode === 'games'
+          ? ((curr.pts || 0) === (prev.pts || 0) && (curr.gamesWon || 0) === (prev.gamesWon || 0) && (curr.gamesDiff || 0) === (prev.gamesDiff || 0) && curr.elo === prev.elo)
+          : ((curr.pts || 0) === (prev.pts || 0) && (curr.setsDiff || 0) === (prev.setsDiff || 0) && (curr.gamesDiff || 0) === (prev.gamesDiff || 0) && curr.wins === prev.wins);
       } else if (sortKey === 'elo') {
-        isSame = (curr.elo === prev.elo);
+        isSame = (curr.elo === prev.elo && (curr.pts || 0) === (prev.pts || 0) && (curr.gamesWon || 0) === (prev.gamesWon || 0) && (curr.gamesDiff || 0) === (prev.gamesDiff || 0));
       } else if (sortKey === 'wins') {
         isSame = (curr.wins === prev.wins && curr.elo === prev.elo);
       } else if (sortKey === 'matches') {
@@ -6269,18 +6459,20 @@ function assignPlayerRanks(players, sortKey = 'pts') {
 
 function getCurrentRankingContext(overrideSort = null) {
   const scope = ui.playerScope || 'daily';
-  const sortKey = overrideSort || ui.playerSort || 'pts';
 
   if (scope === 'shared' || (ui.playerRankingView === 'shared' && ui.sharedRanking?.players?.length)) {
     const sr = ui.sharedRanking;
+    const isSrElo = sr?.primaryMetric === 'elo';
+    const sortKey = overrideSort || (ui.playerSortScope === 'shared' ? ui.playerSort : (isSrElo ? 'elo' : 'pts'));
     const raw = (sr?.players || []).map(p => ({ ...p, shots: { ...(p.shots || {}) } }));
-    const players = assignPlayerRanks(sortStandingsRows(raw, sortKey), sortKey);
+    const players = assignPlayerRanks(sortStandingsRows(raw, sortKey, { tiebreakMode: isSrElo ? 'games' : 'sets' }), sortKey, { tiebreakMode: isSrElo ? 'games' : 'sets' });
     return {
       scope: 'shared',
       id: sr?.id || 'RK-EXT',
       title: sr?.name || 'Ranking Compartido',
       subtitle: sr?.subtitle || 'Ranking compartido',
       entityMode: sr?.entityMode || 'individual',
+      primaryMetric: sr?.primaryMetric || 'pts',
       comp: null,
       scoring: null,
       sortKey,
@@ -6304,12 +6496,16 @@ function getCurrentRankingContext(overrideSort = null) {
         title: scope === 'league' ? 'Ligas' : 'Torneos',
         subtitle: `Sin ${scope === 'league' ? 'ligas' : 'torneos'} todavía`,
         entityMode: 'pairs',
+        primaryMetric: 'pts',
         comp: null,
-        scoring: { winPts: 3, lossPts: 1, setBonusPts: 0 },
-        sortKey,
+        scoring: { winPts: 3, lossPts: 1, drawPts: 2, setBonusPts: 0, gameBonusPts: 0 },
+        sortKey: overrideSort || 'pts',
         players: []
       };
     }
+    const isPP = isProyectoPadelComp(comp);
+    const sortKey = overrideSort || getEffectiveSortKey(comp, scope);
+    const sortOpts = { tiebreakMode: isPP ? 'games' : 'sets' };
     const entityMode = comp.rankingMode === 'both'
       ? (ui.playerEntityMode || 'pairs')
       : (comp.rankingMode || 'pairs');
@@ -6333,15 +6529,14 @@ function getCurrentRankingContext(overrideSort = null) {
       eloBaseMatches: compMatches,
       seedParticipants: seedParts
     });
-    const players = assignPlayerRanks(sortStandingsRows(raw, sortKey), sortKey);
-    const kindWord = comp.kind === 'league' ? 'Liga' : 'Torneo';
-    const modeWord = entityMode === 'pairs' ? 'Parejas' : 'Individual';
+    const players = assignPlayerRanks(sortStandingsRows(raw, sortKey, sortOpts), sortKey, sortOpts);
     return {
       scope,
       id: `${prefs.rankingId || 'RK'}-${comp.id.slice(-4).toUpperCase()}`,
       title: comp.name,
-      subtitle: `${kindWord}${groupSub} · ${modeWord} · +${scoring.winPts}V / +${scoring.lossPts}D + ELO`,
+      subtitle: getCompSubtitle(comp, entityMode, scoring, groupSub),
       entityMode,
+      primaryMetric: isPP ? 'elo' : 'pts',
       comp,
       scoring,
       sortKey,
@@ -6350,6 +6545,7 @@ function getCurrentRankingContext(overrideSort = null) {
   }
 
   // Default: 'daily' (Partido del Día)
+  const sortKey = overrideSort || getEffectiveSortKey(null, 'daily');
   const entityMode = ui.playerEntityMode || 'individual';
   const todayOnly = (ui.dailyTimeFilter === 'today');
   const dailyMatches = historyList.filter(m => getMatchKind(m) === 'daily');
@@ -6369,6 +6565,7 @@ function getCurrentRankingContext(overrideSort = null) {
     title: `${prefs.rankingName || 'Mi Ranking'} · Partido del Día`,
     subtitle: `${timeWord} · ${modeWord} · +${scoring.winPts}V / +${scoring.lossPts}D + ELO`,
     entityMode,
+    primaryMetric: 'pts',
     comp: null,
     scoring,
     sortKey,
@@ -6388,6 +6585,7 @@ function encodeRankingPayload(players, ctxMeta = null) {
       n: rkName,
       sub: ctxMeta?.subtitle || '',
       em: ctxMeta?.entityMode || 'individual',
+      pm: ctxMeta?.primaryMetric || 'pts',
       t: Date.now(),
       p: (players || []).map(p => [
         p.name,
@@ -6405,7 +6603,10 @@ function encodeRankingPayload(players, ctxMeta = null) {
         p.pts || 0,
         p.losses || 0,
         p.setsDiff || 0,
-        p.gamesDiff || 0
+        p.gamesDiff || 0,
+        p.gamesWon || 0,
+        p.draws || 0,
+        p.gamesLost || 0
       ])
     };
     const json = JSON.stringify(compact);
@@ -6441,7 +6642,10 @@ function decodeRankingPayload(b64) {
       pts: row[12] !== undefined ? Number(row[12]) : ((Number(row[2]) || 0) * 3),
       losses: row[13] !== undefined ? Number(row[13]) : Math.max(0, (Number(row[3]) || 0) - (Number(row[2]) || 0)),
       setsDiff: Number(row[14]) || 0,
-      gamesDiff: Number(row[15]) || 0
+      gamesDiff: Number(row[15]) || 0,
+      gamesWon: Number(row[16]) || 0,
+      draws: Number(row[17]) || 0,
+      gamesLost: Number(row[18]) || 0
     }));
     return {
       version: c.v || 1,
@@ -6449,6 +6653,7 @@ function decodeRankingPayload(b64) {
       name: c.n || 'Ranking Compartido',
       subtitle: c.sub || '',
       entityMode: c.em || 'individual',
+      primaryMetric: c.pm || 'pts',
       timestamp: c.t || Date.now(),
       players
     };
@@ -6573,12 +6778,17 @@ async function shareRankingText(overrideCtx = null) {
     rankingUrl = await shortenUrl(fullUrl);
   } catch {}
 
+  const isEloPrimary = ctx.primaryMetric === 'elo' || isProyectoPadelComp(ctx.comp);
   const medals = { 1: '🥇 1º', 2: '🥈 2º', 3: '🥉 3º' };
   const topRows = players.slice(0, 10).map((p) => {
     const rankLabel = medals[p.rank] || `${p.rank}º`;
     const lvl = getEloLevel(p.elo);
     const winPct = pct(p.wins, p.matches);
     const trend = p.lastDelta > 0 ? ` (+${p.lastDelta})` : p.lastDelta < 0 ? ` (${p.lastDelta})` : '';
+    if (isEloPrimary) {
+      const gdStr = (p.gamesDiff || 0) > 0 ? `+${p.gamesDiff}` : String(p.gamesDiff || 0);
+      return `${rankLabel} *${p.name}* · *${p.elo} ELO*${trend} · ${p.pts || 0} pts (${p.gamesWon || 0}G, ${gdStr}) · ${p.wins}G/${p.draws || 0}E/${p.losses || 0}P`;
+    }
     return `${rankLabel} *${p.name}* · ${p.pts || 0} pts · ${p.elo} ELO${trend} · Nivel ${lvl.level} (${lvl.icon}) · ${p.wins}V/${p.matches}P (${winPct}%)`;
   }).join('\n');
 
@@ -6666,6 +6876,7 @@ async function exportRankingImage(overrideCtx = null) {
   const cardH = H - cardY - 120;
   roundRect(ctx, 56, cardY, W - 112, cardH, 24, '#121218');
 
+  const isEloPrimary = rCtx.primaryMetric === 'elo' || isProyectoPadelComp(rCtx.comp);
   // Table header bar
   roundRect(ctx, 56, cardY, W - 112, 58, 24, 'rgba(212, 175, 55, 0.12)');
   ctx.fillStyle = '#d4af37';
@@ -6675,8 +6886,8 @@ async function exportRankingImage(overrideCtx = null) {
   ctx.fillText(rCtx.entityMode === 'pairs' ? 'PAREJA & NIVEL' : 'JUGADOR & NIVEL', 190, cardY + 36);
   ctx.textAlign = 'right';
   ctx.fillText('PARTIDOS', W - 360, cardY + 36);
-  ctx.fillText('ELO', W - 245, cardY + 36);
-  ctx.fillText('PUNTOS', W - 92, cardY + 36);
+  ctx.fillText(isEloPrimary ? 'PTS (G)' : 'ELO', W - 245, cardY + 36);
+  ctx.fillText(isEloPrimary ? 'ELO' : 'PUNTOS', W - 92, cardY + 36);
 
   // Rows
   topPlayers.forEach((p, i) => {
@@ -6714,24 +6925,25 @@ async function exportRankingImage(overrideCtx = null) {
 
     // Record (Wins / Matches / Win%)
     const winPct = pct(p.wins, p.matches);
+    const gdStr = (p.gamesDiff || 0) > 0 ? `+${p.gamesDiff}` : String(p.gamesDiff || 0);
     ctx.textAlign = 'right';
     ctx.fillStyle = '#e2ded5';
     ctx.font = '700 22px "Barlow Condensed", sans-serif';
-    ctx.fillText(`${p.wins}V - ${p.matches - p.wins}D`, W - 360, rowY + 40);
+    ctx.fillText(isEloPrimary ? `${p.wins}G-${p.draws || 0}E-${p.losses || 0}P` : `${p.wins}V - ${p.losses ?? Math.max(0, p.matches - p.wins)}D`, W - 360, rowY + 40);
     ctx.fillStyle = '#a39e93';
     ctx.font = '500 16px Inter, sans-serif';
-    ctx.fillText(`${winPct}% ef.`, W - 360, rowY + 66);
+    ctx.fillText(isEloPrimary ? `${p.gamesWon || 0} GF · ${gdStr}` : `${winPct}% ef.`, W - 360, rowY + 66);
 
-    // ELO
+    // Secondary Metric + ELO trend
     ctx.textAlign = 'right';
-    ctx.fillStyle = '#f5d061';
+    ctx.fillStyle = isEloPrimary ? '#e2ded5' : '#f5d061';
     ctx.font = '800 24px "Barlow Condensed", sans-serif';
-    ctx.fillText(String(p.elo), W - 245, rowY + 42);
+    ctx.fillText(isEloPrimary ? `${p.pts || 0}` : String(p.elo), W - 245, rowY + 42);
     ctx.fillStyle = p.lastDelta > 0 ? '#10b981' : (p.lastDelta < 0 ? '#ef4444' : '#7d7461');
     ctx.font = '600 15px Inter, sans-serif';
     ctx.fillText(p.lastDelta > 0 ? `+${p.lastDelta}` : (p.lastDelta < 0 ? `${p.lastDelta}` : '—'), W - 245, rowY + 66);
 
-    // PTS Pill
+    // Primary Pill (ELO for Proyecto Padel, PTS otherwise)
     const ptsW = 122, ptsH = 54;
     const ptsX = W - 214, ptsY = rowY + 16;
     roundRect(ctx, ptsX, ptsY, ptsW, ptsH, 12, 'rgba(212, 175, 55, 0.14)');
@@ -6744,7 +6956,7 @@ async function exportRankingImage(overrideCtx = null) {
     ctx.fillStyle = '#ffe58f';
     ctx.font = '900 32px "Barlow Condensed", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${p.pts || 0}`, ptsX + ptsW / 2, ptsY + 37);
+    ctx.fillText(isEloPrimary ? `${p.elo}` : `${p.pts || 0}`, ptsX + ptsW / 2, ptsY + 37);
   });
 
   // Bottom watermark with dynamic measurement
@@ -6862,13 +7074,22 @@ function renderMatchCard(m) {
         : `<span class="badge">${esc(fmtDurationLong(m.durationMs))}</span>`;
 
   let eloBadge = '';
-  if (w !== null && !m.isWalkover) {
+  if ((w !== null || st.isDraw) && !m.isWalkover) {
     const eloInfo = calculateMatchEloPreview(m);
     if (eloInfo) {
-      const winPair = w === 0 ? eloInfo.pair0 : eloInfo.pair1;
-      const pts = Math.abs(winPair.players[0]?.delta || 0);
-      eloBadge = `<span class="badge elo" title="Puntos ELO en juego">⚡ ELO ±${pts}</span>`;
+      const p0Delta = eloInfo.pair0.players[0]?.delta || 0;
+      const p1Delta = eloInfo.pair1.players[0]?.delta || 0;
+      if (st.isDraw) {
+        const dMax = Math.max(Math.abs(p0Delta), Math.abs(p1Delta));
+        eloBadge = `<span class="badge">🤝 Empate</span>` + (dMax > 0 ? ` <span class="badge elo" title="Ajuste ELO por empate">⚡ ELO ±${dMax}</span>` : '');
+      } else {
+        const winPair = w === 0 ? eloInfo.pair0 : eloInfo.pair1;
+        const pts = Math.abs(winPair.players[0]?.delta || 0);
+        eloBadge = `<span class="badge elo" title="Puntos ELO en juego">⚡ ELO ±${pts}</span>`;
+      }
     }
+  } else if (st.isDraw) {
+    eloBadge = `<span class="badge">🤝 Empate</span>`;
   }
 
   const renderRow = (t) => {
@@ -6938,12 +7159,13 @@ function renderHome() {
     </div>
     ${activeComps.map(c => {
       const sc = getCompetitionScoringConfig(c);
+      const isPP = isProyectoPadelComp(c);
       const leaderRows = computeScopeStandings(getCompetitionMatches(c), {
         ...sc,
         entityMode: c.rankingMode === 'individual' ? 'individual' : 'pairs',
         seedParticipants: c.participants || []
       });
-      const sorted = sortStandingsRows(leaderRows, 'pts');
+      const sorted = sortStandingsRows(leaderRows, isPP ? 'elo' : 'pts', { tiebreakMode: isPP ? 'games' : 'sets' });
       const leader = sorted[0];
       const matchesCount = getCompetitionMatches(c).filter(m => m.status === 'finished').length;
       return `
@@ -6951,13 +7173,17 @@ function renderHome() {
         <div class="comp-card-top">
           <div>
             <div class="comp-pills" style="margin-bottom:6px">
-              <span class="badge ${c.kind==='league'?'league':'tourn'}">${c.kind==='league'?'🏅 Liga':'🏆 Torneo'}</span>
+              <span class="badge ${isPP ? 'pp' : (c.kind==='league'?'league':'tourn')}">${isPP ? '⚡ Proyecto Pádel' : (c.kind==='league'?'🏅 Liga':'🏆 Torneo')}</span>
               <span class="badge">${(c.participants||[]).length} inscriptos · ${matchesCount} PJ</span>
             </div>
             <div class="comp-card-title">${esc(c.name)}</div>
           </div>
         </div>
-        ${leader && leader.matches > 0 ? `<div class="comp-leader">🥇 Líder: <b>${esc(leader.name)}</b> · ${leader.pts} pts · ${leader.elo} ELO</div>` : `<div class="comp-leader">Tocá para gestionar tabla, fixture o resultados</div>`}
+        ${leader && leader.matches > 0
+          ? (isPP
+            ? `<div class="comp-leader">🥇 Líder ELO: <b>${esc(leader.name)}</b> · ${leader.elo} ELO (${leader.pts} pts · ${leader.gamesWon || 0}G)</div>`
+            : `<div class="comp-leader">🥇 Líder: <b>${esc(leader.name)}</b> · ${leader.pts} pts · ${leader.elo} ELO</div>`)
+          : `<div class="comp-leader">Tocá para cargar resultados o ver tabla</div>`}
       </button>`;
     }).join('')}` : '';
 
@@ -8266,7 +8492,7 @@ function renderStats() {
   const stScopeName = stComp ? `${stComp.kind === 'league' ? 'Liga' : 'Torneo'}: ${stComp.name}` : 'Partido del Día';
   const eloInfo = m.isWalkover ? null : calculateMatchEloPreview(m);
   let eloCardHtml = '';
-  if (eloInfo && st.matchWinner !== null) {
+  if (eloInfo && (st.matchWinner !== null || st.isDraw)) {
     const p0 = eloInfo.pair0;
     const p1 = eloInfo.pair1;
     const swArr = st.sets.reduce((acc, s) => {
@@ -8274,15 +8500,20 @@ function renderStats() {
       else if (s.winner === 1) acc[1]++;
       return acc;
     }, [0, 0]);
-    const t0Pts = (st.matchWinner === 0 ? stScoring.winPts : stScoring.lossPts) + (swArr[0] * (stScoring.setBonusPts || 0));
-    const t1Pts = (st.matchWinner === 1 ? stScoring.winPts : stScoring.lossPts) + (swArr[1] * (stScoring.setBonusPts || 0));
+    const gmArr = st.sets.reduce((acc, s) => [acc[0] + (s.games?.[0] || 0), acc[1] + (s.games?.[1] || 0)], [0, 0]);
+    const gb = stScoring.gameBonusPts || 0;
+    const sb = stScoring.setBonusPts || 0;
+    const base0 = st.isDraw ? (stScoring.drawPts ?? 2) : (st.matchWinner === 0 ? stScoring.winPts : stScoring.lossPts);
+    const base1 = st.isDraw ? (stScoring.drawPts ?? 2) : (st.matchWinner === 1 ? stScoring.winPts : stScoring.lossPts);
+    const t0Pts = base0 + (swArr[0] * sb) + (gmArr[0] * gb);
+    const t1Pts = base1 + (swArr[1] * sb) + (gmArr[1] * gb);
     eloCardHtml = `
     <div class="sec-t">Ranking · ${esc(stScopeName)}</div>
     <div class="card elo-match-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
         <div style="display:flex;align-items:center;gap:8px">
           ${ICONS.trophy}
-          <h3 style="margin:0">Puntos (+${t0Pts} / +${t1Pts}) & ELO (${esc(stScopeName)})</h3>
+          <h3 style="margin:0">${st.isDraw ? `Empate (+${t0Pts} / +${t1Pts} pts) & ELO` : `Puntos (+${t0Pts} / +${t1Pts}) & ELO`} (${esc(stScopeName)})</h3>
         </div>
         ${eloInfo.isBlowout ? `<span class="tag-gold" style="font-size:11px;padding:3px 8px;border-radius:6px;background:rgba(212,175,55,0.15);color:var(--gold);border:1px solid rgba(212,175,55,0.35);font-weight:700">💥 Bonus x1.2 (+6 juegos de ventaja)</span>` : ''}
       </div>
@@ -8418,6 +8649,7 @@ function renderStats() {
         </div>`).join('')}
       <div class="meta">
         ${getMatchContextBadgeHtml(m)}
+        ${st.isDraw ? `<span class="badge">🤝 EMPATE</span>` : ''}
         <span>·</span>
         <span>${esc(fmtDateLong(m.createdAt))}</span>
         <span>·</span>
@@ -8600,22 +8832,57 @@ function formatFixtureScoreSummary(fx) {
   };
 }
 
+function renderSortBarHtml(sortKey, isEloPrimary = false) {
+  const btns = isEloPrimary
+    ? [
+        ['elo', '⭐ ELO'],
+        ['pts', '🏅 Puntos (G)'],
+        ['wins', '🏆 Victorias'],
+        ['matches', '🎾 Partidos']
+      ]
+    : [
+        ['pts', '🏅 Puntos'],
+        ['elo', '⭐ ELO'],
+        ['wins', '🏆 Victorias'],
+        ['matches', '🎾 Partidos']
+      ];
+  return `
+    <div class="seg" style="margin-bottom:14px">
+      ${btns.map(([k, lbl]) => `<button class="${sortKey===k?'on':''}" data-set-psort="${k}">${lbl}</button>`).join('')}
+    </div>`;
+}
+
 function renderStandingsSectionHtml(players, rCtx, opts = {}) {
   if (!players || !players.length) {
     return `<div class="empty">${ICONS.trophy}<br>${esc(opts.emptyText || 'Todavía no hay jugadores o partidos en este ranking.')}</div>`;
   }
   const qualCount = Number(opts.qualCount) || 0;
   const entityLabel = rCtx?.entityMode === 'pairs' ? 'Pareja' : 'Jugador';
+  const isEloPrimary = rCtx?.primaryMetric === 'elo' || isProyectoPadelComp(rCtx?.comp);
+  const scoringBadge = rCtx?.scoring ? getCompScoringSummaryLabel(rCtx.comp, rCtx.scoring, false) : '';
 
   const tableHtml = `
   <div class="card" style="padding:12px 14px;margin-bottom:14px">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-      <h3 style="margin:0;font-size:15px">${esc(opts.tableTitle || 'Tabla de Posiciones (Puntos + ELO)')}</h3>
-      ${rCtx?.scoring ? `<small class="muted">+${rCtx.scoring.winPts}V / +${rCtx.scoring.lossPts}D${rCtx.scoring.setBonusPts ? ` · +${rCtx.scoring.setBonusPts}/set` : ''}</small>` : ''}
+      <h3 style="margin:0;font-size:15px">${esc(opts.tableTitle || (isEloPrimary ? 'Tabla Oficial · ELO Principal' : 'Tabla de Posiciones (Puntos + ELO)'))}</h3>
+      ${scoringBadge ? `<small class="muted">${esc(scoringBadge)}</small>` : ''}
     </div>
     <div class="tbl-wrap">
       <table class="stand-tbl">
         <thead>
+          ${isEloPrimary ? `
+          <tr>
+            <th>Pos</th>
+            <th>${entityLabel}</th>
+            <th title="Partidos jugados">PJ</th>
+            <th title="Ganados">G</th>
+            <th title="Empates">E</th>
+            <th title="Perdidos">P</th>
+            <th title="Games ganados">GF</th>
+            <th title="Diferencia de games">DJ</th>
+            <th title="Puntos secundarios (Games + Bonus)">PTS</th>
+            <th title="Rating ELO Principal">ELO</th>
+          </tr>` : `
           <tr>
             <th>Pos</th>
             <th>${entityLabel}</th>
@@ -8626,7 +8893,7 @@ function renderStandingsSectionHtml(players, rCtx, opts = {}) {
             <th title="Diferencia de juegos">DJ</th>
             <th title="Rating ELO exclusivo de este ranking">ELO</th>
             <th title="Puntos acumulados">PTS</th>
-          </tr>
+          </tr>`}
         </thead>
         <tbody>
           ${players.map((p, idx) => {
@@ -8635,6 +8902,9 @@ function renderStandingsSectionHtml(players, rCtx, opts = {}) {
             const sd = (p.setsDiff || 0) > 0 ? `+${p.setsDiff}` : String(p.setsDiff || 0);
             const gd = (p.gamesDiff || 0) > 0 ? `+${p.gamesDiff}` : String(p.gamesDiff || 0);
             const qualCls = (qualCount > 0 && idx < qualCount) ? 'qual' : '';
+            const deltaMini = p.lastDelta
+              ? `<small style="font-size:11px;font-family:var(--font);font-weight:700;margin-left:3px;color:${p.lastDelta > 0 ? '#10b981' : '#ef4444'}">${p.lastDelta > 0 ? '+' : ''}${p.lastDelta}</small>`
+              : '';
             return `
             <tr class="${qualCls}">
               <td><b>${medal}</b></td>
@@ -8645,13 +8915,22 @@ function renderStandingsSectionHtml(players, rCtx, opts = {}) {
                   <span style="font-size:11px;color:${lvl.color};font-weight:700">${lvl.icon}${lvl.level}</span>
                 </div>
               </td>
+              ${isEloPrimary ? `
+              <td>${p.matches}</td>
+              <td>${p.wins}</td>
+              <td>${p.draws || 0}</td>
+              <td>${p.losses ?? Math.max(0, p.matches - p.wins - (p.draws || 0))}</td>
+              <td>${p.gamesWon || 0}</td>
+              <td>${gd}</td>
+              <td><b>${p.pts ?? 0}</b></td>
+              <td class="pts-cell">${p.elo}${deltaMini}</td>` : `
               <td>${p.matches}</td>
               <td>${p.wins}</td>
               <td>${p.losses ?? Math.max(0, p.matches - p.wins)}</td>
               <td>${sd}</td>
               <td>${gd}</td>
               <td><b>${p.elo}</b></td>
-              <td class="pts-cell">${p.pts ?? 0}</td>
+              <td class="pts-cell">${p.pts ?? 0}</td>`}
             </tr>`;
           }).join('')}
         </tbody>
@@ -8681,7 +8960,7 @@ function renderStandingsSectionHtml(players, rCtx, opts = {}) {
         : `<div class="elo-trend neu">Sin cambios</div>`;
 
     const shotBadges = [];
-    if (p.shots) {
+    if (!isEloPrimary && p.shots) {
       if (p.shots.smash) shotBadges.push(`💥 ${p.shots.smash} Smash`);
       if (p.shots.volea) shotBadges.push(`🎾 ${p.shots.volea} Volea`);
       if (p.shots.bandeja) shotBadges.push(`🌀 ${p.shots.bandeja} Bandeja`);
@@ -8705,12 +8984,20 @@ function renderStandingsSectionHtml(players, rCtx, opts = {}) {
             ? `<span class="calib-pill calib" title="Factor K=50 para calibración rápida">Calib. (${p.finishedMatches || 0}/10)</span>`
             : `<span class="calib-pill fixed" title="Factor K=32 consolidado">K=32</span>`}
         </div>
-        <small>${p.matches} PJ · ${p.wins} PG / ${p.losses ?? Math.max(0, p.matches - p.wins)} PP (${winPct}%) · Sets ${sdStr} · Juegos ${gdStr}</small>
+        ${isEloPrimary
+          ? `<small>${p.matches} PJ · ${p.wins}G ${p.draws || 0}E ${p.losses ?? 0}P (${winPct}%) · ${p.gamesWon || 0} GF / ${p.gamesLost || 0} GC (Dif ${gdStr})</small>`
+          : `<small>${p.matches} PJ · ${p.wins} PG / ${p.losses ?? Math.max(0, p.matches - p.wins)} PP (${winPct}%) · Sets ${sdStr} · Juegos ${gdStr}</small>`}
         <div class="pstats">
-          <span>Winners: <b>${p.winners || 0}</b></span>
-          <span>ENF: <b>${p.ue || 0}</b></span>
-          <span>1º Saque: <b>${pct(p.firstServeIn || 0, p.srvPtsTotal || 0)}%</b></span>
-          <span>Gan. saque: <b>${pct(p.srvPtsWon || 0, p.srvPtsTotal || 0)}%</b></span>
+          ${isEloPrimary ? `
+            <span>Pts (Games+Bonus): <b>${p.pts ?? 0} pts</b></span>
+            <span>Games ganados: <b>${p.gamesWon || 0}</b></span>
+            <span>Dif. games: <b>${gdStr}</b></span>
+          ` : `
+            <span>Winners: <b>${p.winners || 0}</b></span>
+            <span>ENF: <b>${p.ue || 0}</b></span>
+            <span>1º Saque: <b>${pct(p.firstServeIn || 0, p.srvPtsTotal || 0)}%</b></span>
+            <span>Gan. saque: <b>${pct(p.srvPtsWon || 0, p.srvPtsTotal || 0)}%</b></span>
+          `}
         </div>
         ${shotBadges.length ? `
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
@@ -8718,10 +9005,17 @@ function renderStandingsSectionHtml(players, rCtx, opts = {}) {
         </div>` : ''}
       </div>
       <div class="pcard-pts-box">
-        <span class="pcard-pts-main">${p.pts ?? 0}</span>
-        <small>PUNTOS</small>
-        <div class="pcard-elo-sub">⚡ ${p.elo} ELO</div>
-        ${trendHtml}
+        ${isEloPrimary ? `
+          <span class="pcard-pts-main" style="font-size:32px">${p.elo}</span>
+          <small>ELO</small>
+          ${trendHtml}
+          <div class="pcard-elo-sub" title="Puntaje secundario por games + bonus">🏅 ${p.pts ?? 0} pts · ${p.gamesWon || 0}G</div>
+        ` : `
+          <span class="pcard-pts-main">${p.pts ?? 0}</span>
+          <small>PUNTOS</small>
+          <div class="pcard-elo-sub">⚡ ${p.elo} ELO</div>
+          ${trendHtml}
+        `}
       </div>
     </div>`;
   }).join('');
@@ -8731,6 +9025,7 @@ function renderStandingsSectionHtml(players, rCtx, opts = {}) {
 
 function getCompFormatLabel(comp) {
   if (!comp) return '';
+  if (comp.format === 'proyecto_padel') return '⚡ Proyecto Pádel';
   if (comp.format === 'league_rr') return 'Todos contra Todos';
   if (comp.format === 'league_rr2') return 'Ida y Vuelta';
   if (comp.format === 'knockout') return 'Eliminación Directa';
@@ -8765,6 +9060,7 @@ function renderCompetitions() {
 
     ${shown.length ? shown.map(c => {
       const sc = getCompetitionScoringConfig(c);
+      const isPP = isProyectoPadelComp(c);
       const matches = getCompetitionMatches(c, true);
       const finCount = matches.filter(m => m.status === 'finished').length;
       const pendingFx = (c.fixtures || []).filter(fx => !fx.isBye && fx.team0 && fx.team1 && fx.winnerSide === null).length;
@@ -8773,7 +9069,7 @@ function renderCompetitions() {
         ...sc,
         entityMode,
         seedParticipants: c.participants || []
-      }), 'pts');
+      }), isPP ? 'elo' : 'pts', { tiebreakMode: isPP ? 'games' : 'sets' });
       const leader = rows[0];
       const finalFx = (c.fixtures || []).find(fx => fx.phase === 'playoff' && fx.roundLabel === 'Final' && fx.winnerSide !== null);
       const champTeam = finalFx ? (finalFx.winnerSide === 0 ? finalFx.team0 : finalFx.team1) : null;
@@ -8783,9 +9079,9 @@ function renderCompetitions() {
         <div class="comp-card-top">
           <div style="min-width:0;flex:1">
             <div class="comp-pills" style="margin-bottom:6px">
-              <span class="badge ${c.kind==='league'?'league':'tourn'}">${c.kind==='league'?'🏅 Liga':'🏆 Torneo'}</span>
-              <span class="badge">${esc(getCompFormatLabel(c))}</span>
-              <span class="badge">+${sc.winPts}V / +${sc.lossPts}D</span>
+              <span class="badge ${isPP ? 'pp' : (c.kind==='league'?'league':'tourn')}">${isPP ? '⚡ Proyecto Pádel' : (c.kind==='league'?'🏅 Liga':'🏆 Torneo')}</span>
+              ${!isPP ? `<span class="badge">${esc(getCompFormatLabel(c))}</span>` : `<span class="badge">👤 Individual · ELO Principal</span>`}
+              <span class="badge">${esc(getCompScoringSummaryLabel(c, sc, true))}</span>
               ${c.syncCode ? `<span class="badge sync">📡 Sala #${esc(c.syncCode)}</span>` : ''}
             </div>
             <div class="comp-card-title">${esc(c.name)}</div>
@@ -8803,13 +9099,17 @@ function renderCompetitions() {
         ${champTeam
           ? `<div class="comp-leader">🏆 Campeón: <b>${esc(champTeam.label || formatPairLabel(champTeam.players?.[0], champTeam.players?.[1]))}</b></div>`
           : (leader && leader.matches > 0
-            ? `<div class="comp-leader">🥇 Líder: <b>${esc(leader.name)}</b> · ${leader.pts} pts · ${leader.elo} ELO (${leader.wins}V)</div>`
+            ? (isPP
+              ? `<div class="comp-leader">🥇 Líder ELO: <b>${esc(leader.name)}</b> · ${leader.elo} ELO (${leader.pts} pts · ${leader.gamesWon || 0}G)</div>`
+              : `<div class="comp-leader">🥇 Líder: <b>${esc(leader.name)}</b> · ${leader.pts} pts · ${leader.elo} ELO (${leader.wins}V)</div>`)
             : '')}
 
         <div class="btn-row" style="margin-top:2px">
-          <button class="btn primary sm" data-open-comp="${esc(c.id)}">Gestionar</button>
+          <button class="btn primary sm" data-open-comp="${esc(c.id)}">${isPP ? 'Gestionar / Cargar' : 'Gestionar'}</button>
           <button class="btn sm" data-open-comp-rank="${esc(c.id)}">${ICONS.trophy} Ver Ranking</button>
-          <button class="btn sm" data-play-in-comp="${esc(c.id)}">${ICONS.play} Jugar aquí</button>
+          ${isPP
+            ? `<button class="btn sm" data-act="open-comp-quick-score" data-comp="${esc(c.id)}">${ICONS.check} Cargar Resultado</button>`
+            : `<button class="btn sm" data-play-in-comp="${esc(c.id)}">${ICONS.play} Jugar aquí</button>`}
         </div>
       </div>`;
     }).join('') : `
@@ -8952,29 +9252,32 @@ function renderCompDetail() {
     </div>${renderTabbar('competitions')}`;
   }
   ui.compId = comp.id;
-  const tab = ui.compTab || 'standings';
+  const isPP = isProyectoPadelComp(comp);
+  const fixtures = comp.fixtures || [];
+  let tab = ui.compTab || 'standings';
+  if (isPP && tab === 'fixtures' && !fixtures.length) tab = 'standings';
   const sc = getCompetitionScoringConfig(comp);
   const parts = comp.participants || [];
   const matches = getCompetitionMatches(comp, true);
-  const fixtures = comp.fixtures || [];
 
   const entityMode = comp.rankingMode === 'both'
     ? (ui.playerEntityMode || 'pairs')
     : (comp.rankingMode || 'pairs');
-  const sortKey = ui.playerSort || 'pts';
+  const sortKey = getEffectiveSortKey(comp, comp.id);
+  const sortOpts = { tiebreakMode: isPP ? 'games' : 'sets' };
   const rawStandings = computeScopeStandings(getCompetitionMatches(comp, false), {
     ...sc,
     entityMode,
     seedParticipants: parts
   });
-  const players = assignPlayerRanks(sortStandingsRows(rawStandings, sortKey), sortKey);
-  const kindWord = comp.kind === 'league' ? 'Liga' : 'Torneo';
+  const players = assignPlayerRanks(sortStandingsRows(rawStandings, sortKey, sortOpts), sortKey, sortOpts);
   const rCtx = {
     scope: comp.kind,
     id: `${prefs.rankingId || 'RK'}-${comp.id.slice(-4).toUpperCase()}`,
     title: comp.name,
-    subtitle: `${kindWord} · ${entityMode === 'pairs' ? 'Parejas' : 'Individual'} · +${sc.winPts}V / +${sc.lossPts}D + ELO`,
+    subtitle: getCompSubtitle(comp, entityMode, sc),
     entityMode,
+    primaryMetric: isPP ? 'elo' : 'pts',
     comp,
     scoring: sc,
     sortKey,
@@ -9003,16 +9306,15 @@ function renderCompDetail() {
           <button class="${entityMode==='individual'?'on':''}" data-set-pentity="individual">👤 Individual</button>
         </div>
       ` : ''}
-      <div class="seg" style="margin-bottom:14px">
-        <button class="${sortKey==='pts'?'on':''}" data-set-psort="pts">🏅 Puntos</button>
-        <button class="${sortKey==='elo'?'on':''}" data-set-psort="elo">⭐ ELO</button>
-        <button class="${sortKey==='wins'?'on':''}" data-set-psort="wins">🏆 Victorias</button>
-        <button class="${sortKey==='matches'?'on':''}" data-set-psort="matches">🎾 Partidos</button>
-      </div>
+      ${renderSortBarHtml(sortKey, isPP)}
       ${groupsHtml}
       ${renderStandingsSectionHtml(players, rCtx, {
-        tableTitle: comp.format === 'groups_playoff' ? 'Ranking General + ELO del Torneo' : 'Tabla de Posiciones + ELO',
-        emptyText: 'Inscribí participantes o jugá un partido en esta competencia para ver la tabla.'
+        tableTitle: isPP
+          ? 'Tabla Proyecto Pádel · ELO Principal'
+          : (comp.format === 'groups_playoff' ? 'Ranking General + ELO del Torneo' : 'Tabla de Posiciones + ELO'),
+        emptyText: isPP
+          ? 'Tocá «⚡ Cargar Resultado Final» arriba para sumar el primer resultado (ej: Lucía-Juan vs Marcos-Noelia 4-2) o agregá inscriptos.'
+          : 'Inscribí participantes o jugá un partido en esta competencia para ver la tabla.'
       })}
       ${players.length ? `
         <div class="btn-row" style="margin-top:12px">
@@ -9052,10 +9354,12 @@ function renderCompDetail() {
   } else if (tab === 'matches') {
     bodyHtml = `
       <div class="btn-row" style="margin-bottom:14px">
-        <button class="btn primary" data-play-in-comp="${esc(comp.id)}">${ICONS.play} Jugar en vivo</button>
-        <button class="btn" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Sets / Games</button>
+        ${isPP
+          ? `<button class="btn primary" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Resultado Final</button>`
+          : `<button class="btn primary" data-play-in-comp="${esc(comp.id)}">${ICONS.play} Jugar en vivo</button>
+             <button class="btn" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Sets / Games</button>`}
       </div>
-      ${matches.length ? matches.map(renderMatchCard).join('') : `<div class="empty">${ICONS.ball}<br>Aún no se registraron partidos en esta competencia.</div>`}
+      ${matches.length ? matches.map(renderMatchCard).join('') : `<div class="empty">${ICONS.ball}<br>Aún no se registraron partidos en este torneo.</div>`}
     `;
   } else if (tab === 'participants') {
     const isIndOnly = comp.rankingMode === 'individual';
@@ -9145,17 +9449,29 @@ function renderCompDetail() {
       <div style="display:flex;gap:6px;margin-left:auto">
         <button class="icon-btn" data-open-comp-sync="${esc(comp.id)}" title="Sincronizar varios dispositivos (QR / Link)">${ICONS.qr}</button>
         <button class="icon-btn" data-edit-comp="${esc(comp.id)}" title="Editar">${ICONS.edit}</button>
-        <button class="icon-btn" data-play-in-comp="${esc(comp.id)}" title="Jugar partido aquí">${ICONS.play}</button>
+        ${isPP
+          ? `<button class="icon-btn" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}" title="Cargar resultado rápido">${ICONS.plus}</button>`
+          : `<button class="icon-btn" data-play-in-comp="${esc(comp.id)}" title="Jugar partido aquí">${ICONS.play}</button>`}
         <button class="icon-btn" data-del-comp="${esc(comp.id)}" title="Eliminar">${ICONS.trash}</button>
       </div>
     </div>
 
     <div class="comp-pills" style="margin-bottom:10px">
-      <span class="badge ${comp.kind==='league'?'league':'tourn'}">${comp.kind==='league'?'🏅 Liga':'🏆 Torneo'}</span>
-      <span class="badge">${esc(getCompFormatLabel(comp))}</span>
-      <span class="badge">+${sc.winPts}V / +${sc.lossPts}D · ELO Aparte</span>
+      <span class="badge ${isPP ? 'pp' : (comp.kind==='league'?'league':'tourn')}">${isPP ? '⚡ Proyecto Pádel' : (comp.kind==='league'?'🏅 Liga':'🏆 Torneo')}</span>
+      ${!isPP ? `<span class="badge">${esc(getCompFormatLabel(comp))}</span>` : `<span class="badge">👤 Individual · Parejas Libres</span>`}
+      <span class="badge">${esc(getCompScoringSummaryLabel(comp, sc, true))}</span>
       ${comp.syncCode ? `<span class="badge sync">📡 Sala #${esc(comp.syncCode)}</span>` : ''}
     </div>
+
+    ${isPP ? `
+      <div class="pp-hero-bar">
+        <div style="min-width:0;flex:1">
+          <b style="font-size:14px;color:var(--acc-ink);display:block">⚡ Mesa de Resultados · ELO Principal</b>
+          <small style="color:var(--tx2);font-size:12px;display:block">Cargá solo los marcadores finales (ej. Lucía-Juan vs Marcos-Noelia 4-2 o 3-3 empate).</small>
+        </div>
+        <button class="btn primary" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Resultado Final</button>
+      </div>
+    ` : ''}
 
     ${comp.syncCode ? `
       <div class="sync-bar">
@@ -9174,8 +9490,8 @@ function renderCompDetail() {
     ` : `
       <div class="sync-bar idle">
         <div style="min-width:0;flex:1">
-          <b style="font-size:13px;color:var(--tx);display:block">🏟️ ¿Se juegan varios partidos simultáneos?</b>
-          <small style="color:var(--tx2);font-size:11.5px;display:block">Generá un QR o enlace para conectar varios celulares y sumar resultados juntos.</small>
+          <b style="font-size:13px;color:var(--tx);display:block">🏟️ ¿Se cargan resultados desde varios celulares?</b>
+          <small style="color:var(--tx2);font-size:11.5px;display:block">Generá un QR o enlace para sincronizar tabla y resultados entre dispositivos.</small>
         </div>
         <button class="btn primary sm" data-open-comp-sync="${esc(comp.id)}">${ICONS.qr} Conectar dispositivos</button>
       </div>
@@ -9183,7 +9499,7 @@ function renderCompDetail() {
 
     <div class="seg" style="margin-bottom:16px">
       <button class="${tab==='standings'?'on':''}" data-set-ctab="standings">Tabla</button>
-      <button class="${tab==='fixtures'?'on':''}" data-set-ctab="fixtures">Fixture</button>
+      ${(!isPP || fixtures.length > 0) ? `<button class="${tab==='fixtures'?'on':''}" data-set-ctab="fixtures">Fixture</button>` : ''}
       <button class="${tab==='matches'?'on':''}" data-set-ctab="matches">Partidos (${matches.length})</button>
       <button class="${tab==='participants'?'on':''}" data-set-ctab="participants">Inscriptos (${parts.length})</button>
     </div>
@@ -9241,6 +9557,9 @@ function syncQuickScoreStateFromDom() {
 
 function formatQuickScorePreview(qs) {
   if (!qs) return 'Tocá los games de cada set para cargar el resultado';
+  const comp = qs.compId ? getCompById(qs.compId) : null;
+  const isPP = isProyectoPadelComp(comp);
+  const sc = getCompetitionScoringConfig(comp);
   const n0 = formatPairLabel(qs.teams[0]?.players?.[0] || 'DRIVE 1', qs.teams[0]?.players?.[1] || 'REVÉS 1');
   const n1 = formatPairLabel(qs.teams[1]?.players?.[0] || 'DRIVE 2', qs.teams[1]?.players?.[1] || 'REVÉS 2');
   if (qs.wo) {
@@ -9249,12 +9568,29 @@ function formatQuickScorePreview(qs) {
     return '⚠️ Activaste W.O.: elegí qué pareja ganó abajo';
   }
   const valid = (qs.sets || []).filter(s => s[0] !== null && s[1] !== null);
-  if (!valid.length) return 'Tocá los games de cada set (0–7) para calcular el ganador';
+  if (!valid.length) return isPP ? 'Tocá los games finales de cada pareja (ej. 4 y 2, o 3 y 3)' : 'Tocá los games de cada set (0–7) para calcular el ganador';
   const scoreTxt = valid.map(s => `${s[0]}-${s[1]}`).join(' · ');
-  let w0 = 0, w1 = 0;
-  valid.forEach(s => { if (s[0] > s[1]) w0++; else if (s[1] > s[0]) w1++; });
+  let w0 = 0, w1 = 0, g0 = 0, g1 = 0;
+  valid.forEach(s => {
+    const a = Number(s[0]) || 0, b = Number(s[1]) || 0;
+    g0 += a; g1 += b;
+    if (a > b) w0++; else if (b > a) w1++;
+  });
+  if (isPP) {
+    const gb = sc.gameBonusPts || 0;
+    if (qs.winner === '0' || (qs.winner === 'auto' && w0 > w1)) {
+      return `✓ Gana ${n0} (${scoreTxt}) · +${sc.winPts + g0 * gb} pts vs +${sc.lossPts + g1 * gb} pts · + ELO`;
+    }
+    if (qs.winner === '1' || (qs.winner === 'auto' && w1 > w0)) {
+      return `✓ Gana ${n1} (${scoreTxt}) · +${sc.winPts + g1 * gb} pts vs +${sc.lossPts + g0 * gb} pts · + ELO`;
+    }
+    if ((qs.winner === 'draw' || qs.winner === 'auto') && g0 === g1) {
+      return `🤝 Empate ${scoreTxt} · Ambos +${(sc.drawPts ?? 2) + g0 * gb} pts (${sc.drawPts ?? 2}E + ${g0}G) · Ajuste ELO`;
+    }
+  }
   if (qs.winner === '0') return `✓ Gana ${n0} (${scoreTxt})`;
   if (qs.winner === '1') return `✓ Gana ${n1} (${scoreTxt})`;
+  if (qs.winner === 'draw' && g0 === g1) return `🤝 Empate (${scoreTxt})`;
   if (w0 > w1) return `✓ Gana ${n0} (${w0}-${w1} sets · ${scoreTxt})`;
   if (w1 > w0) return `✓ Gana ${n1} (${w1}-${w0} sets · ${scoreTxt})`;
   return `Empate ${w0}-${w1} en sets (${scoreTxt}) — Agregá otro set o elegí ganador`;
@@ -9298,8 +9634,9 @@ function renderCompetitionModals() {
   if (ui.compModal === 'create' || ui.compModal === 'edit') {
     const f = ui.compFormState || {};
     const isTourn = f.kind === 'tournament';
+    const isPP = isTourn && f.format === 'proyecto_padel';
     const formats = isTourn
-      ? [['knockout','Eliminación Directa'], ['groups_playoff','Grupos + Playoffs'], ['open','Libre / Americano']]
+      ? [['proyecto_padel','⚡ Proyecto Pádel'], ['knockout','Eliminación Directa'], ['groups_playoff','Grupos + Playoffs'], ['open','Libre / Americano']]
       : [['league_rr','Todos contra Todos'], ['league_rr2','Ida y Vuelta'], ['open','Liga Libre']];
     const dr = f.defaultRules || {};
 
@@ -9318,7 +9655,7 @@ function renderCompetitionModals() {
 
         <div class="field" style="margin-bottom:10px">
           <label>Nombre</label>
-          <input class="inp" id="cf-name" value="${esc(f.name || '')}" placeholder="${isTourn ? 'Ej: Copa Nocturna / Open SÉ' : 'Ej: Liga del Jueves / Apertura'}">
+          <input class="inp" id="cf-name" value="${esc(f.name || '')}" placeholder="${isPP ? 'Ej: Torneo Proyecto Pádel #1' : (isTourn ? 'Ej: Copa Nocturna / Open SÉ' : 'Ej: Liga del Jueves / Apertura')}">
         </div>
 
         <div class="field" style="margin-bottom:10px">
@@ -9327,6 +9664,13 @@ function renderCompetitionModals() {
             ${formats.map(([k, lbl]) => `<button type="button" class="pill ${f.format===k?'on':''}" data-cf-fmt="${k}">${lbl}</button>`).join('')}
           </div>
         </div>
+
+        ${isPP ? `
+          <div style="padding:10px 12px;border-radius:12px;background:rgba(212,175,55,0.10);border:1px solid rgba(212,175,55,0.32);margin-bottom:10px;font-size:12.5px;color:var(--tx2);line-height:1.4">
+            <b style="color:var(--gold2);display:block;margin-bottom:2px">⚡ Modo Proyecto Pádel · ELO Principal</b>
+            Carga directa de resultados finales (ej. <i>Lucía-Juan vs Marcos-Noelia 4-2</i> o empate <i>3-3</i>), sin fiscalización ni marcador punto a punto. Contabiliza ranking <b>Individual por ELO</b> y puntaje secundario por <b>Games + Bonus</b>.
+          </div>
+        ` : ''}
 
         ${f.format === 'groups_playoff' ? `
           <div class="row wrap" style="margin-bottom:10px">
@@ -9344,50 +9688,67 @@ function renderCompetitionModals() {
             </div>
           </div>` : ''}
 
-        <div class="field" style="margin-bottom:10px">
-          <label>Ranking por</label>
-          <div class="pills">
-            <button type="button" class="pill ${f.rankingMode==='pairs'?'on':''}" data-cf-rmode="pairs">👥 Parejas Fijas</button>
-            <button type="button" class="pill ${f.rankingMode==='individual'?'on':''}" data-cf-rmode="individual">👤 Individual</button>
-            <button type="button" class="pill ${f.rankingMode==='both'?'on':''}" data-cf-rmode="both">🔀 Ambos</button>
+        ${!isPP ? `
+          <div class="field" style="margin-bottom:10px">
+            <label>Ranking por</label>
+            <div class="pills">
+              <button type="button" class="pill ${f.rankingMode==='pairs'?'on':''}" data-cf-rmode="pairs">👥 Parejas Fijas</button>
+              <button type="button" class="pill ${f.rankingMode==='individual'?'on':''}" data-cf-rmode="individual">👤 Individual</button>
+              <button type="button" class="pill ${f.rankingMode==='both'?'on':''}" data-cf-rmode="both">🔀 Ambos</button>
+            </div>
           </div>
-        </div>
+        ` : ''}
 
         <div class="row wrap" style="margin-bottom:10px">
           <div class="field">
             <label>Pts Victoria</label>
             <input type="number" class="inp" id="cf-wpts" min="0" max="50" value="${Number(f.winPts ?? 3)}">
           </div>
+          ${isPP ? `
+            <div class="field">
+              <label>Pts Empate</label>
+              <input type="number" class="inp" id="cf-dpts" min="0" max="50" value="${Number(f.drawPts ?? 2)}">
+            </div>
+          ` : ''}
           <div class="field">
             <label>Pts Derrota</label>
             <input type="number" class="inp" id="cf-lpts" min="0" max="50" value="${Number(f.lossPts ?? 1)}">
           </div>
-          <div class="field">
-            <label>Bonus/Set ganado</label>
-            <input type="number" class="inp" id="cf-spts" min="0" max="10" value="${Number(f.setBonusPts ?? 0)}">
-          </div>
+          ${isPP ? `
+            <div class="field">
+              <label>Pts/Game ganado</label>
+              <input type="number" class="inp" id="cf-gpts" min="0" max="20" value="${Number(f.gameBonusPts ?? 1)}">
+            </div>
+          ` : `
+            <div class="field">
+              <label>Bonus/Set ganado</label>
+              <input type="number" class="inp" id="cf-spts" min="0" max="10" value="${Number(f.setBonusPts ?? 0)}">
+            </div>
+          `}
         </div>
 
-        <div class="row wrap" style="margin-bottom:14px">
-          <div class="field">
-            <label>Sets por defecto</label>
-            <select class="inp" id="cf-sets">
-              <option value="1" ${(Number(dr.totalSets)||3)===1?'selected':''}>1 Set único</option>
-              <option value="3" ${(Number(dr.totalSets)||3)===3?'selected':''}>Al mejor de 3 sets</option>
-            </select>
+        ${!isPP ? `
+          <div class="row wrap" style="margin-bottom:14px">
+            <div class="field">
+              <label>Sets por defecto</label>
+              <select class="inp" id="cf-sets">
+                <option value="1" ${(Number(dr.totalSets)||3)===1?'selected':''}>1 Set único</option>
+                <option value="3" ${(Number(dr.totalSets)||3)===3?'selected':''}>Al mejor de 3 sets</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>En el 40-40</label>
+              <select class="inp" id="cf-deuce">
+                <option value="golden" ${(dr.deuceRule||'golden')==='golden'?'selected':''}>Punto de Oro</option>
+                <option value="adv" ${dr.deuceRule==='adv'?'selected':''}>Ventajas</option>
+                <option value="star" ${dr.deuceRule==='star'?'selected':''}>Star Point (FIP)</option>
+              </select>
+            </div>
           </div>
-          <div class="field">
-            <label>En el 40-40</label>
-            <select class="inp" id="cf-deuce">
-              <option value="golden" ${(dr.deuceRule||'golden')==='golden'?'selected':''}>Punto de Oro</option>
-              <option value="adv" ${dr.deuceRule==='adv'?'selected':''}>Ventajas</option>
-              <option value="star" ${dr.deuceRule==='star'?'selected':''}>Star Point (FIP)</option>
-            </select>
-          </div>
-        </div>
+        ` : ''}
 
-        <div class="btn-row">
-          <button class="btn primary block" data-act="save-comp-modal">${ui.compModal === 'edit' ? 'Guardar Cambios' : 'Crear y Gestionar'}</button>
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn primary block" data-act="save-comp-modal">${ui.compModal === 'edit' ? 'Guardar Cambios' : (isPP ? 'Crear Torneo' : 'Crear y Gestionar')}</button>
           <button class="btn block" data-close-comp-modal="1">Cancelar</button>
         </div>
       </div>
@@ -9400,12 +9761,11 @@ function renderCompetitionModals() {
     }
     const qs = ui.quickScoreState;
     const comp = qs.compId ? getCompById(qs.compId) : null;
+    const isPP = isProyectoPadelComp(comp);
     const pairParts = comp ? (comp.participants || []).filter(pt => pt.type === 'pair') : [];
+    const compPool = comp ? getCompQuickPlayerPool(comp) : [];
     const compPlayerSuggestions = comp
-      ? Array.from(new Set([
-          ...(comp.participants || []).flatMap(pt => pt.type === 'pair' ? (pt.players || []) : [pt.name]).filter(Boolean),
-          ...getKnownPlayerNames()
-        ]))
+      ? Array.from(new Set([...compPool, ...getKnownPlayerNames()]))
       : getKnownPlayerNames();
     const n0 = formatPairLabel(qs.teams[0]?.players?.[0] || 'DRIVE 1', qs.teams[0]?.players?.[1] || 'REVÉS 1');
     const n1 = formatPairLabel(qs.teams[1]?.players?.[0] || 'DRIVE 2', qs.teams[1]?.players?.[1] || 'REVÉS 2');
@@ -9413,6 +9773,11 @@ function renderCompetitionModals() {
       ? ` (${esc(qs.stageLabel || 'Cruce')})`
       : (comp ? ` · ${esc(comp.name)}` : ' · Partido del Día');
     const showQuickTen = (sIdx) => sIdx >= 2;
+    const assignedKeys = new Set([
+      qs.teams[0]?.players?.[0], qs.teams[0]?.players?.[1],
+      qs.teams[1]?.players?.[0], qs.teams[1]?.players?.[1]
+    ].map(x => String(x || '').trim().toUpperCase()).filter(Boolean));
+    const slotCls = (idx) => `inp qs-slot-inp ${qs.activeSlot === idx ? 'active-slot' : ''}`;
 
     return `
     <div class="scrim" data-close-comp-modal="1">
@@ -9425,8 +9790,8 @@ function renderCompetitionModals() {
 
         ${qs.mode === 'comp-adhoc' ? `
           <div class="field" style="margin-bottom:10px">
-            <label>Etapa / Ronda (opcional)</label>
-            <input class="inp" id="qs-round" value="${esc(qs.stageLabel || '')}" placeholder="Ej: Fecha 2 / Grupo A / Libre">
+            <label>${isPP ? 'Turno / Ronda (opcional)' : 'Etapa / Ronda (opcional)'}</label>
+            <input class="inp" id="qs-round" value="${esc(qs.stageLabel || '')}" placeholder="${isPP ? 'Ej: Turno 1 / Cancha 2 (opcional)' : 'Ej: Fecha 2 / Grupo A / Libre'}">
           </div>
           ${pairParts.length >= 2 && !qs.useManualTeams ? `
             <div class="row wrap" style="margin-bottom:8px">
@@ -9448,13 +9813,28 @@ function renderCompetitionModals() {
             </div>
           ` : `
             <div class="row wrap" style="margin-bottom:8px">
-              <div class="field"><label>Pareja 1 · Drive</label><input class="inp" id="qs-t0p0" list="qs-known-players" value="${esc(qs.teams[0].players[0]||'')}" placeholder="DRIVE 1"></div>
-              <div class="field"><label>Pareja 1 · Revés</label><input class="inp" id="qs-t0p1" list="qs-known-players" value="${esc(qs.teams[0].players[1]||'')}" placeholder="REVÉS 1"></div>
+              <div class="field"><label>Pareja 1 · Jugador 1</label><input class="${slotCls(0)}" id="qs-t0p0" data-qs-slot="0" list="qs-known-players" value="${esc(qs.teams[0].players[0]||'')}" placeholder="Ej: Lucía"></div>
+              <div class="field"><label>Pareja 1 · Jugador 2</label><input class="${slotCls(1)}" id="qs-t0p1" data-qs-slot="1" list="qs-known-players" value="${esc(qs.teams[0].players[1]||'')}" placeholder="Ej: Juan"></div>
             </div>
-            <div class="row wrap" style="margin-bottom:10px">
-              <div class="field"><label>Pareja 2 · Drive</label><input class="inp" id="qs-t1p0" list="qs-known-players" value="${esc(qs.teams[1].players[0]||'')}" placeholder="DRIVE 2"></div>
-              <div class="field"><label>Pareja 2 · Revés</label><input class="inp" id="qs-t1p1" list="qs-known-players" value="${esc(qs.teams[1].players[1]||'')}" placeholder="REVÉS 2"></div>
+            <div class="row wrap" style="margin-bottom:8px">
+              <div class="field"><label>Pareja 2 · Jugador 1</label><input class="${slotCls(2)}" id="qs-t1p0" data-qs-slot="2" list="qs-known-players" value="${esc(qs.teams[1].players[0]||'')}" placeholder="Ej: Marcos"></div>
+              <div class="field"><label>Pareja 2 · Jugador 2</label><input class="${slotCls(3)}" id="qs-t1p1" data-qs-slot="3" list="qs-known-players" value="${esc(qs.teams[1].players[1]||'')}" placeholder="Ej: Noelia"></div>
             </div>
+            ${compPool.length ? `
+              <div style="margin-bottom:10px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px">
+                  <small class="muted" style="font-size:11px">Tocá jugadores para llenar rápido (casilla ${(qs.activeSlot || 0) + 1}/4):</small>
+                  <button type="button" class="pill sm" data-act="qs-clear-players" style="min-height:24px;padding:2px 8px;font-size:11px">Limpiar nombres</button>
+                </div>
+                <div class="qs-player-chips">
+                  ${compPool.map(nm => `<button type="button" class="qs-p-chip ${assignedKeys.has(nm.toUpperCase())?'used':''}" data-qs-pick-player="${esc(nm)}">+ ${esc(nm)}</button>`).join('')}
+                </div>
+              </div>
+            ` : `
+              <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+                <button type="button" class="pill sm" data-act="qs-clear-players" style="min-height:24px;padding:2px 8px;font-size:11px">Limpiar nombres</button>
+              </div>
+            `}
             ${pairParts.length >= 2 ? `<div style="margin-bottom:12px"><button type="button" class="pill sm" data-act="qs-toggle-manual-teams">👥 Elegir parejas inscriptas</button></div>` : ''}
           `}
         ` : `
@@ -9467,7 +9847,7 @@ function renderCompetitionModals() {
           return `
           <div class="qs-set-card">
             <div class="qs-set-hdr">
-              <b>Set ${sIdx + 1}${isStbHint ? ' / Súper TB' : (sIdx >= 2 ? ' (Opcional)' : '')}</b>
+              <b>${isPP ? 'Marcador Final (Games)' : `Set ${sIdx + 1}${isStbHint ? ' / Súper TB' : (sIdx >= 2 ? ' (Opcional)' : '')}`}</b>
               <button type="button" class="pill sm" data-qs-clear-set="${sIdx}" style="min-height:26px;padding:2px 8px;font-size:11px">Limpiar</button>
             </div>
             ${[0, 1].map(side => {
@@ -9489,24 +9869,27 @@ function renderCompetitionModals() {
           </div>`;
         }).join('')}
 
-        ${qs.sets.length < 5 ? `
+        ${!isPP && qs.sets.length < 5 ? `
           <button type="button" class="btn sm block" data-act="qs-add-set" style="margin-bottom:8px">
             ${ICONS.plus} Agregar Set ${qs.sets.length + 1}${qs.sets.length === 2 ? ' / Súper TB' : ''}
           </button>` : ''}
 
         <div class="qs-preview" id="qs-preview">${esc(formatQuickScorePreview(qs))}</div>
 
-        <div class="tog" style="border:none;padding:4px 0">
-          <div><b>Victoria por Walkover (W.O.)</b><small>Otorga puntos de tabla y avanza sin alterar ELO</small></div>
-          <label class="sw"><input type="checkbox" id="qs-wo" ${qs.wo?'checked':''}><span></span></label>
-        </div>
+        ${!isPP ? `
+          <div class="tog" style="border:none;padding:4px 0">
+            <div><b>Victoria por Walkover (W.O.)</b><small>Otorga puntos de tabla y avanza sin alterar ELO</small></div>
+            <label class="sw"><input type="checkbox" id="qs-wo" ${qs.wo?'checked':''}><span></span></label>
+          </div>
+        ` : ''}
 
         <div class="field" style="margin:8px 0 14px">
-          <label>Ganador (si empatan sets o en W.O.)</label>
+          <label>${isPP ? 'Definición del resultado (auto detecta empate)' : 'Ganador (si empatan sets o en W.O.)'}</label>
           <select class="inp" id="qs-winner">
-            <option value="auto" ${qs.winner==='auto'?'selected':''}>Automático por sets</option>
-            <option value="0" ${qs.winner==='0'?'selected':''}>${esc(n0)}</option>
-            <option value="1" ${qs.winner==='1'?'selected':''}>${esc(n1)}</option>
+            <option value="auto" ${qs.winner==='auto'?'selected':''}>${isPP ? 'Automático por marcador (o Empate)' : 'Automático por sets'}</option>
+            <option value="0" ${qs.winner==='0'?'selected':''}>Gana ${esc(n0)}</option>
+            <option value="1" ${qs.winner==='1'?'selected':''}>Gana ${esc(n1)}</option>
+            ${isPP ? `<option value="draw" ${qs.winner==='draw'?'selected':''}>🤝 Empate oficial</option>` : ''}
           </select>
         </div>
 
@@ -9808,12 +10191,7 @@ function renderPlayers() {
 
     ${scopeSubHtml}
 
-    <div class="seg" style="margin-bottom:16px">
-      <button class="${currentSort==='pts'?'on':''}" data-set-psort="pts">🏅 Puntos</button>
-      <button class="${currentSort==='elo'?'on':''}" data-set-psort="elo">⭐ ELO</button>
-      <button class="${currentSort==='wins'?'on':''}" data-set-psort="wins">🏆 Victorias</button>
-      <button class="${currentSort==='matches'?'on':''}" data-set-psort="matches">🎾 Partidos</button>
-    </div>
+    ${renderSortBarHtml(currentSort, rCtx.primaryMetric === 'elo' || isProyectoPadelComp(rCtx.comp))}
 
     ${renderStandingsSectionHtml(players, rCtx, {
       tableTitle: rCtx.title || 'Tabla de Posiciones',
@@ -10038,10 +10416,14 @@ function syncCompFormFromDom() {
   if (nm) f.name = nm.value;
   const wp = document.getElementById('cf-wpts');
   if (wp) f.winPts = Math.max(0, Number(wp.value) || 0);
+  const dp = document.getElementById('cf-dpts');
+  if (dp) f.drawPts = Math.max(0, Number(dp.value) || 0);
   const lp = document.getElementById('cf-lpts');
   if (lp) f.lossPts = Math.max(0, Number(lp.value) || 0);
   const sp = document.getElementById('cf-spts');
   if (sp) f.setBonusPts = Math.max(0, Number(sp.value) || 0);
+  const gp = document.getElementById('cf-gpts');
+  if (gp) f.gameBonusPts = Math.max(0, Number(gp.value) || 0);
   const ng = document.getElementById('cf-ngroups');
   if (ng) f.numGroups = Math.max(2, Math.min(4, Number(ng.value) || 2));
   const adv = document.getElementById('cf-adv');
@@ -10066,8 +10448,10 @@ function openCompModal(mode, kindOrComp) {
       format: c.format || (c.kind === 'tournament' ? 'knockout' : 'league_rr'),
       rankingMode: c.rankingMode || 'pairs',
       winPts: sc.winPts,
+      drawPts: sc.drawPts,
       lossPts: sc.lossPts,
       setBonusPts: sc.setBonusPts,
+      gameBonusPts: sc.gameBonusPts,
       numGroups: Number(c.numGroups) || 2,
       advancePerGroup: Number(c.advancePerGroup) || 2,
       defaultRules: clone(c.defaultRules || {
@@ -10086,8 +10470,10 @@ function openCompModal(mode, kindOrComp) {
     format: kind === 'tournament' ? 'knockout' : 'league_rr',
     rankingMode: 'pairs',
     winPts: 3,
+    drawPts: 2,
     lossPts: 1,
     setBonusPts: 0,
+    gameBonusPts: 0,
     numGroups: 2,
     advancePerGroup: 2,
     defaultRules: {
@@ -10138,21 +10524,23 @@ function fillPresetFromComp(comp, fx = null) {
 function buildCompRankingContext(comp) {
   if (!comp) return getCurrentRankingContext();
   const sc = getCompetitionScoringConfig(comp);
+  const isPP = isProyectoPadelComp(comp);
   const entityMode = comp.rankingMode === 'both' ? (ui.playerEntityMode || 'pairs') : (comp.rankingMode || 'pairs');
-  const sortKey = ui.playerSort || 'pts';
+  const sortKey = getEffectiveSortKey(comp, comp.id);
+  const sortOpts = { tiebreakMode: isPP ? 'games' : 'sets' };
   const raw = computeScopeStandings(getCompetitionMatches(comp, false), {
     ...sc,
     entityMode,
     seedParticipants: comp.participants || []
   });
-  const players = assignPlayerRanks(sortStandingsRows(raw, sortKey), sortKey);
-  const kindWord = comp.kind === 'league' ? 'Liga' : 'Torneo';
+  const players = assignPlayerRanks(sortStandingsRows(raw, sortKey, sortOpts), sortKey, sortOpts);
   return {
     scope: comp.kind,
     id: `${prefs.rankingId || 'RK'}-${comp.id.slice(-4).toUpperCase()}`,
     title: comp.name,
-    subtitle: `${kindWord} · ${entityMode === 'pairs' ? 'Parejas' : 'Individual'} · +${sc.winPts}V / +${sc.lossPts}D + ELO`,
+    subtitle: getCompSubtitle(comp, entityMode, sc),
     entityMode,
+    primaryMetric: isPP ? 'elo' : 'pts',
     comp,
     scoring: sc,
     sortKey,
@@ -10338,6 +10726,37 @@ document.addEventListener('click', (ev) => {
     return;
   }
 
+  const qsSlotEl = t.closest('[data-qs-slot]');
+  if (qsSlotEl && ui.quickScoreState) {
+    const slot = Number(qsSlotEl.getAttribute('data-qs-slot')) || 0;
+    ui.quickScoreState.activeSlot = slot;
+    document.querySelectorAll?.('.qs-slot-inp').forEach(el => {
+      el.classList.toggle('active-slot', Number(el.getAttribute('data-qs-slot')) === slot);
+    });
+  }
+
+  const qsPickPlEl = t.closest('[data-qs-pick-player]');
+  if (qsPickPlEl && ui.quickScoreState) {
+    syncQuickScoreStateFromDom();
+    const qs = ui.quickScoreState;
+    const nm = qsPickPlEl.getAttribute('data-qs-pick-player');
+    const slot = Math.max(0, Math.min(3, Number(qs.activeSlot) || 0));
+    qs.teams[Math.floor(slot / 2)].players[slot % 2] = nm;
+    // Advance activeSlot to next empty box (or cycle modulo 4)
+    const flat = [
+      qs.teams[0].players[0], qs.teams[0].players[1],
+      qs.teams[1].players[0], qs.teams[1].players[1]
+    ];
+    let nextSlot = (slot + 1) % 4;
+    for (let k = 1; k <= 4; k++) {
+      const idx = (slot + k) % 4;
+      if (!String(flat[idx] || '').trim()) { nextSlot = idx; break; }
+    }
+    qs.activeSlot = nextSlot;
+    render();
+    return;
+  }
+
   const qsPickEl = t.closest('[data-qs-pick]');
   if (qsPickEl) {
     const [sIdxStr, sideStr, gValStr] = qsPickEl.getAttribute('data-qs-pick').split(':');
@@ -10446,7 +10865,22 @@ document.addEventListener('click', (ev) => {
   const cfFmtEl = t.closest('[data-cf-fmt]');
   if (cfFmtEl && ui.compFormState) {
     syncCompFormFromDom();
-    ui.compFormState.format = cfFmtEl.getAttribute('data-cf-fmt');
+    const nfmt = cfFmtEl.getAttribute('data-cf-fmt');
+    ui.compFormState.format = nfmt;
+    if (nfmt === 'proyecto_padel') {
+      ui.compFormState.kind = 'tournament';
+      ui.compFormState.rankingMode = 'individual';
+      ui.compFormState.winPts = 3;
+      ui.compFormState.drawPts = 2;
+      ui.compFormState.lossPts = 1;
+      ui.compFormState.setBonusPts = 0;
+      ui.compFormState.gameBonusPts = 1;
+      ui.compFormState.defaultRules = {
+        ...(ui.compFormState.defaultRules || {}),
+        totalSets: 1,
+        deuceRule: 'golden'
+      };
+    }
     render();
     return;
   }
@@ -10522,6 +10956,10 @@ document.addEventListener('click', (ev) => {
   const psEl = t.closest('[data-set-psort]');
   if (psEl) {
     ui.playerSort = psEl.getAttribute('data-set-psort');
+    if (ui.route === 'comp-detail') ui.playerSortScope = ui.compId || 'comp';
+    else if (ui.playerScope === 'league') ui.playerSortScope = ui.selectedLeagueId || 'league';
+    else if (ui.playerScope === 'tournament') ui.playerSortScope = ui.selectedTournId || 'tournament';
+    else ui.playerSortScope = ui.playerScope || 'daily';
     render();
     return;
   }
@@ -10957,22 +11395,32 @@ document.addEventListener('click', (ev) => {
           return;
         }
         const now = Date.now();
-        const totalSets = Number(f.defaultRules?.totalSets) || 3;
+        const isPP = f.format === 'proyecto_padel';
+        const totalSets = isPP ? 1 : (Number(f.defaultRules?.totalSets) || 3);
         const cleanRules = {
           ...(f.defaultRules || {}),
           totalSets,
-          setsToWin: Math.floor(totalSets / 2) + 1
+          setsToWin: Math.floor(totalSets / 2) + 1,
+          ...(isPP ? { deuceRule: 'golden' } : {})
         };
+        const rankingMode = isPP ? 'individual' : f.rankingMode;
+        const winPts = Number(f.winPts) || 0;
+        const drawPts = Number.isFinite(Number(f.drawPts)) ? Number(f.drawPts) : 2;
+        const lossPts = Number(f.lossPts) || 0;
+        const setBonusPts = isPP ? 0 : (Number(f.setBonusPts) || 0);
+        const gameBonusPts = isPP ? (Number.isFinite(Number(f.gameBonusPts)) ? Number(f.gameBonusPts) : 1) : (Number(f.gameBonusPts) || 0);
         if (ui.compModal === 'edit' && f.id) {
           const comp = getCompById(f.id);
           if (comp) {
             comp.kind = f.kind;
             comp.name = f.name.trim();
             comp.format = f.format;
-            comp.rankingMode = f.rankingMode;
-            comp.winPts = Number(f.winPts) || 0;
-            comp.lossPts = Number(f.lossPts) || 0;
-            comp.setBonusPts = Number(f.setBonusPts) || 0;
+            comp.rankingMode = rankingMode;
+            comp.winPts = winPts;
+            comp.drawPts = drawPts;
+            comp.lossPts = lossPts;
+            comp.setBonusPts = setBonusPts;
+            comp.gameBonusPts = gameBonusPts;
             comp.numGroups = Number(f.numGroups) || 2;
             comp.advancePerGroup = Number(f.advancePerGroup) || 2;
             comp.defaultRules = cleanRules;
@@ -10988,10 +11436,12 @@ document.addEventListener('click', (ev) => {
             kind: f.kind,
             name: f.name.trim(),
             format: f.format,
-            rankingMode: f.rankingMode,
-            winPts: Number(f.winPts) || 0,
-            lossPts: Number(f.lossPts) || 0,
-            setBonusPts: Number(f.setBonusPts) || 0,
+            rankingMode,
+            winPts,
+            drawPts,
+            lossPts,
+            setBonusPts,
+            gameBonusPts,
             numGroups: Number(f.numGroups) || 2,
             advancePerGroup: Number(f.advancePerGroup) || 2,
             defaultRules: cleanRules,
@@ -11008,7 +11458,7 @@ document.addEventListener('click', (ev) => {
             render();
           } else {
             ui.compId = newComp.id;
-            ui.compTab = 'participants';
+            ui.compTab = isPP ? 'standings' : 'participants';
             navigate('comp-detail');
           }
           showToast(`${newComp.kind === 'league' ? 'Liga' : 'Torneo'} creado`);
@@ -11177,13 +11627,43 @@ document.addEventListener('click', (ev) => {
           render();
         }
         break;
+      case 'qs-clear-players':
+        if (ui.quickScoreState) {
+          syncQuickScoreStateFromDom();
+          ui.quickScoreState.teams[0].players = ['', ''];
+          ui.quickScoreState.teams[1].players = ['', ''];
+          ui.quickScoreState.activeSlot = 0;
+          render();
+        }
+        break;
       case 'save-quick-score': {
         syncQuickScoreStateFromDom();
         const qs = ui.quickScoreState;
         const target = actEl.getAttribute('data-target') || qs?.fixtureKey || ui.quickScoreFixtureId;
         const [cid, fxid] = String(target || '').split(':');
-        const isWo = !!document.getElementById('qs-wo')?.checked;
+        const mode = qs?.mode || (cid && fxid ? 'fixture' : 'preset');
+        const targetComp = mode === 'fixture'
+          ? getCompById(cid)
+          : (mode === 'comp-adhoc' ? getCompById(qs?.compId || cid) : ((preset.matchContext === 'league' || preset.matchContext === 'tournament') && preset.compId ? getCompById(preset.compId) : null));
+        const isPP = isProyectoPadelComp(targetComp);
+        const isWo = !isPP && !!document.getElementById('qs-wo')?.checked;
         const winSel = document.getElementById('qs-winner')?.value || 'auto';
+
+        if (isPP && mode === 'comp-adhoc') {
+          const four = [
+            qs?.teams?.[0]?.players?.[0], qs?.teams?.[0]?.players?.[1],
+            qs?.teams?.[1]?.players?.[0], qs?.teams?.[1]?.players?.[1]
+          ].map(x => String(x || '').trim());
+          if (four.some(x => !x)) {
+            showToast('Ingresá o tocá los 4 nombres de los jugadores');
+            break;
+          }
+          if (new Set(four.map(x => x.toUpperCase())).size < 4) {
+            showToast('Cada uno de los 4 jugadores debe ser distinto');
+            break;
+          }
+        }
+
         const setsArr = [];
         if (!isWo) {
           for (let i = 1; i <= 5; i++) {
@@ -11196,57 +11676,47 @@ document.addEventListener('click', (ev) => {
             }
           }
           if (!setsArr.length) {
-            showToast('Seleccioná al menos el resultado de un set o activá W.O.');
+            showToast(isPP ? 'Ingresá los games finales de ambas parejas' : 'Seleccioná al menos el resultado de un set o activá W.O.');
             break;
           }
         }
-        let winnerSide = null;
-        if (winSel === '0' || winSel === '1') {
-          winnerSide = Number(winSel);
-        } else if (isWo) {
-          showToast('Elegí qué pareja ganó por W.O.');
+        const resolved = resolveQuickScoreOutcome(targetComp, setsArr, winSel, isWo);
+        if (!resolved.ok) {
+          showToast(resolved.error);
           break;
-        } else {
-          let w0 = 0, w1 = 0;
-          setsArr.forEach(s => { if (s[0] > s[1]) w0++; else if (s[1] > s[0]) w1++; });
-          if (w0 === w1) {
-            showToast('Empate en sets: elegí manualmente la pareja ganadora');
-            break;
-          }
-          winnerSide = w0 > w1 ? 0 : 1;
         }
+        const winnerSide = resolved.winnerSide;
+        const isDraw = !!resolved.isDraw;
 
         let savedMatch = null;
-        const mode = qs?.mode || (cid && fxid ? 'fixture' : 'preset');
         if (mode === 'fixture' && cid && fxid) {
           savedMatch = submitQuickFixtureResult(cid, fxid, setsArr, winnerSide, isWo);
-        } else if (mode === 'comp-adhoc' && (qs?.compId || cid)) {
-          const comp = getCompById(qs?.compId || cid);
-          if (!comp) break;
+        } else if (mode === 'comp-adhoc' && targetComp) {
           if (!qs.useManualTeams && qs.selPartIds?.[0] && qs.selPartIds?.[0] === qs.selPartIds?.[1]) {
             showToast('Elegí dos parejas distintas');
             break;
           }
           savedMatch = submitQuickMatchResult({
-            comp,
+            comp: targetComp,
             stageLabel: qs.stageLabel || '',
             teams: qs.teams,
             setsArr,
             winnerSide,
+            isDraw,
             isWalkover: isWo
           });
         } else {
           const kind = preset.matchContext || 'daily';
-          const comp = (kind === 'league' || kind === 'tournament') && preset.compId ? getCompById(preset.compId) : null;
           savedMatch = submitQuickMatchResult({
             kind,
-            comp,
-            fixtureId: comp && preset.fixtureId ? preset.fixtureId : '',
+            comp: targetComp,
+            fixtureId: targetComp && preset.fixtureId ? preset.fixtureId : '',
             stageLabel: qs?.stageLabel || preset.stageLabel || '',
             teams: qs?.teams || preset.teams,
             rules: preset,
             setsArr,
             winnerSide,
+            isDraw,
             isWalkover: isWo
           });
           preset.fixtureId = '';
@@ -11269,7 +11739,7 @@ document.addEventListener('click', (ev) => {
         } else {
           render();
         }
-        showToast(isWo ? 'W.O. registrado' : '✓ Resultado guardado');
+        showToast(isWo ? 'W.O. registrado' : (isDraw ? '🤝 Empate guardado y ELO actualizado' : '✓ Resultado guardado'));
         break;
       }
       case 'share-comp-rank': {
