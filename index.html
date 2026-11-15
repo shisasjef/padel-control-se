@@ -85,23 +85,44 @@ a{color:inherit}
 @keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .page-h{
   display:flex;
+  flex-direction:column;
   align-items:center;
+  justify-content:center;
+  text-align:center;
   gap:10px;
-  margin-bottom:20px;
+  margin-bottom:18px;
   min-width:0;
   max-width:100%;
+}
+.page-h-top{
+  display:grid;
+  grid-template-columns:46px minmax(0,1fr) 46px;
+  align-items:center;
+  gap:10px;
+  width:100%;
+}
+.page-h-top > .icon-btn:first-child{grid-column:1;justify-self:start}
+.page-h-top > h1{grid-column:2}
+.page-h-acts{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
   flex-wrap:wrap;
+  width:100%;
 }
 .page-h h1{
   font-family:var(--cond);
-  font-size:clamp(22px, 5.2vw, 32px);
+  font-size:clamp(24px, 5vw, 34px);
   font-weight:800;
-  font-style:italic;
-  letter-spacing:.6px;
+  font-style:normal;
+  letter-spacing:.8px;
   text-transform:uppercase;
-  flex:1 1 auto;
+  text-align:center;
+  width:100%;
   min-width:0;
-  line-height:1;
+  line-height:1.08;
+  margin:0;
 }
 .icon-btn{
   width:46px;height:46px;border-radius:16px;display:grid;place-items:center;
@@ -127,9 +148,13 @@ a{color:inherit}
   box-sizing:border-box;
 }
 .card h3{font-size:14px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--acc-ink);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card h3:not(:has(.tag-s)){justify-content:center;text-align:center}
 .card h3 .tag-s{margin-left:auto;font-family:var(--cond);font-size:14px;letter-spacing:1.6px;color:var(--acc-ink);font-weight:800;background:color-mix(in srgb,var(--acc) 16%,transparent);padding:3px 10px;border-radius:999px;border:1px solid var(--line)}
-.sec-t{font-family:var(--cond);font-size:15px;font-style:italic;letter-spacing:2.8px;color:var(--acc-ink);text-transform:uppercase;margin:28px 0 12px;font-weight:800;display:flex;align-items:center;gap:10px}
-.sec-t:after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.sec-t{font-family:var(--cond);font-size:15px;font-style:normal;letter-spacing:2.4px;color:var(--acc-ink);text-transform:uppercase;text-align:center;margin:26px 0 12px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:12px}
+.sec-t:before,.sec-t:after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--line))}
+.sec-t:after{background:linear-gradient(90deg,var(--line),transparent)}
+.sec-t:has(button){justify-content:space-between;text-align:left}
+.sec-t:has(button):before{display:none}
 
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:9px;
@@ -252,12 +277,14 @@ a{color:inherit}
 }
 .hero svg.logo-ic{width:76px;height:76px;border-radius:22px;display:block;flex:none;box-shadow:0 14px 32px rgba(0,0,0,.75), 0 0 24px rgba(212,175,55,.22)}
 .hero h1{
-  font-family:var(--cond);font-size:clamp(30px,6vw,42px);font-weight:800;font-style:italic;text-transform:uppercase;line-height:1.12;letter-spacing:1px;
-  padding:2px 8px 2px 0;
+  font-family:var(--cond);font-size:clamp(28px,5.6vw,40px);font-weight:800;font-style:normal;text-transform:uppercase;line-height:1.12;letter-spacing:1px;
+  padding:2px 0;
   margin:0 0 4px 0;
+  text-align:center;
   background:linear-gradient(90deg, #ffffff 0%, #ffe58f 60%, #d4af37 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
+.hero .sig-sub{align-items:center}
 .sig-sub{
   display:inline-flex;flex-direction:column;align-items:flex-start;margin-top:2px;
 }
@@ -295,7 +322,7 @@ a{color:inherit}
 .feat b{display:block;margin:12px 0 5px;font-size:15px;font-weight:700}
 .feat p{font-size:13px;color:var(--tx2);line-height:1.5}
 .empty{text-align:center;color:var(--tx2);padding:42px 14px;font-size:14.5px;line-height:1.55;background:var(--card);border-radius:var(--radius);border:1px dashed var(--line)}
-.empty .ic{width:44px;height:44px;opacity:.55;margin-bottom:10px;color:var(--acc-ink)}
+.empty>.ic{width:44px;height:44px;opacity:.55;margin-bottom:10px;color:var(--acc-ink)}
 
 /* match cards */
 .mcard{
@@ -685,7 +712,10 @@ body:has(.scrim) .tabbar{pointer-events:none}
   box-shadow:0 -20px 60px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,229,143,.25);
 }
 @media(min-width:700px){.scrim{align-items:center;padding:16px}.sheet{border-radius:26px;max-height:calc(100dvh - 32px);box-shadow:0 30px 80px rgba(0,0,0,.88), inset 0 1px 0 rgba(255,229,143,.25)}}
-.sheet h2{font-family:var(--cond);font-size:clamp(24px,4vw,28px);font-weight:800;font-style:italic;text-transform:uppercase;letter-spacing:.7px;line-height:1.05;margin-bottom:4px;color:var(--acc-ink)}
+.sheet h2{font-family:var(--cond);font-size:clamp(24px,4vw,28px);font-weight:800;font-style:normal;text-transform:uppercase;letter-spacing:.7px;line-height:1.05;margin-bottom:6px;text-align:center;color:var(--acc-ink)}
+.sheet-hdr{display:grid;grid-template-columns:38px minmax(0,1fr) 38px;align-items:center;gap:8px;margin-bottom:10px}
+.sheet-hdr>h2{grid-column:2;margin:0;text-align:center}
+.sheet-hdr>:last-child:not(h2){grid-column:3;justify-self:end}
 .sheet .field{margin-bottom:10px}
 .sheet .inp{height:44px;border-radius:14px;font-size:15px}
 .sheet .pills button{min-height:36px;padding:6px 12px;font-size:13px}
@@ -729,7 +759,7 @@ body:has(.scrim) .tabbar{pointer-events:none}
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
   color:#fff;text-align:center;padding:26px;animation:fade .22s var(--ease);
 }
-.overlay h2{font-family:var(--cond);font-size:clamp(42px,9vw,88px);font-style:italic;text-transform:uppercase;letter-spacing:1px;line-height:.95;font-weight:800;color:var(--acc-ink)}
+.overlay h2{font-family:var(--cond);font-size:clamp(42px,9vw,88px);font-style:normal;text-transform:uppercase;letter-spacing:1px;line-height:.95;font-weight:800;text-align:center;color:var(--acc-ink)}
 .overlay p{color:var(--tx2);font-size:16px;font-weight:600}
 .overlay .big-ic{width:80px;height:80px;color:var(--acc-ink);padding:18px;border-radius:26px;background:rgba(212,175,55,.14);box-shadow:0 0 40px rgba(212,175,55,.3)}
 .overlay .count{font-family:var(--cond);font-weight:800;font-size:clamp(84px,24vw,210px);line-height:.9;font-variant-numeric:tabular-nums;color:var(--acc-ink);text-shadow:0 0 40px rgba(212,175,55,.45)}
@@ -756,7 +786,7 @@ body:has(.scrim) .tabbar{pointer-events:none}
 }
 .st-head .tr{display:flex;align-items:center;gap:14px;padding:7px 0}
 .st-head .bar{width:6px;height:34px;border-radius:99px;background:var(--c);box-shadow:0 0 14px var(--c);flex:none}
-.st-head .nm{flex:1;font-family:var(--cond);font-size:clamp(24px,4.8vw,34px);font-weight:800;font-style:italic;text-transform:uppercase;min-width:0;line-height:1;color:var(--tx2);letter-spacing:.5px}
+.st-head .nm{flex:1;font-family:var(--cond);font-size:clamp(24px,4.8vw,34px);font-weight:800;font-style:normal;text-transform:uppercase;min-width:0;line-height:1;color:var(--tx2);letter-spacing:.5px}
 .st-head .tr.win .nm{color:var(--tx)}
 .st-head .tro{color:#facc15;width:24px;height:24px;filter:drop-shadow(0 0 8px rgba(250,204,21,.5))}
 .sboxes{display:flex;gap:8px}
@@ -1701,7 +1731,7 @@ html.obs-mode #app, body.obs-mode #app {
   box-shadow: 0 14px 34px -10px rgba(212, 175, 55, 0.35);
 }
 .champ-banner small { display: block; font-size: 11px; font-weight: 800; letter-spacing: 1.8px; text-transform: uppercase; color: var(--gold); }
-.champ-banner b { display: block; font-family: var(--cond); font-size: 28px; font-weight: 900; font-style: italic; text-transform: uppercase; color: #fff; margin-top: 3px; }
+.champ-banner b { display: block; font-family: var(--cond); font-size: 28px; font-weight: 900; font-style: normal; text-transform: uppercase; color: #fff; margin-top: 3px; }
 
 .pcard-pts-box {
   display: flex;
@@ -7201,11 +7231,11 @@ function renderHome() {
   <div class="page">
     <div class="hero">
       ${LOGO_SVG}
-      <div style="flex:1;min-width:0">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center">
         <h1>Pádel Control SÉ</h1>
         ${renderSignatureBadge()}
       </div>
-      <div style="display:flex;gap:8px;margin-left:auto">
+      <div style="display:flex;gap:8px;flex:none">
         <button class="icon-btn" data-nav="settings" title="Ajustes">${ICONS.gear}</button>
         <button class="icon-btn" data-act="open-qr-modal" title="Compartir App / Código QR">${ICONS.qr}</button>
       </div>
@@ -7402,9 +7432,13 @@ function renderNewMatch() {
   <div class="page">
     ${datalist}
     <div class="page-h">
-      <button class="icon-btn" data-nav="home" title="Volver">${ICONS.back}</button>
-      <h1>Nuevo Partido</h1>
-      <button class="btn sm" data-act="swap-preset-teams" title="Intercambiar parejas">${ICONS.swap} Invertir</button>
+      <div class="page-h-top">
+        <button class="icon-btn" data-nav="home" title="Volver">${ICONS.back}</button>
+        <h1>Nuevo Partido</h1>
+      </div>
+      <div class="page-h-acts">
+        <button class="btn sm" data-act="swap-preset-teams" title="Intercambiar parejas">${ICONS.swap} Invertir Parejas</button>
+      </div>
     </div>
 
     <div class="sec-t">Tipo de partido y ranking</div>
@@ -7742,19 +7776,16 @@ function renderQRModal() {
   return `
   <div class="scrim" data-close-qr="1" style="z-index:125">
     <div class="sheet" style="max-width:460px;text-align:center">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:10px">
-          ${ICONS.qr}
-          <span style="font-family:var(--cond);font-size:20px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--acc-ink)">Código QR de la App</span>
-        </div>
-        <button class="icon-btn" data-act="close-qr-modal" style="width:38px;height:38px;border-radius:12px" title="Cerrar">✕</button>
+      <div class="sheet-hdr">
+        <h2 style="font-size:21px;white-space:nowrap">Código QR de la App</h2>
+        <button class="icon-btn" data-act="close-qr-modal" style="width:36px;height:36px;border-radius:12px" title="Cerrar">✕</button>
       </div>
 
       <div style="background:linear-gradient(135deg,rgba(212,175,55,0.12) 0%,rgba(16,16,22,0.95) 55%,rgba(245,208,97,0.06) 100%);border:1px solid rgba(212,175,55,0.35);border-radius:24px;padding:20px 16px;box-shadow:0 18px 45px rgba(0,0,0,0.85)">
         <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px">
           ${LOGO_SVG.replace('class="logo-ic"', 'class="logo-ic" style="width:48px;height:48px"')}
-          <div style="text-align:left">
-            <div style="font-family:var(--cond);font-size:22px;font-weight:800;font-style:italic;text-transform:uppercase;line-height:1.15;color:var(--tx);margin-bottom:3px">Pádel Control SÉ</div>
+          <div style="text-align:center">
+            <div style="font-family:var(--cond);font-size:22px;font-weight:800;font-style:normal;text-transform:uppercase;line-height:1.15;color:var(--tx);margin-bottom:3px">Pádel Control SÉ</div>
             <div style="font-family:var(--sig);font-size:19px;color:#f5d572;line-height:1.2">By Sairaf Engel</div>
           </div>
         </div>
@@ -7927,17 +7958,15 @@ function renderOBSModal() {
   return `
   <div class="scrim" data-close-obs-modal="1" style="z-index:126">
     <div class="sheet" style="max-width:560px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#ffe58f,#d4af37);color:#080600;display:grid;place-items:center;flex:none;box-shadow:0 6px 16px rgba(212,175,55,.45)">
-            ${ICONS.tv}
-          </div>
-          <div>
-            <h2 style="margin:0;font-size:19px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.5px">Superposición OBS / vMix</h2>
-            <small style="color:var(--tx2)">Marcador broadcast transparente para streamings en vivo</small>
-          </div>
+      <div class="sheet-hdr">
+        <div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#ffe58f,#d4af37);color:#080600;display:grid;place-items:center;flex:none;box-shadow:0 6px 16px rgba(212,175,55,.45)">
+          ${ICONS.tv}
         </div>
-        <button class="icon-btn" data-act="close-obs-modal" style="width:38px;height:38px;border-radius:12px" title="Cerrar">✕</button>
+        <div>
+          <h2 style="margin:0;font-size:20px;text-align:center">Superposición OBS / vMix</h2>
+          <small style="color:var(--tx2);display:block;text-align:center">Marcador broadcast transparente para streamings en vivo</small>
+        </div>
+        <button class="icon-btn" data-act="close-obs-modal" style="width:36px;height:36px;border-radius:12px" title="Cerrar">✕</button>
       </div>
 
       <!-- Live scorebug preview box -->
@@ -8629,9 +8658,11 @@ function renderStats() {
     <div class="print-only print-title">DETALLES DEL PARTIDO · PÁDEL CONTROL SÉ · BY SAIRAF ENGEL</div>
 
     <div class="page-h no-print">
-      <button class="icon-btn" data-nav="${backRoute}" title="Volver">${ICONS.back}</button>
-      <h1 style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Detalles del Partido</h1>
-      <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap">
+      <div class="page-h-top">
+        <button class="icon-btn" data-nav="${backRoute}" title="Volver">${ICONS.back}</button>
+        <h1>Detalles del Partido</h1>
+      </div>
+      <div class="page-h-acts">
         ${isLive ? `<button class="btn primary sm" data-nav="${isRemoteLiveStats ? 'live' : 'board'}">${ICONS.play} Volver</button>` : ''}
         ${stComp && !isRemoteLiveStats ? `<button class="btn sm" data-open-comp="${esc(stComp.id)}">${ICONS.award} Ver ${stComp.kind==='league'?'Liga':'Torneo'}</button>` : ''}
         ${!isRemoteLiveStats && isLive ? `<button class="icon-btn" data-act="share-live" title="Compartir en vivo">${ICONS.live}</button>` : ''}
@@ -9051,15 +9082,15 @@ function renderCompetitions() {
   return `
   <div class="page">
     <div class="page-h">
-      <h1 style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Ligas y Torneos</h1>
-      <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap">
+      <h1>Ligas y Torneos</h1>
+      <div class="page-h-acts">
         <button class="btn sm" data-act="open-join-comp" title="Unirse con código o link">📲 Unirse</button>
         <button class="btn primary sm" data-act="new-comp" data-kind="league">${ICONS.plus} Liga</button>
         <button class="btn primary sm" data-act="new-comp" data-kind="tournament">${ICONS.plus} Torneo</button>
         <button class="icon-btn" data-nav="settings" title="Ajustes">${ICONS.gear}</button>
       </div>
     </div>
-    <p class="muted" style="margin-bottom:14px">Cada Liga y Torneo mantiene su propia tabla de posiciones, ELO independiente, fixture, llaves eliminatorias y sincronización por QR.</p>
+    <p class="muted" style="text-align:center;margin-bottom:14px">Cada Liga y Torneo mantiene su propia tabla de posiciones, ELO independiente, fixture, llaves eliminatorias y sincronización por QR.</p>
 
     <div class="seg" style="margin-bottom:14px">
       <button class="${f==='all'?'on':''}" data-set-cfilter="all">Todas (${competitionsList.length})</button>
@@ -9453,9 +9484,11 @@ function renderCompDetail() {
   return `
   <div class="page">
     <div class="page-h">
-      <button class="icon-btn" data-nav="competitions" title="Volver">${ICONS.back}</button>
-      <h1 style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(comp.name)}</h1>
-      <div style="display:flex;gap:6px;margin-left:auto">
+      <div class="page-h-top">
+        <button class="icon-btn" data-nav="competitions" title="Volver">${ICONS.back}</button>
+        <h1>${esc(comp.name)}</h1>
+      </div>
+      <div class="page-h-acts">
         <button class="icon-btn" data-open-comp-sync="${esc(comp.id)}" title="Sincronizar varios dispositivos (QR / Link)">${ICONS.qr}</button>
         <button class="icon-btn" data-edit-comp="${esc(comp.id)}" title="Editar">${ICONS.edit}</button>
         ${isPP
@@ -9465,7 +9498,7 @@ function renderCompDetail() {
       </div>
     </div>
 
-    <div class="comp-pills" style="margin-bottom:10px">
+    <div class="comp-pills" style="justify-content:center;margin-bottom:10px">
       <span class="badge ${isPP ? 'pp' : (comp.kind==='league'?'league':'tourn')}">${isPP ? '⚡ Proyecto Pádel' : (comp.kind==='league'?'🏅 Liga':'🏆 Torneo')}</span>
       ${!isPP ? `<span class="badge">${esc(getCompFormatLabel(comp))}</span>` : `<span class="badge">👤 Individual · Parejas Libres</span>`}
       <span class="badge">${esc(getCompScoringSummaryLabel(comp, sc, true))}</span>
@@ -9652,8 +9685,8 @@ function renderCompetitionModals() {
     return `
     <div class="scrim" data-close-comp-modal="1">
       <div class="sheet" style="max-width:560px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
-          <h2 style="margin:0">${ui.compModal === 'edit' ? 'Editar' : 'Crear'} ${isTourn ? 'Torneo' : 'Liga'}</h2>
+        <div class="sheet-hdr">
+          <h2>${ui.compModal === 'edit' ? 'Editar' : 'Crear'} ${isTourn ? 'Torneo' : 'Liga'}</h2>
           <button type="button" class="icon-btn" data-close-comp-modal="1" title="Cerrar" style="width:36px;height:36px;border-radius:12px;font-size:15px;font-weight:700">✕</button>
         </div>
 
@@ -9795,9 +9828,9 @@ function renderCompetitionModals() {
     <div class="scrim" data-close-comp-modal="1">
       <div class="sheet" style="max-width:520px">
         ${qs.mode === 'comp-adhoc' ? `<datalist id="qs-known-players">${compPlayerSuggestions.map(nm => `<option value="${esc(nm)}">`).join('')}</datalist>` : ''}
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-          <h2 style="margin:0;font-size:20px">⚡ Cargar Resultado${titleSuffix}</h2>
-          <button class="icon-btn" data-close-comp-modal="1" title="Cerrar" style="font-size:16px;font-weight:700">✕</button>
+        <div class="sheet-hdr">
+          <h2 style="font-size:21px">⚡ Cargar Resultado${titleSuffix}</h2>
+          <button class="icon-btn" data-close-comp-modal="1" title="Cerrar" style="width:36px;height:36px;border-radius:12px;font-size:15px;font-weight:700">✕</button>
         </div>
 
         ${qs.mode === 'comp-adhoc' ? `
@@ -9966,9 +9999,9 @@ function renderCompetitionModals() {
     return `
     <div class="scrim" data-close-comp-modal="1">
       <div class="sheet" style="max-width:480px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-          <h2 style="margin:0">📡 Conectar Dispositivos</h2>
-          <button class="icon-btn" data-close-comp-modal="1" title="Cerrar" style="font-size:16px;font-weight:700">✕</button>
+        <div class="sheet-hdr">
+          <h2>📡 Conectar Dispositivos</h2>
+          <button class="icon-btn" data-close-comp-modal="1" title="Cerrar" style="width:36px;height:36px;border-radius:12px;font-size:15px;font-weight:700">✕</button>
         </div>
         <p class="muted" style="margin-bottom:12px">Todos los celulares que escaneen este QR o abran el enlace se conectan al mismo <b>${kindWord}: ${esc(comp.name)}</b> y suman sus resultados automáticamente al finalizar cada partido.</p>
 
@@ -10013,9 +10046,9 @@ function renderCompetitionModals() {
     return `
     <div class="scrim" data-close-comp-modal="1">
       <div class="sheet" style="max-width:440px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-          <h2 style="margin:0">📲 Unirse a Liga o Torneo</h2>
-          <button class="icon-btn" data-close-comp-modal="1" title="Cerrar" style="font-size:16px;font-weight:700">✕</button>
+        <div class="sheet-hdr">
+          <h2>📲 Unirse a Liga o Torneo</h2>
+          <button class="icon-btn" data-close-comp-modal="1" title="Cerrar" style="width:36px;height:36px;border-radius:12px;font-size:15px;font-weight:700">✕</button>
         </div>
         <p class="muted" style="margin-bottom:14px">Ingresá el código de sala (6 letras/números) o pegá el enlace compartido por el organizador para conectarte desde este dispositivo.</p>
         <div class="field" style="margin-bottom:14px">
@@ -10050,12 +10083,14 @@ function renderHistory() {
   <div class="page">
     <div class="page-h">
       <h1>Historial (${historyList.length})</h1>
-      <button class="btn sm" data-act="export-json" title="Exportar copia de seguridad">${ICONS.dl} Backup</button>
-      <label class="btn sm" style="cursor:pointer" title="Importar partidos desde archivo JSON">
-        ${ICONS.up} Importar
-        <input type="file" accept=".json,application/json" style="display:none" id="imp-json-file">
-      </label>
-      <button class="icon-btn" data-nav="settings" title="Ajustes">${ICONS.gear}</button>
+      <div class="page-h-acts">
+        <button class="btn sm" data-act="export-json" title="Exportar copia de seguridad">${ICONS.dl} Backup</button>
+        <label class="btn sm" style="cursor:pointer" title="Importar partidos desde archivo JSON">
+          ${ICONS.up} Importar
+          <input type="file" accept=".json,application/json" style="display:none" id="imp-json-file">
+        </label>
+        <button class="icon-btn" data-nav="settings" title="Ajustes">${ICONS.gear}</button>
+      </div>
     </div>
 
     <div class="seg" style="margin-bottom:12px">
@@ -10185,14 +10220,14 @@ function renderPlayers() {
   return `
   <div class="page">
     <div class="page-h">
-      <h1 style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Rankings</h1>
-      <div style="display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap">
+      <h1>Rankings</h1>
+      <div class="page-h-acts">
         <button class="btn primary sm" data-act="share-ranking" title="Compartir Ranking por WhatsApp o enlace">${ICONS.share} Compartir</button>
         <button class="btn sm" data-act="export-ranking-img" title="Descargar imagen oficial del Ranking">${ICONS.img} Imagen</button>
         <button class="icon-btn" data-nav="settings" title="Ajustes">${ICONS.gear}</button>
       </div>
     </div>
-    <p class="muted" style="margin-bottom:12px">Rankings separados por competencia: Partido del Día (acumulado u hoy), Ligas y Torneos.</p>
+    <p class="muted" style="text-align:center;margin-bottom:12px">Rankings separados por competencia: Partido del Día (acumulado u hoy), Ligas y Torneos.</p>
 
     <div class="seg" style="margin-bottom:12px">
       <button class="${scope==='daily'?'on':''}" data-set-pscope="daily">☀️ Partido del Día</button>
@@ -10253,8 +10288,10 @@ function renderSettings() {
   return `
   <div class="page">
     <div class="page-h">
-      <button class="icon-btn" data-nav="home" title="Inicio">${ICONS.back}</button>
-      <h1>Ajustes y Controles</h1>
+      <div class="page-h-top">
+        <button class="icon-btn" data-nav="home" title="Inicio">${ICONS.back}</button>
+        <h1>Ajustes y Controles</h1>
+      </div>
     </div>
 
     <!-- Account & Ranking ID Card -->
