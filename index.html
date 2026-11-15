@@ -1985,6 +1985,318 @@ html.obs-mode #app, body.obs-mode #app {
   border-color: rgba(212, 175, 55, 0.35);
 }
 
+/* ---------- Player Card Studio ---------- */
+.home-card-cta {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 14px;
+  padding: 13px 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.22) 0%, rgba(22, 16, 40, 0.94) 55%, rgba(212, 175, 55, 0.14) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.52);
+  box-shadow: 0 12px 30px -10px rgba(168, 85, 247, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+.home-card-cta:hover {
+  border-color: rgba(232, 121, 249, 0.78);
+  transform: translateY(-1px);
+}
+.home-card-cta-ico {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #a855f7, #7e22ce);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  flex: none;
+  font-size: 22px;
+  box-shadow: 0 6px 18px rgba(168, 85, 247, 0.45);
+}
+.home-card-cta-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.home-card-cta-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+}
+.home-card-cta-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: #d8b4fe;
+  line-height: 1.3;
+}
+.home-card-cta-go {
+  flex: none;
+  font-size: 13px;
+  font-weight: 800;
+  color: #f5d061;
+  white-space: nowrap;
+}
+
+.pc-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 390px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 820px) {
+  .pc-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.pc-preview-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 14px;
+}
+@media (max-width: 820px) {
+  .pc-preview-col {
+    position: static;
+  }
+}
+.pc-preview-frame {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #080710;
+  box-shadow: 0 24px 54px -14px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(168, 85, 247, 0.35);
+}
+.pc-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.pc-canvas.dragging {
+  cursor: grabbing;
+}
+.pc-drag-hint {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--tx2);
+  margin-top: 2px;
+}
+.pc-ai-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-top: 10px;
+  background: rgba(168, 85, 247, 0.14);
+  border: 1px solid rgba(168, 85, 247, 0.38);
+  color: #e9d5ff;
+  text-align: center;
+}
+.pc-ai-status.err {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.38);
+  color: #fde68a;
+}
+.pc-ai-status.ok {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.38);
+  color: #6ee7b7;
+}
+.pc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+}
+.pc-chip {
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card2);
+  color: var(--tx2);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pc-chip.on {
+  background: linear-gradient(135deg, #a855f7, #7e22ce);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.38);
+}
+.pc-sliders {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.pc-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pc-slider-row label {
+  width: 92px;
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--tx2);
+}
+.pc-slider-row input[type="range"] {
+  flex: 1;
+  accent-color: #a855f7;
+  cursor: pointer;
+}
+.pc-slider-row span {
+  width: 44px;
+  text-align: right;
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--tx);
+}
+.pc-themes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.pc-theme-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tx2);
+  text-align: left;
+}
+.pc-theme-btn.on {
+  border-color: #c084fc;
+  color: #ffffff;
+  background: rgba(168, 85, 247, 0.16);
+}
+.pc-theme-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex: none;
+  border: 2px solid rgba(255, 255, 255, 0.65);
+}
+.pc-logos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 480px) {
+  .pc-logos-grid { grid-template-columns: 1fr; }
+}
+.pc-logo-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(212, 175, 55, 0.3);
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.pc-logo-thumb {
+  height: 46px;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.pc-saved-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 10px;
+}
+.pc-saved-card {
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pc-saved-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.pc-saved-ava {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  display: grid;
+  place-items: center;
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 18px;
+  color: #e9d5ff;
+  flex: none;
+}
+.pc-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: rgba(168, 85, 247, 0.16);
+  border: 1px solid rgba(168, 85, 247, 0.42);
+  color: #e9d5ff;
+}
+.pc-mini-btn:hover {
+  background: rgba(168, 85, 247, 0.28);
+  border-color: rgba(216, 180, 254, 0.68);
+}
+.pc-mini-btn .ic {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.home-card-cta-ico .ic {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+.pc-section h3 .ic {
+  width: 18px;
+  height: 18px;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
+
 </style>
 </head>
 <body>
@@ -2049,7 +2361,9 @@ const ICONS = {
   sun:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
   calendar:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
   award:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>',
-  check:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+  check:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  idCard:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2.2"/><path d="M6.2 16.5c.6-1.9 2.2-2.7 2.8-2.7s2.2.8 2.8 2.7"/><path d="M14.5 9.5h4M14.5 13h4M14.5 16.5h2.5"/></svg>',
+  camera:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
 };
 
 const LOGO_SVG = `<svg class="logo-ic" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
@@ -2277,7 +2591,12 @@ const ui = {
   changeoverOverlay: null, // {title, sub, secondsLeft, total}
   setSummaryOverlay: null, // {setIdx}
   matchEndDismissed: false,
-  voiceListening: false
+  voiceListening: false,
+  playerCardReturnRoute: 'home',
+  playerCardDraft: null,
+  playerCardAiBusy: false,
+  playerCardAiStatus: '', // '', 'loading', 'ok', 'err'
+  playerCardAiText: ''
 };
 
 function loadJSON(k, fb) {
@@ -7212,6 +7531,1624 @@ async function exportRankingImage(overrideCtx = null) {
   }, 'image/png');
 }
 
+// ==================== PLAYER CARD STUDIO (TARJETAS DE JUGADOR) ====================
+const PLAYER_CARD_THEMES = {
+  purple: {
+    id: 'purple',
+    label: 'Violeta Tour',
+    bgTop: '#070611',
+    bgMid: '#180c30',
+    bgBot: '#07060e',
+    accent: '#a855f7',
+    accentBright: '#e879f9',
+    accentSoft: '#d8b4fe',
+    badgeStops: ['#3b0764', '#6b21a8', '#a855f7'],
+    courtGlow: '#7c3aed',
+    courtGlow2: '#3b82f6',
+    frameLight: '#f8fafc',
+    frameMid: '#94a3b8',
+    frameDark: '#334155',
+    ribbonFill: ['#070710', '#160b2b', '#070710']
+  },
+  gold: {
+    id: 'gold',
+    label: 'Obsidian & Oro SÉ',
+    bgTop: '#060608',
+    bgMid: '#171207',
+    bgBot: '#08070a',
+    accent: '#d4af37',
+    accentBright: '#ffe58f',
+    accentSoft: '#fef08a',
+    badgeStops: ['#452d03', '#92650a', '#d4af37'],
+    courtGlow: '#d4af37',
+    courtGlow2: '#f59e0b',
+    frameLight: '#fff8dc',
+    frameMid: '#d4af37',
+    frameDark: '#4a3608',
+    ribbonFill: ['#080705', '#1c1507', '#080705']
+  },
+  blue: {
+    id: 'blue',
+    label: 'Azul Premier',
+    bgTop: '#050812',
+    bgMid: '#0a1c3f',
+    bgBot: '#050914',
+    accent: '#3b82f6',
+    accentBright: '#38bdf8',
+    accentSoft: '#bae6fd',
+    badgeStops: ['#172554', '#1d4ed8', '#0ea5e9'],
+    courtGlow: '#2563eb',
+    courtGlow2: '#06b6d4',
+    frameLight: '#f8fafc',
+    frameMid: '#94a3b8',
+    frameDark: '#334155',
+    ribbonFill: ['#050914', '#0b1e40', '#050914']
+  },
+  green: {
+    id: 'green',
+    label: 'Esmeralda Club',
+    bgTop: '#050c09',
+    bgMid: '#07281e',
+    bgBot: '#050b09',
+    accent: '#10b981',
+    accentBright: '#34d399',
+    accentSoft: '#a7f3d0',
+    badgeStops: ['#064e3b', '#047857', '#10b981'],
+    courtGlow: '#10b981',
+    courtGlow2: '#06b6d4',
+    frameLight: '#f8fafc',
+    frameMid: '#94a3b8',
+    frameDark: '#334155',
+    ribbonFill: ['#050b09', '#09261d', '#050b09']
+  }
+};
+
+const PLAYER_CARD_CATEGORIES = ['1ra', '2da', '3ra', '4ta', '5ta', '6ta', '7ma', '8va', 'Libre', 'Suma'];
+const PLAYER_CARD_POSITIONS = ['Drive', 'Revés', 'Ambos'];
+const PLAYER_CARD_HANDS = ['Diestro', 'Diestra', 'Zurdo', 'Zurda'];
+const PLAYER_CARD_SHOTS = ['Víbora', 'Bandeja', 'Smash', 'Volea', 'Globo', 'Bajada', 'Dejada', 'Chiquita'];
+
+const PC_IDB_NAME = 'padel_se_cards_db_v1';
+const PC_LS_META_FALLBACK = 'padel_se_card_meta_v1';
+let savedPlayerCards = [];
+let playerCardLogos = { logo1: null, logo2: null, subTitle: '' };
+const pcImgCache = new Map();
+let pcSegmenterPromise = null;
+let pcAiRequestToken = 0;
+let pcDragState = null;
+
+function openPlayerCardDB() {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') {
+      reject(new Error('IndexedDB unavailable'));
+      return;
+    }
+    const req = indexedDB.open(PC_IDB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('cards')) {
+        db.createObjectStore('cards', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('meta')) {
+        db.createObjectStore('meta', { keyPath: 'key' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('IDB open failed'));
+  });
+}
+
+async function loadPlayerCardDataFromIDB() {
+  try {
+    const db = await openPlayerCardDB();
+    const tx = db.transaction(['cards', 'meta'], 'readonly');
+    const cardsReq = tx.objectStore('cards').getAll();
+    const logosReq = tx.objectStore('meta').get('logos');
+    await new Promise((res) => {
+      tx.oncomplete = res;
+      tx.onerror = res;
+    });
+    if (Array.isArray(cardsReq.result)) {
+      savedPlayerCards = cardsReq.result.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    }
+    if (logosReq.result && logosReq.result.value) {
+      playerCardLogos = Object.assign({ logo1: null, logo2: null, subTitle: '' }, logosReq.result.value);
+    }
+    db.close();
+  } catch {
+    try {
+      const fb = loadJSON(PC_LS_META_FALLBACK, null);
+      if (fb) playerCardLogos = Object.assign({ logo1: null, logo2: null, subTitle: '' }, fb);
+    } catch {}
+  }
+  if (ui.route === 'player-card' || ui.route === 'players' || ui.route === 'comp-detail') {
+    render();
+  }
+}
+
+async function savePlayerCardToIDB(cardObj) {
+  const clean = {
+    id: cardObj.id,
+    name: cardObj.name || '',
+    nameKey: (cardObj.name || '').trim().toUpperCase(),
+    category: cardObj.category || '6ta',
+    age: cardObj.age || '',
+    position: cardObj.position || 'Drive',
+    hand: cardObj.hand || 'Diestro',
+    bestShot: cardObj.bestShot || 'Víbora',
+    theme: cardObj.theme || 'purple',
+    bgMode: cardObj.bgMode || 'ai',
+    showAppBrand: cardObj.showAppBrand !== false,
+    zoom: Number(cardObj.zoom) || 1,
+    offsetX: Number(cardObj.offsetX) || 0,
+    offsetY: Number(cardObj.offsetY) || 0,
+    origPhoto: cardObj.origPhoto || null,
+    cutoutPhoto: cardObj.cutoutPhoto || null,
+    origHasAlpha: !!cardObj.origHasAlpha,
+    updatedAt: Date.now()
+  };
+  const idx = savedPlayerCards.findIndex(c => c.id === clean.id);
+  if (idx >= 0) savedPlayerCards[idx] = clean;
+  else savedPlayerCards.unshift(clean);
+  savedPlayerCards.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+  try {
+    const db = await openPlayerCardDB();
+    const tx = db.transaction('cards', 'readwrite');
+    tx.objectStore('cards').put(clean);
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+    db.close();
+    return true;
+  } catch (e) {
+    console.warn('Save card IDB error', e);
+    return false;
+  }
+}
+
+async function deletePlayerCardFromIDB(cardId) {
+  savedPlayerCards = savedPlayerCards.filter(c => c.id !== cardId);
+  try {
+    const db = await openPlayerCardDB();
+    const tx = db.transaction('cards', 'readwrite');
+    tx.objectStore('cards').delete(cardId);
+    await new Promise((res) => { tx.oncomplete = res; tx.onerror = res; });
+    db.close();
+  } catch {}
+}
+
+async function saveCardLogosToIDB() {
+  try {
+    const db = await openPlayerCardDB();
+    const tx = db.transaction('meta', 'readwrite');
+    tx.objectStore('meta').put({ key: 'logos', value: playerCardLogos });
+    await new Promise((res) => { tx.oncomplete = res; tx.onerror = res; });
+    db.close();
+  } catch {
+    try { saveJSON(PC_LS_META_FALLBACK, { subTitle: playerCardLogos.subTitle || '' }); } catch {}
+  }
+}
+
+function createDefaultPlayerCardDraft(overrides = {}) {
+  const prevTheme = ui.playerCardDraft?.theme || 'purple';
+  const prevCat = ui.playerCardDraft?.category || '6ta';
+  const prevBrand = ui.playerCardDraft ? ui.playerCardDraft.showAppBrand !== false : true;
+  return {
+    id: 'pc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6),
+    name: '',
+    category: prevCat,
+    age: '',
+    position: 'Drive',
+    hand: 'Diestro',
+    bestShot: 'Víbora',
+    theme: prevTheme,
+    bgMode: 'ai',
+    showAppBrand: prevBrand,
+    zoom: 1,
+    offsetX: 0,
+    offsetY: 0,
+    origPhoto: null,
+    cutoutPhoto: null,
+    origHasAlpha: false,
+    ...overrides
+  };
+}
+
+function getActivePlayerCardDraft() {
+  if (!ui.playerCardDraft) {
+    ui.playerCardDraft = createDefaultPlayerCardDraft();
+  }
+  return ui.playerCardDraft;
+}
+
+function getSavedCardForPlayerName(name) {
+  const key = String(name || '').trim().toUpperCase();
+  if (!key) return null;
+  return savedPlayerCards.find(c => (c.nameKey || c.name?.trim().toUpperCase()) === key) || null;
+}
+
+function openPlayerCardFor(playerName = '', opts = {}) {
+  ui.playerCardReturnRoute = opts.returnRoute || ui.route || 'home';
+  const cleanName = String(playerName || '').trim();
+  const isPlaceholder = /^(DRIVE|REV[EÉ]S)\s*[12]?$/i.test(cleanName);
+  const existing = (!isPlaceholder && cleanName) ? getSavedCardForPlayerName(cleanName) : null;
+
+  if (existing) {
+    ui.playerCardDraft = { ...clone(existing) };
+    ui.playerCardAiStatus = existing.cutoutPhoto ? 'ok' : '';
+    ui.playerCardAiText = existing.cutoutPhoto ? '✓ Tarjeta y recorte cargados' : '';
+  } else {
+    ui.playerCardDraft = createDefaultPlayerCardDraft({
+      name: isPlaceholder ? '' : cleanName,
+      position: opts.position || 'Drive'
+    });
+    ui.playerCardAiStatus = '';
+    ui.playerCardAiText = '';
+  }
+  navigate('player-card');
+}
+
+function loadCachedCardImage(src) {
+  if (!src) return Promise.resolve(null);
+  const hit = pcImgCache.get(src);
+  if (hit && hit.complete && hit.naturalWidth > 0) return Promise.resolve(hit);
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      if (pcImgCache.size > 40) {
+        const firstKey = pcImgCache.keys().next().value;
+        pcImgCache.delete(firstKey);
+      }
+      pcImgCache.set(src, img);
+      resolve(img);
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function getSyncCachedCardImage(src) {
+  if (!src) return null;
+  const hit = pcImgCache.get(src);
+  if (hit) return (hit.complete && hit.naturalWidth > 0) ? hit : null;
+  const img = new Image();
+  img.onload = () => {
+    if (pcImgCache.size > 40) {
+      const firstKey = pcImgCache.keys().next().value;
+      pcImgCache.delete(firstKey);
+    }
+    pcImgCache.set(src, img);
+    if (ui.route === 'player-card') refreshPlayerCardPreview();
+  };
+  pcImgCache.set(src, img);
+  img.src = src;
+  return null;
+}
+
+function readFileAsImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('No se pudo leer la imagen'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('Error leyendo archivo'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function detectImageAlpha(img) {
+  try {
+    const c = document.createElement('canvas');
+    c.width = 48; c.height = 48;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, 48, 48);
+    const data = ctx.getImageData(0, 0, 48, 48).data;
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] < 245) return true;
+    }
+  } catch {}
+  return false;
+}
+
+async function processUploadedPlayerPhoto(file) {
+  if (!file) return;
+  const draft = getActivePlayerCardDraft();
+  try {
+    const img = await readFileAsImage(file);
+    const maxDim = 960;
+    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height));
+    const w = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
+    const h = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const hasAlpha = detectImageAlpha(img);
+    draft.origPhoto = hasAlpha ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.92);
+    draft.origHasAlpha = hasAlpha;
+    draft.cutoutPhoto = hasAlpha ? draft.origPhoto : null;
+    draft.zoom = 1;
+    draft.offsetX = 0;
+    draft.offsetY = 0;
+
+    if (hasAlpha) {
+      ui.playerCardAiStatus = 'ok';
+      ui.playerCardAiText = '✓ Imagen PNG sin fondo detectada';
+      render();
+      return;
+    }
+
+    if (draft.bgMode === 'ai') {
+      render();
+      await runPlayerPhotoAiCutout(draft);
+    } else {
+      ui.playerCardAiStatus = 'ok';
+      ui.playerCardAiText = '⚡ Modo instantáneo activo';
+      render();
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('No se pudo cargar esa imagen');
+  }
+}
+
+async function processUploadedLogo(file, slot) {
+  if (!file) return;
+  try {
+    const img = await readFileAsImage(file);
+    const maxDim = 600;
+    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height));
+    const w = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
+    const h = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    const dataUrl = c.toDataURL('image/png');
+    if (slot === 1) playerCardLogos.logo1 = dataUrl;
+    else playerCardLogos.logo2 = dataUrl;
+    await saveCardLogosToIDB();
+    render();
+    showToast(`Logo ${slot} guardado`);
+  } catch {
+    showToast('No se pudo cargar el logo');
+  }
+}
+
+async function loadPlayerAiSegmenter() {
+  if (!pcSegmenterPromise) {
+    pcSegmenterPromise = (async () => {
+      const mod = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/vision_bundle.mjs');
+      const { FilesetResolver, ImageSegmenter } = mod;
+      const vision = await FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm'
+      );
+      const modelAssetPath = 'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite';
+      try {
+        return await ImageSegmenter.createFromOptions(vision, {
+          baseOptions: { modelAssetPath, delegate: 'GPU' },
+          runningMode: 'IMAGE',
+          outputConfidenceMasks: true,
+          outputCategoryMask: false
+        });
+      } catch {
+        return await ImageSegmenter.createFromOptions(vision, {
+          baseOptions: { modelAssetPath, delegate: 'CPU' },
+          runningMode: 'IMAGE',
+          outputConfidenceMasks: true,
+          outputCategoryMask: false
+        });
+      }
+    })().catch((err) => {
+      pcSegmenterPromise = null;
+      throw err;
+    });
+  }
+  return pcSegmenterPromise;
+}
+
+async function runPlayerPhotoAiCutout(draft) {
+  if (!draft || !draft.origPhoto) return;
+  if (draft.origHasAlpha) {
+    draft.cutoutPhoto = draft.origPhoto;
+    ui.playerCardAiStatus = 'ok';
+    ui.playerCardAiText = '✓ Imagen transparente lista';
+    render();
+    return;
+  }
+
+  const token = ++pcAiRequestToken;
+  ui.playerCardAiBusy = true;
+  ui.playerCardAiStatus = 'loading';
+  ui.playerCardAiText = '✨ Recortando fondo con IA (la 1ª vez carga ~3 MB)...';
+  updatePcAiStatusDom();
+
+  try {
+    const segmenter = await loadPlayerAiSegmenter();
+    if (token !== pcAiRequestToken) return;
+
+    const srcImg = await loadCachedCardImage(draft.origPhoto);
+    if (!srcImg || token !== pcAiRequestToken) return;
+
+    const w = srcImg.naturalWidth || srcImg.width;
+    const h = srcImg.naturalHeight || srcImg.height;
+    const result = segmenter.segment(srcImg);
+    const masks = result.confidenceMasks || [];
+    const labels = typeof segmenter.getLabels === 'function' ? segmenter.getLabels() : [];
+
+    let personMaskIdx = 0;
+    if (masks.length > 1) {
+      const found = labels.findIndex(l => /person|foreground|human/i.test(String(l)));
+      personMaskIdx = found >= 0 ? found : 1;
+    }
+
+    const maskObj = masks[personMaskIdx];
+    if (!maskObj) throw new Error('No mask returned');
+
+    const mw = maskObj.width || w;
+    const mh = maskObj.height || h;
+    const conf = maskObj.getAsFloat32Array();
+
+    // Build smooth alpha mask canvas
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = mw;
+    maskCanvas.height = mh;
+    const mCtx = maskCanvas.getContext('2d');
+    const imgData = mCtx.createImageData(mw, mh);
+    const d = imgData.data;
+
+    let personPixels = 0;
+    for (let i = 0; i < conf.length; i++) {
+      const c = conf[i];
+      // Smoothstep feathering around person boundary
+      const t = Math.max(0, Math.min(1, (c - 0.30) / (0.70 - 0.30)));
+      const alpha = Math.round(t * t * (3 - 2 * t) * 255);
+      if (alpha > 128) personPixels++;
+      const p = i * 4;
+      d[p] = 255;
+      d[p + 1] = 255;
+      d[p + 2] = 255;
+      d[p + 3] = alpha;
+    }
+    mCtx.putImageData(imgData, 0, 0);
+
+    try { result.close?.(); } catch {}
+
+    if (personPixels < (conf.length * 0.015)) {
+      throw new Error('No se detectó claramente una persona en la foto');
+    }
+
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = w;
+    outCanvas.height = h;
+    const oCtx = outCanvas.getContext('2d');
+    try { oCtx.filter = 'blur(1.4px)'; } catch {}
+    oCtx.drawImage(maskCanvas, 0, 0, w, h);
+    try { oCtx.filter = 'none'; } catch {}
+    oCtx.globalCompositeOperation = 'source-in';
+    oCtx.drawImage(srcImg, 0, 0, w, h);
+    oCtx.globalCompositeOperation = 'source-over';
+
+    if (token !== pcAiRequestToken) return;
+    draft.cutoutPhoto = outCanvas.toDataURL('image/png');
+    draft.bgMode = 'ai';
+    ui.playerCardAiBusy = false;
+    ui.playerCardAiStatus = 'ok';
+    ui.playerCardAiText = '✓ Fondo recortado automáticamente';
+    updatePcAiStatusDom();
+    refreshPlayerCardPreview();
+  } catch (err) {
+    if (token !== pcAiRequestToken) return;
+    console.warn('AI cutout fallback:', err);
+    ui.playerCardAiBusy = false;
+    draft.bgMode = 'instant';
+    ui.playerCardAiStatus = 'err';
+    ui.playerCardAiText = 'No se pudo usar IA (sin conexión o foto compleja) · Aplicado Modo Instantáneo';
+    render();
+  }
+}
+
+function updatePcAiStatusDom() {
+  const el = document.getElementById('pc-ai-status-box');
+  if (!el) return;
+  if (!ui.playerCardAiText) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'flex';
+  el.className = 'pc-ai-status ' + (ui.playerCardAiStatus === 'ok' ? 'ok' : (ui.playerCardAiStatus === 'err' ? 'err' : ''));
+  el.textContent = ui.playerCardAiText;
+}
+
+// ---------- Canvas Geometry & Vector Artwork Helpers ----------
+function traceChamferedRect(ctx, x, y, w, h, cut) {
+  ctx.beginPath();
+  ctx.moveTo(x + cut, y);
+  ctx.lineTo(x + w - cut, y);
+  ctx.lineTo(x + w, y + cut);
+  ctx.lineTo(x + w, y + h - cut);
+  ctx.lineTo(x + w - cut, y + h);
+  ctx.lineTo(x + cut, y + h);
+  ctx.lineTo(x, y + h - cut);
+  ctx.lineTo(x, y + cut);
+  ctx.closePath();
+}
+
+function drawRoundedPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, r);
+  else ctx.rect(x, y, w, h);
+}
+
+function fitCanvasFontSize(ctx, text, maxW, startSize, minSize, fontFmt) {
+  let size = startSize;
+  while (size > minSize) {
+    ctx.font = fontFmt(size);
+    if (ctx.measureText(text).width <= maxW) break;
+    size -= 2;
+  }
+  ctx.font = fontFmt(size);
+  return size;
+}
+
+function drawPadelControlEmblemCanvas(ctx, cx, cy, size, theme) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  const s = size / 120;
+  ctx.scale(s, s);
+  ctx.translate(-60, -60);
+
+  const gGold = ctx.createLinearGradient(10, 10, 110, 110);
+  if (theme.id === 'purple') {
+    gGold.addColorStop(0, '#ffffff');
+    gGold.addColorStop(0.35, '#e9d5ff');
+    gGold.addColorStop(0.7, '#a855f7');
+    gGold.addColorStop(1, '#f5d061');
+  } else {
+    gGold.addColorStop(0, '#fff6cc');
+    gGold.addColorStop(0.35, '#f3d266');
+    gGold.addColorStop(0.7, '#d4af37');
+    gGold.addColorStop(1, '#a87910');
+  }
+
+  // Outer squircle
+  drawRoundedPath(ctx, 4, 4, 112, 112, 26);
+  ctx.fillStyle = '#09080f';
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = gGold;
+  ctx.stroke();
+
+  // Inner Shield
+  ctx.beginPath();
+  ctx.moveTo(60, 14);
+  ctx.lineTo(96, 27);
+  ctx.lineTo(96, 59);
+  ctx.quadraticCurveTo(96, 86, 60, 105);
+  ctx.quadraticCurveTo(24, 86, 24, 59);
+  ctx.lineTo(24, 27);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(12, 11, 20, 0.9)';
+  ctx.fill();
+  ctx.lineWidth = 1.6;
+  ctx.strokeStyle = gGold;
+  ctx.stroke();
+
+  // Tilted Racket
+  ctx.save();
+  ctx.translate(58, 57);
+  ctx.rotate(-0.42);
+  ctx.translate(-58, -57);
+  ctx.beginPath();
+  ctx.ellipse(60, 46, 20, 24, 0, 0, Math.PI * 2);
+  ctx.fillStyle = gGold;
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(60, 46, 15.5, 19, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#09090d';
+  ctx.fill();
+  // Grip
+  drawRoundedPath(ctx, 56, 69, 8, 28, 3);
+  ctx.fillStyle = gGold;
+  ctx.fill();
+  // Drilled holes
+  ctx.fillStyle = gGold;
+  [[-6, -9],[0,-10],[6,-9],[-9,-2],[-3,-2],[3,-2],[9,-2],[-8,5],[-2,5],[4,5],[10,5],[-5,11],[0,12],[5,11]].forEach(([hx, hy]) => {
+    ctx.beginPath();
+    ctx.arc(60 + hx, 46 + hy, 1.7, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+
+  // Padel ball
+  const ballG = ctx.createRadialGradient(75, 69, 2, 79, 73, 15);
+  ballG.addColorStop(0, '#ffffff');
+  ballG.addColorStop(0.5, theme.accentBright);
+  ballG.addColorStop(1, theme.accent);
+  ctx.beginPath();
+  ctx.arc(79, 73, 14, 0, Math.PI * 2);
+  ctx.fillStyle = ballG;
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#070709';
+  ctx.stroke();
+
+  // Bottom SÉ pill
+  drawRoundedPath(ctx, 41, 94, 38, 17, 8.5);
+  ctx.fillStyle = '#09080c';
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = gGold;
+  ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'italic 800 12.5px "Barlow Condensed", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SÉ', 60, 103);
+
+  ctx.restore();
+}
+
+function drawCardIconCalendar(ctx, cx, cy) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.strokeStyle = '#ffffff';
+  ctx.fillStyle = '#ffffff';
+  ctx.lineWidth = 3.2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  drawRoundedPath(ctx, -23, -19, 46, 42, 7);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-23, -7);
+  ctx.lineTo(23, -7);
+  ctx.moveTo(-11, -26);
+  ctx.lineTo(-11, -15);
+  ctx.moveTo(11, -26);
+  ctx.lineTo(11, -15);
+  ctx.stroke();
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 4; c++) {
+      ctx.beginPath();
+      ctx.arc(-13.5 + c * 9, 2 + r * 7.5, 2.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawCardIconPadelCourt(ctx, cx, cy, pos, theme) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  // Perspective court trapezoid
+  const tlx = -22, trx = 22, blx = -29, brx = 29, ty = -20, by = 20;
+  // Highlight Drive (right) or Revés (left) or Ambos
+  const p = String(pos || '').toLowerCase();
+  if (p.includes('drive') || p.includes('ambos')) {
+    ctx.beginPath();
+    ctx.moveTo(0, ty); ctx.lineTo(trx, ty); ctx.lineTo(brx, by); ctx.lineTo(0, by); ctx.closePath();
+    ctx.fillStyle = theme.accentBright + '44';
+    ctx.fill();
+  }
+  if (p.includes('rev') || p.includes('ambos')) {
+    ctx.beginPath();
+    ctx.moveTo(tlx, ty); ctx.lineTo(0, ty); ctx.lineTo(0, by); ctx.lineTo(blx, by); ctx.closePath();
+    ctx.fillStyle = theme.accentBright + '44';
+    ctx.fill();
+  }
+
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(tlx, ty);
+  ctx.lineTo(trx, ty);
+  ctx.lineTo(brx, by);
+  ctx.lineTo(blx, by);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Net horizontal middle & center line
+  ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  ctx.moveTo(-25.5, 0); ctx.lineTo(25.5, 0);
+  ctx.moveTo(0, ty); ctx.lineTo(0, by);
+  ctx.moveTo(-23.8, -10); ctx.lineTo(23.8, -10);
+  ctx.moveTo(-27.2, 11); ctx.lineTo(27.2, 11);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCardIconHand(ctx, cx, cy, hand) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  const isLeft = /zurd/i.test(String(hand || ''));
+  if (!isLeft) ctx.scale(-1, 1);
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  // Palm + fingers clean silhouette
+  ctx.moveTo(-14, 18);
+  ctx.quadraticCurveTo(-18, 6, -24, -2);
+  ctx.quadraticCurveTo(-27, -7, -21, -9);
+  ctx.quadraticCurveTo(-17, -9, -12, 0);
+  ctx.lineTo(-14, -18);
+  ctx.quadraticCurveTo(-14, -23, -10, -23);
+  ctx.quadraticCurveTo(-6, -23, -6, -18);
+  ctx.lineTo(-5, -2);
+  ctx.lineTo(-4, -23);
+  ctx.quadraticCurveTo(-4, -28, 0, -28);
+  ctx.quadraticCurveTo(4, -28, 4, -23);
+  ctx.lineTo(4, -3);
+  ctx.lineTo(7, -21);
+  ctx.quadraticCurveTo(7, -26, 11, -26);
+  ctx.quadraticCurveTo(15, -26, 15, -20);
+  ctx.lineTo(13, -1);
+  ctx.lineTo(18, -14);
+  ctx.quadraticCurveTo(19, -18, 22, -17);
+  ctx.quadraticCurveTo(25, -16, 24, -11);
+  ctx.lineTo(18, 11);
+  ctx.quadraticCurveTo(15, 24, 1, 24);
+  ctx.quadraticCurveTo(-9, 24, -14, 18);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCardIconRacket(ctx, cx, cy) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(-0.62);
+  ctx.strokeStyle = '#ffffff';
+  ctx.fillStyle = '#ffffff';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  // Head
+  ctx.beginPath();
+  ctx.ellipse(0, -10, 16, 20, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  // Throat + handle
+  ctx.beginPath();
+  ctx.moveTo(-5, 9); ctx.lineTo(-3, 25); ctx.lineTo(3, 25); ctx.lineTo(5, 9);
+  ctx.stroke();
+  // Holes
+  const holes = [[-5,-19],[0,-20],[5,-19],[-8,-12],[-2.7,-12],[2.7,-12],[8,-12],[-7,-5],[0,-5],[7,-5],[-4,1],[4,1]];
+  holes.forEach(([hx, hy]) => {
+    ctx.beginPath();
+    ctx.arc(hx, hy, 1.9, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawPadelPlayerSilhouette(ctx, x, y, scale) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+  ctx.shadowBlur = 16;
+
+  // Head
+  ctx.beginPath();
+  ctx.arc(46, 20, 14, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dynamic athletic lunging body + limbs
+  ctx.beginPath();
+  ctx.moveTo(35, 36);
+  ctx.lineTo(58, 36);
+  ctx.lineTo(74, 52);
+  // Right arm swinging racket forward-right
+  ctx.lineTo(106, 56);
+  ctx.lineTo(118, 53);
+  ctx.lineTo(118, 61);
+  ctx.lineTo(102, 66);
+  ctx.lineTo(66, 62);
+  // Torso right
+  ctx.lineTo(58, 92);
+  // Lunging front right leg
+  ctx.lineTo(92, 118);
+  ctx.lineTo(86, 152);
+  ctx.lineTo(100, 158);
+  ctx.lineTo(82, 164);
+  ctx.lineTo(74, 156);
+  ctx.lineTo(78, 124);
+  ctx.lineTo(44, 102);
+  // Trailing back left leg
+  ctx.lineTo(16, 134);
+  ctx.lineTo(-8, 158);
+  ctx.lineTo(-22, 164);
+  ctx.lineTo(-26, 156);
+  ctx.lineTo(4, 125);
+  ctx.lineTo(28, 86);
+  ctx.lineTo(26, 58);
+  // Back balance left arm
+  ctx.lineTo(4, 72);
+  ctx.lineTo(-8, 65);
+  ctx.lineTo(18, 46);
+  ctx.closePath();
+  ctx.fill();
+
+  // Racket extended in front hand
+  ctx.save();
+  ctx.translate(132, 50);
+  ctx.rotate(0.45);
+  ctx.beginPath();
+  ctx.ellipse(0, -14, 13, 17, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(-2.5, 2, 5, 14);
+  ctx.restore();
+
+  // Small padel ball in air
+  ctx.beginPath();
+  ctx.arc(106, 28, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawLogoFit(ctx, img, boxX, boxY, boxW, boxH) {
+  if (!img) return;
+  const iw = img.naturalWidth || img.width;
+  const ih = img.naturalHeight || img.height;
+  if (!iw || !ih) return;
+  const scale = Math.min(boxW / iw, boxH / ih);
+  const dw = iw * scale;
+  const dh = ih * scale;
+  const dx = boxX + (boxW - dw) / 2;
+  const dy = boxY + (boxH - dh) / 2;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.65)';
+  ctx.shadowBlur = 16;
+  ctx.drawImage(img, dx, dy, dw, dh);
+  ctx.restore();
+}
+
+function drawPlayerCardCanvas(canvas, draft, preloadedImgs = null) {
+  if (!canvas || !draft) return;
+  const W = 1080, H = 1350;
+  if (canvas.width !== W) canvas.width = W;
+  if (canvas.height !== H) canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const theme = PLAYER_CARD_THEMES[draft.theme] || PLAYER_CARD_THEMES.purple;
+
+  // Resolve images (sync cache for live preview, or preloaded map for export)
+  const getImg = (src) => {
+    if (!src) return null;
+    if (preloadedImgs && preloadedImgs.has(src)) return preloadedImgs.get(src);
+    return getSyncCachedCardImage(src);
+  };
+
+  const photoSrc = (draft.bgMode === 'ai' && draft.cutoutPhoto) ? draft.cutoutPhoto : draft.origPhoto;
+  const photoImg = getImg(photoSrc);
+  const logo1Img = getImg(playerCardLogos.logo1);
+  const logo2Img = getImg(playerCardLogos.logo2);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Outer backing matching chamfered metallic frame
+  traceChamferedRect(ctx, 6, 6, W - 12, H - 12, 54);
+  ctx.fillStyle = '#050509';
+  ctx.fill();
+
+  // Inner chamfered card clip
+  const framePad = 24;
+  const innerCut = 44;
+  ctx.save();
+  traceChamferedRect(ctx, framePad, framePad, W - framePad * 2, H - framePad * 2, innerCut);
+  ctx.clip();
+
+  // 1. Arena / Court Background Gradient
+  const bgG = ctx.createLinearGradient(0, 0, W, H);
+  bgG.addColorStop(0, theme.bgTop);
+  bgG.addColorStop(0.52, theme.bgMid);
+  bgG.addColorStop(1, theme.bgBot);
+  ctx.fillStyle = bgG;
+  ctx.fillRect(0, 0, W, H);
+
+  // Stadium spotlight blooms
+  const bloom1 = ctx.createRadialGradient(310, 560, 20, 310, 560, 500);
+  bloom1.addColorStop(0, theme.courtGlow + '58');
+  bloom1.addColorStop(0.55, theme.courtGlow2 + '22');
+  bloom1.addColorStop(1, 'transparent');
+  ctx.fillStyle = bloom1;
+  ctx.fillRect(0, 0, W, H);
+
+  const bloom2 = ctx.createRadialGradient(840, 240, 20, 840, 240, 420);
+  bloom2.addColorStop(0, theme.accentBright + '44');
+  bloom2.addColorStop(1, 'transparent');
+  ctx.fillStyle = bloom2;
+  ctx.fillRect(0, 0, W, H);
+
+  // Procedural indoor padel court mesh & perspective lines
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.045)';
+  ctx.lineWidth = 1.5;
+  for (let gx = 40; gx < W; gx += 32) {
+    ctx.beginPath();
+    ctx.moveTo(gx, 180);
+    ctx.lineTo(gx, 860);
+    ctx.stroke();
+  }
+  for (let gy = 200; gy < 840; gy += 32) {
+    ctx.beginPath();
+    ctx.moveTo(24, gy);
+    ctx.lineTo(W - 24, gy);
+    ctx.stroke();
+  }
+  // Glass reflections & court blue/violet floor perspective
+  const floorG = ctx.createLinearGradient(0, 830, 0, H);
+  floorG.addColorStop(0, 'rgba(0,0,0,0)');
+  floorG.addColorStop(0.35, theme.courtGlow2 + '38');
+  floorG.addColorStop(1, theme.bgBot);
+  ctx.fillStyle = floorG;
+  ctx.fillRect(0, 830, W, H - 830);
+
+  ctx.strokeStyle = theme.accentSoft + '33';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(24, 860); ctx.lineTo(W - 24, 860);
+  ctx.moveTo(540, 860); ctx.lineTo(540, 1180);
+  ctx.moveTo(24, 1020); ctx.lineTo(W - 24, 1020);
+  ctx.stroke();
+  ctx.restore();
+
+  // 2. Player Portrait Layer (positioned left/center behind stats & bottom banner)
+  if (photoImg) {
+    const iw = photoImg.naturalWidth || photoImg.width;
+    const ih = photoImg.naturalHeight || photoImg.height;
+    const targetH = 920 * (Number(draft.zoom) || 1);
+    const baseScale = targetH / ih;
+    const dw = iw * baseScale;
+    const dh = ih * baseScale;
+    const cx = 335 + (Number(draft.offsetX) || 0);
+    const cy = 685 + (Number(draft.offsetY) || 0);
+    const dx = cx - dw / 2;
+    const dy = cy - dh / 2;
+
+    const isCutout = (draft.bgMode === 'ai' && !!draft.cutoutPhoto) || draft.origHasAlpha;
+
+    // Backlight halo behind player
+    const halo = ctx.createRadialGradient(cx, cy - 60, 30, cx, cy - 40, Math.max(dw, dh) * 0.52);
+    halo.addColorStop(0, theme.accentBright + '60');
+    halo.addColorStop(0.55, theme.accent + '22');
+    halo.addColorStop(1, 'transparent');
+    ctx.fillStyle = halo;
+    ctx.fillRect(24, 170, 740, 960);
+
+    if (isCutout) {
+      // Softly fade the very bottom edge of the portrait so it never shows a hard horizontal cut above the ribbon
+      const pCanvas = document.createElement('canvas');
+      pCanvas.width = W;
+      pCanvas.height = H;
+      const pCtx = pCanvas.getContext('2d');
+      pCtx.drawImage(photoImg, dx, dy, dw, dh);
+      const bottomEdge = dy + dh;
+      const fadeStart = Math.max(dy, bottomEdge - 80);
+      if (bottomEdge > fadeStart + 1) {
+        pCtx.globalCompositeOperation = 'destination-in';
+        const bMask = pCtx.createLinearGradient(0, fadeStart, 0, bottomEdge);
+        bMask.addColorStop(0, 'rgba(0,0,0,1)');
+        bMask.addColorStop(1, 'rgba(0,0,0,0)');
+        pCtx.fillStyle = bMask;
+        pCtx.fillRect(0, 0, W, H);
+      }
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.72)';
+      ctx.shadowBlur = 28;
+      ctx.drawImage(pCanvas, 0, 0);
+      ctx.restore();
+    } else {
+      // Instant mode with opaque background: smooth studio vignette mask so it blends seamlessly
+      const pCanvas = document.createElement('canvas');
+      pCanvas.width = 720;
+      pCanvas.height = 960;
+      const pCtx = pCanvas.getContext('2d');
+      pCtx.drawImage(photoImg, dx - 24, dy - 180, dw, dh);
+      pCtx.globalCompositeOperation = 'destination-in';
+      const vMask = pCtx.createRadialGradient(340, 420, 140, 340, 430, 380);
+      vMask.addColorStop(0, 'rgba(0,0,0,1)');
+      vMask.addColorStop(0.72, 'rgba(0,0,0,0.92)');
+      vMask.addColorStop(1, 'rgba(0,0,0,0)');
+      pCtx.fillStyle = vMask;
+      pCtx.fillRect(0, 0, 720, 960);
+      ctx.drawImage(pCanvas, 24, 180);
+    }
+  } else {
+    // Elegant placeholder silhouette when no photo uploaded yet
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.beginPath();
+    ctx.arc(330, 460, 96, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(155, 990);
+    ctx.quadraticCurveTo(175, 620, 330, 600);
+    ctx.quadraticCurveTo(485, 620, 505, 990);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = theme.accentSoft;
+    ctx.font = '700 28px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('SUBÍ TU FOTO', 330, 790);
+    ctx.restore();
+  }
+
+  // 3. Top Header Carbon Wedge
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(20, 20);
+  ctx.lineTo(1060, 20);
+  ctx.lineTo(1060, 148);
+  ctx.lineTo(20, 290);
+  ctx.closePath();
+  const hdrG = ctx.createLinearGradient(0, 20, 680, 270);
+  hdrG.addColorStop(0, '#090910');
+  hdrG.addColorStop(0.6, '#141322');
+  hdrG.addColorStop(1, '#08080f');
+  ctx.fillStyle = hdrG;
+  ctx.fill();
+
+  // Subtle carbon weave diagonal streaks inside header
+  ctx.save();
+  ctx.clip();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+  ctx.lineWidth = 4;
+  for (let s = -200; s < W + 200; s += 16) {
+    ctx.beginPath();
+    ctx.moveTo(s, 20);
+    ctx.lineTo(s + 160, 300);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Glowing diagonal accent line below header
+  ctx.beginPath();
+  ctx.moveTo(20, 290);
+  ctx.lineTo(680, 200);
+  ctx.strokeStyle = theme.accentBright;
+  ctx.lineWidth = 5;
+  ctx.shadowColor = theme.accent;
+  ctx.shadowBlur = 18;
+  ctx.stroke();
+  ctx.restore();
+
+  // 4. Header Logos (Uploaded Logos OR Pádel Control SÉ App Emblem)
+  const subTxt = (playerCardLogos.subTitle || '').trim() ||
+    ((prefs.rankingName && prefs.rankingName !== 'Mi Ranking') ? prefs.rankingName : 'PLAYER CARD · OFICIAL');
+
+  if (logo1Img && logo2Img) {
+    drawLogoFit(ctx, logo1Img, 62, 48, 255, 160);
+    drawLogoFit(ctx, logo2Img, 342, 44, 300, 142);
+  } else if (logo1Img) {
+    drawLogoFit(ctx, logo1Img, 66, 48, 300, 160);
+    if (draft.showAppBrand) {
+      drawPadelControlEmblemCanvas(ctx, 450, 108, 92, theme);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 22px "Barlow Condensed", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('PÁDEL CONTROL SÉ', 508, 102);
+      ctx.fillStyle = theme.accentSoft;
+      ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText(subTxt.toUpperCase().slice(0, 22), 508, 126);
+    }
+  } else if (logo2Img) {
+    drawPadelControlEmblemCanvas(ctx, 134, 128, 128, theme);
+    drawLogoFit(ctx, logo2Img, 232, 44, 410, 144);
+  } else {
+    // Default App Branding
+    drawPadelControlEmblemCanvas(ctx, 142, 134, 146, theme);
+    ctx.save();
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'italic 800 44px "Barlow Condensed", sans-serif';
+    ctx.fillText('PÁDEL CONTROL SÉ', 238, 114);
+    ctx.fillStyle = theme.accentBright;
+    ctx.font = '700 20px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(subTxt.toUpperCase().slice(0, 26), 240, 148);
+    ctx.restore();
+  }
+
+  // 5. Top-Right Category Badge ("CATEGORÍA / 6ta")
+  ctx.save();
+  const catX = 668, catY = 52, catW = 342, catH = 262;
+  ctx.beginPath();
+  ctx.moveTo(catX + 18, catY);
+  ctx.lineTo(catX + catW - 26, catY);
+  ctx.lineTo(catX + catW, catY + 26);
+  ctx.lineTo(catX + catW - 20, catY + catH - 20);
+  ctx.quadraticCurveTo(catX + catW - 24, catY + catH, catX + catW - 44, catY + catH);
+  ctx.lineTo(catX + 38, catY + catH - 22);
+  ctx.quadraticCurveTo(catX + 18, catY + catH - 24, catX + 14, catY + catH - 46);
+  ctx.lineTo(catX, catY + 22);
+  ctx.quadraticCurveTo(catX, catY, catX + 18, catY);
+  ctx.closePath();
+
+  const catG = ctx.createLinearGradient(catX, catY, catX + catW, catY + catH);
+  catG.addColorStop(0, theme.badgeStops[0]);
+  catG.addColorStop(0.45, theme.badgeStops[1]);
+  catG.addColorStop(1, theme.badgeStops[2]);
+  ctx.shadowColor = theme.accent;
+  ctx.shadowBlur = 34;
+  ctx.fillStyle = catG;
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.stroke();
+
+  // Category text
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#f5f3ff';
+  ctx.font = '700 28px "Plus Jakarta Sans", sans-serif';
+  ctx.fillText('CATEGORÍA', catX + catW / 2 + 2, catY + 58);
+
+  const catVal = (draft.category || '—').trim();
+  fitCanvasFontSize(ctx, catVal, catW - 64, 134, 48, (sz) => `italic 800 ${sz}px "Barlow Condensed", sans-serif`);
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetY = 5;
+  ctx.fillText(catVal, catX + catW / 2 - 4, catY + 178);
+  ctx.restore();
+
+  // 6. Four Right-Side Stat Capsules
+  const ageRaw = String(draft.age || '').trim();
+  const ageVal = !ageRaw ? '—' : (/^\d+$/.test(ageRaw) ? `${ageRaw} años` : ageRaw);
+  const posVal = (draft.position || 'Drive').trim();
+  const handVal = (draft.hand || 'Diestro').trim();
+  const shotVal = (draft.bestShot || 'Víbora').trim();
+
+  const pills = [
+    { label: 'EDAD', value: ageVal, drawIcon: (x, y) => drawCardIconCalendar(ctx, x, y) },
+    { label: 'POSICIÓN', value: posVal, drawIcon: (x, y) => drawCardIconPadelCourt(ctx, x, y, posVal, theme) },
+    { label: 'PERFIL', value: handVal, drawIcon: (x, y) => drawCardIconHand(ctx, x, y, handVal) },
+    { label: 'MEJOR GOLPE', value: shotVal, drawIcon: (x, y) => drawCardIconRacket(ctx, x, y) }
+  ];
+
+  const pillX = 562;
+  const pillW = 468;
+  const pillH = 128;
+  const pillStartY = 354;
+  const pillGap = 24;
+
+  pills.forEach((pill, i) => {
+    const py = pillStartY + i * (pillH + pillGap);
+    ctx.save();
+    drawRoundedPath(ctx, pillX, py, pillW, pillH, 26);
+
+    const pBg = ctx.createLinearGradient(pillX, py, pillX + pillW, py + pillH);
+    pBg.addColorStop(0, 'rgba(8, 9, 20, 0.90)');
+    pBg.addColorStop(1, 'rgba(20, 16, 40, 0.92)');
+    ctx.shadowColor = theme.accent + '66';
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = pBg;
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+    const pBorder = ctx.createLinearGradient(pillX, py, pillX + pillW, py + pillH);
+    pBorder.addColorStop(0, 'rgba(255, 255, 255, 0.92)');
+    pBorder.addColorStop(0.5, 'rgba(203, 213, 225, 0.7)');
+    pBorder.addColorStop(1, 'rgba(255, 255, 255, 0.85)');
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = pBorder;
+    ctx.stroke();
+
+    // Icon on left
+    pill.drawIcon(pillX + 58, py + pillH / 2);
+
+    // Label + Value
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '700 21px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(pill.label, pillX + 116, py + 44);
+
+    fitCanvasFontSize(ctx, pill.value, pillW - 138, 54, 28, (sz) => `italic 800 ${sz}px "Barlow Condensed", sans-serif`);
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0,0,0,0.65)';
+    ctx.shadowBlur = 8;
+    ctx.fillText(pill.value, pillX + 116, py + 102);
+
+    ctx.restore();
+  });
+
+  // 7. Bottom Diagonal Name Ribbon + Player Silhouette
+  ctx.save();
+  // Ribbon polygon sloping slightly upward from left to right
+  const rTopL = 1110, rTopR = 966;
+  const rBotL = 1286, rBotR = 1142;
+
+  ctx.beginPath();
+  ctx.moveTo(20, rTopL);
+  ctx.lineTo(W - 20, rTopR);
+  ctx.lineTo(W - 20, rBotR);
+  ctx.lineTo(20, rBotL);
+  ctx.closePath();
+
+  const ribG = ctx.createLinearGradient(0, rTopR, W, rBotL);
+  ribG.addColorStop(0, theme.ribbonFill[0]);
+  ribG.addColorStop(0.5, theme.ribbonFill[1]);
+  ribG.addColorStop(1, theme.ribbonFill[2]);
+  ctx.fillStyle = ribG;
+  ctx.fill();
+
+  // Fill area below ribbon cleanly in dark carbon so no gaps show at corners
+  ctx.beginPath();
+  ctx.moveTo(20, rBotL);
+  ctx.lineTo(W - 20, rBotR);
+  ctx.lineTo(W - 20, H - 20);
+  ctx.lineTo(20, H - 20);
+  ctx.closePath();
+  ctx.fillStyle = '#07070c';
+  ctx.fill();
+
+  // Glowing top and bottom neon borders on ribbon
+  ctx.strokeStyle = theme.accentBright;
+  ctx.lineWidth = 6;
+  ctx.shadowColor = theme.accent;
+  ctx.shadowBlur = 22;
+  ctx.beginPath();
+  ctx.moveTo(20, rTopL); ctx.lineTo(W - 20, rTopR);
+  ctx.moveTo(20, rBotL); ctx.lineTo(W - 20, rBotR);
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(20, rTopL); ctx.lineTo(W - 20, rTopR);
+  ctx.moveTo(20, rBotL); ctx.lineTo(W - 20, rBotR);
+  ctx.stroke();
+
+  // Rotated Player Name inside diagonal ribbon
+  const angle = Math.atan2(rTopR - rTopL, (W - 20) - 20);
+  const nameTxt = ((draft.name || '').trim() || 'TU NOMBRE').toUpperCase();
+  ctx.save();
+  ctx.translate(78, 1188);
+  ctx.rotate(angle);
+  fitCanvasFontSize(ctx, nameTxt, 650, 88, 38, (sz) => `italic 800 ${sz}px "Barlow Condensed", sans-serif`);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(0,0,0,0.85)';
+  ctx.shadowBlur = 12;
+  ctx.fillText(nameTxt, 0, 0);
+  ctx.restore();
+
+  // Padel Player White Silhouette on Bottom Right
+  drawPadelPlayerSilhouette(ctx, 782, 1002, 1.38);
+
+  if (draft.showAppBrand) {
+    ctx.fillStyle = 'rgba(226, 232, 240, 0.55)';
+    ctx.font = '600 18px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('PÁDEL CONTROL SÉ', 78, H - 46);
+  }
+  ctx.restore();
+
+  ctx.restore(); // End inner chamfered clip
+
+  // 8. Metallic Outer Silver/Chrome Chamfered Frame
+  ctx.save();
+  traceChamferedRect(ctx, framePad, framePad, W - framePad * 2, H - framePad * 2, innerCut);
+  const fGrad = ctx.createLinearGradient(0, 0, W, H);
+  fGrad.addColorStop(0, theme.frameLight);
+  fGrad.addColorStop(0.25, theme.frameMid);
+  fGrad.addColorStop(0.5, theme.frameDark);
+  fGrad.addColorStop(0.75, theme.frameLight);
+  fGrad.addColorStop(1, theme.frameMid);
+  ctx.lineWidth = 14;
+  ctx.strokeStyle = fGrad;
+  ctx.stroke();
+
+  // Thin crisp inner highlight bezel
+  traceChamferedRect(ctx, framePad + 6, framePad + 6, W - (framePad + 6) * 2, H - (framePad + 6) * 2, innerCut - 4);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.stroke();
+  ctx.restore();
+}
+
+function refreshPlayerCardPreview() {
+  const canvas = document.getElementById('pc-preview-canvas');
+  if (!canvas) return;
+  drawPlayerCardCanvas(canvas, getActivePlayerCardDraft());
+}
+
+async function renderExportPlayerCardBlob() {
+  if (document.fonts && document.fonts.ready) {
+    try { await document.fonts.ready; } catch {}
+  }
+  const draft = getActivePlayerCardDraft();
+  const photoSrc = (draft.bgMode === 'ai' && draft.cutoutPhoto) ? draft.cutoutPhoto : draft.origPhoto;
+  const srcs = [photoSrc, playerCardLogos.logo1, playerCardLogos.logo2].filter(Boolean);
+  const loaded = new Map();
+  await Promise.all(srcs.map(async (s) => {
+    const img = await loadCachedCardImage(s);
+    if (img) loaded.set(s, img);
+  }));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080;
+  canvas.height = 1350;
+  drawPlayerCardCanvas(canvas, draft, loaded);
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), 'image/png');
+  });
+}
+
+function getPlayerCardFileSlug(name) {
+  const clean = String(name || 'jugador').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `tarjeta-${clean || 'jugador'}-padel-se.png`;
+}
+
+async function downloadPlayerCardImage() {
+  const draft = getActivePlayerCardDraft();
+  const blob = await renderExportPlayerCardBlob();
+  if (!blob) {
+    showToast('No se pudo generar la imagen');
+    return;
+  }
+  triggerBlobDownload(blob, getPlayerCardFileSlug(draft.name));
+  showToast('¡Tarjeta HD descargada!');
+}
+
+async function sharePlayerCardImage() {
+  const draft = getActivePlayerCardDraft();
+  const blob = await renderExportPlayerCardBlob();
+  if (!blob) {
+    showToast('No se pudo generar la imagen');
+    return;
+  }
+  const filename = getPlayerCardFileSlug(draft.name);
+  const file = new File([blob], filename, { type: 'image/png' });
+  const playerLabelTxt = (draft.name || 'Jugador').trim();
+
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: `Tarjeta de Pádel · ${playerLabelTxt}`,
+        text: `🎾 Tarjeta oficial de ${playerLabelTxt} (${draft.category || ''} · ${draft.position || ''} · ${draft.hand || ''})`
+      });
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+    }
+  }
+  triggerBlobDownload(blob, filename);
+  showToast('Imagen descargada (lista para compartir por WhatsApp o redes)');
+}
+
+async function saveCurrentPlayerCard() {
+  const draft = getActivePlayerCardDraft();
+  if (!String(draft.name || '').trim()) {
+    showToast('Ingresá el nombre del jugador antes de guardar');
+    document.getElementById('pc-name')?.focus();
+    return;
+  }
+  const ok = await savePlayerCardToIDB(draft);
+  render();
+  showToast(ok ? '✓ Tarjeta guardada en Mis Tarjetas' : 'Error al guardar en este navegador');
+}
+
+function renderPlayerCardView() {
+  const draft = getActivePlayerCardDraft();
+  const known = getKnownPlayerNames();
+  const themeList = Object.values(PLAYER_CARD_THEMES);
+  const backRoute = ui.playerCardReturnRoute && ui.playerCardReturnRoute !== 'player-card' ? ui.playerCardReturnRoute : 'home';
+
+  return `
+  <div class="page">
+    <datalist id="pc-known-players">${known.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+    <div class="page-h">
+      <div class="page-h-top">
+        <button class="icon-btn" data-nav="${esc(backRoute)}" title="Volver">${ICONS.back}</button>
+        <h1>Tarjeta de Jugador</h1>
+        <button class="icon-btn" data-act="pc-new-blank" title="Nueva tarjeta en blanco">${ICONS.plus}</button>
+      </div>
+    </div>
+    <p class="muted" style="text-align:center;margin-bottom:16px">Subí una foto, completá tus datos y generá tu tarjeta HD lista para compartir.</p>
+
+    <div class="pc-layout">
+      <!-- Live Card Preview Column -->
+      <div class="pc-preview-col">
+        <div class="pc-preview-frame">
+          <canvas id="pc-preview-canvas" class="pc-canvas" width="1080" height="1350"></canvas>
+        </div>
+        ${draft.origPhoto ? `<div class="pc-drag-hint">💡 Tocá y arrastrá sobre la foto para reencuadrar</div>` : ''}
+        <div class="btn-row">
+          <button class="btn primary big" data-act="pc-share">${ICONS.share} Compartir</button>
+          <button class="btn big" data-act="pc-download">${ICONS.dl} Descargar HD</button>
+        </div>
+        <button class="btn block" data-act="pc-save">${ICONS.check} Guardar en Mis Tarjetas (${savedPlayerCards.length})</button>
+      </div>
+
+      <!-- Editor Controls Column -->
+      <div>
+        <!-- 1. Photo & Cutout -->
+        <div class="card">
+          <h3>${ICONS.camera} Foto y Recorte</h3>
+          <div class="btn-row">
+            <label class="btn primary" style="cursor:pointer;flex:2 1 180px">
+              ${ICONS.camera} ${draft.origPhoto ? 'Cambiar Foto' : 'Subir Foto del Jugador/a'}
+              <input type="file" id="pc-photo-inp" accept="image/*" style="display:none">
+            </label>
+            ${draft.origPhoto ? `<button class="btn danger sm" data-act="pc-clear-photo" style="flex:0 0 auto">${ICONS.trash} Quitar</button>` : ''}
+          </div>
+
+          <div class="seg" style="margin-top:12px">
+            <button class="${draft.bgMode==='ai'?'on':''}" data-pc-bgmode="ai" ${ui.playerCardAiBusy?'disabled':''}>✨ Recorte IA (Sin fondo)</button>
+            <button class="${draft.bgMode==='instant'?'on':''}" data-pc-bgmode="instant" ${ui.playerCardAiBusy?'disabled':''}>⚡ Modo Instantáneo</button>
+          </div>
+
+          <div id="pc-ai-status-box" class="pc-ai-status ${ui.playerCardAiStatus === 'ok' ? 'ok' : (ui.playerCardAiStatus === 'err' ? 'err' : '')}" style="display:${ui.playerCardAiText ? 'flex' : 'none'}">
+            ${esc(ui.playerCardAiText)}
+          </div>
+
+          ${draft.origPhoto ? `
+          <div class="pc-sliders">
+            <div class="pc-slider-row">
+              <label for="pc-zoom">Zoom</label>
+              <input type="range" id="pc-zoom" min="0.55" max="2.2" step="0.02" value="${Number(draft.zoom || 1).toFixed(2)}">
+              <span id="pc-zoom-val">${Math.round((Number(draft.zoom || 1)) * 100)}%</span>
+            </div>
+            <div class="pc-slider-row">
+              <label for="pc-offx">Posición X</label>
+              <input type="range" id="pc-offx" min="-350" max="350" step="2" value="${Math.round(Number(draft.offsetX || 0))}">
+              <span id="pc-offx-val">${Math.round(Number(draft.offsetX || 0))}</span>
+            </div>
+            <div class="pc-slider-row">
+              <label for="pc-offy">Posición Y</label>
+              <input type="range" id="pc-offy" min="-350" max="350" step="2" value="${Math.round(Number(draft.offsetY || 0))}">
+              <span id="pc-offy-val">${Math.round(Number(draft.offsetY || 0))}</span>
+            </div>
+            <div style="display:flex;justify-content:flex-end">
+              <button class="btn sm" data-act="pc-reset-frame">↺ Centrar foto</button>
+            </div>
+          </div>` : ''}
+        </div>
+
+        <!-- 2. Player Details -->
+        <div class="card">
+          <h3>${ICONS.idCard} Datos del Jugador/a</h3>
+          <div class="field">
+            <label for="pc-name">Nombre y Apellido</label>
+            <input class="inp" id="pc-name" list="pc-known-players" value="${esc(draft.name || '')}" placeholder="Ej: Nestor García">
+          </div>
+
+          <div class="row wrap" style="margin-top:12px">
+            <div class="field" style="flex:1 1 140px">
+              <label for="pc-cat">Categoría</label>
+              <input class="inp" id="pc-cat" value="${esc(draft.category || '')}" placeholder="Ej: 6ta, 4ta, Suma 10">
+            </div>
+            <div class="field" style="flex:0 1 130px">
+              <label for="pc-age">Edad</label>
+              <input class="inp" id="pc-age" inputmode="numeric" value="${esc(draft.age || '')}" placeholder="Ej: 52">
+            </div>
+          </div>
+          <div class="pc-chips">
+            ${PLAYER_CARD_CATEGORIES.map(c => `<button class="pc-chip ${draft.category===c?'on':''}" data-pc-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+          </div>
+
+          <div class="field" style="margin-top:14px">
+            <label>Posición en cancha</label>
+            <div class="seg">
+              ${PLAYER_CARD_POSITIONS.map(pos => `<button class="${draft.position===pos?'on':''}" data-pc-pos="${esc(pos)}">${esc(pos)}</button>`).join('')}
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:14px">
+            <label>Perfil (Mano hábil)</label>
+            <div class="pc-chips">
+              ${PLAYER_CARD_HANDS.map(h => `<button class="pc-chip ${draft.hand===h?'on':''}" data-pc-hand="${esc(h)}">${esc(h)}</button>`).join('')}
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:14px">
+            <label for="pc-shot">Mejor Golpe</label>
+            <input class="inp" id="pc-shot" value="${esc(draft.bestShot || '')}" placeholder="Ej: Víbora, Bandeja, Smash">
+            <div class="pc-chips">
+              ${PLAYER_CARD_SHOTS.map(sh => `<button class="pc-chip ${draft.bestShot===sh?'on':''}" data-pc-shot="${esc(sh)}">${esc(sh)}</button>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Style & Logos -->
+        <div class="card">
+          <h3>🎨 Estilo y Logos</h3>
+          <div class="field">
+            <label>Tema de tarjeta</label>
+            <div class="pc-themes">
+              ${themeList.map(th => `
+                <button class="pc-theme-btn ${draft.theme===th.id?'on':''}" data-pc-theme="${esc(th.id)}">
+                  <span class="pc-theme-swatch" style="background:linear-gradient(135deg,${th.accentBright},${th.accent})"></span>
+                  <span>${esc(th.label)}</span>
+                </button>`).join('')}
+            </div>
+          </div>
+
+          <div class="pc-logos-grid" style="margin-top:14px">
+            <div class="pc-logo-box">
+              <small class="muted" style="font-size:11.5px;font-weight:700">Logo 1 (Izquierda)</small>
+              ${playerCardLogos.logo1 ? `<img class="pc-logo-thumb" src="${playerCardLogos.logo1}" alt="Logo 1">` : `<small class="muted" style="font-size:11px">Por defecto: Logo Pádel Control SÉ</small>`}
+              <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+                <label class="btn sm" style="cursor:pointer">
+                  ${ICONS.up} ${playerCardLogos.logo1 ? 'Cambiar' : 'Subir'}
+                  <input type="file" id="pc-logo1-inp" accept="image/*" style="display:none">
+                </label>
+                ${playerCardLogos.logo1 ? `<button class="btn danger sm" data-pc-del-logo="1">${ICONS.trash}</button>` : ''}
+              </div>
+            </div>
+            <div class="pc-logo-box">
+              <small class="muted" style="font-size:11.5px;font-weight:700">Logo 2 (Centro)</small>
+              ${playerCardLogos.logo2 ? `<img class="pc-logo-thumb" src="${playerCardLogos.logo2}" alt="Logo 2">` : `<small class="muted" style="font-size:11px">Opcional: Torneo / Club</small>`}
+              <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+                <label class="btn sm" style="cursor:pointer">
+                  ${ICONS.up} ${playerCardLogos.logo2 ? 'Cambiar' : 'Subir'}
+                  <input type="file" id="pc-logo2-inp" accept="image/*" style="display:none">
+                </label>
+                ${playerCardLogos.logo2 ? `<button class="btn danger sm" data-pc-del-logo="2">${ICONS.trash}</button>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:12px">
+            <label for="pc-subtitle">Texto / Club de respaldo (si no subís ambos logos)</label>
+            <input class="inp" id="pc-subtitle" value="${esc(playerCardLogos.subTitle || '')}" placeholder="Ej: Proyecto Pádel · Torneo Apertura">
+          </div>
+
+          <div class="tog" style="margin-top:10px;padding:10px 0 0">
+            <div><b>Mostrar sello Pádel Control SÉ</b><small>Marca sutil al pie de la tarjeta.</small></div>
+            <label class="sw"><input type="checkbox" ${draft.showAppBrand !== false ? 'checked' : ''} id="pc-show-brand"><span></span></label>
+          </div>
+        </div>
+
+        <!-- 4. Saved Cards Library -->
+        ${savedPlayerCards.length ? `
+        <div class="card">
+          <h3>${ICONS.idCard} Mis Tarjetas Guardadas (${savedPlayerCards.length})</h3>
+          <div class="pc-saved-grid">
+            ${savedPlayerCards.map(sc => {
+              const ini = (sc.name || 'JG').split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'JG';
+              const thumb = sc.cutoutPhoto || sc.origPhoto;
+              return `
+              <div class="pc-saved-card">
+                <div class="pc-saved-top">
+                  ${thumb
+                    ? `<img class="pc-saved-ava" src="${thumb}" alt="${esc(sc.name)}">`
+                    : `<div class="pc-saved-ava">${esc(ini)}</div>`}
+                  <div style="min-width:0;flex:1">
+                    <b style="display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(sc.name || 'Sin nombre')}</b>
+                    <small class="muted" style="font-size:11.5px">${esc(sc.category || '—')} · ${esc(sc.position || '')}</small>
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px">
+                  <button class="btn sm" style="flex:1" data-pc-load="${esc(sc.id)}">Editar / Ver</button>
+                  <button class="btn danger sm" data-pc-del="${esc(sc.id)}" title="Eliminar">${ICONS.trash}</button>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>` : ''}
+      </div>
+    </div>
+
+    ${renderSignatureFooter()}
+  </div>
+  ${renderTabbar('home')}`;
+}
+
 // ==================== VIEWS & RENDERERS ====================
 function navigate(route, extra = {}) {
   Object.assign(ui, extra);
@@ -7429,6 +9366,14 @@ function renderHome() {
         <span class="daily-rk-sub">${todayCount} hoy · ${dailyMatches.length} total</span>
       </span>
       <span class="daily-rk-cta">Ver tabla →</span>
+    </button>
+    <button class="home-card-cta" data-open-player-card="">
+      <div class="home-card-cta-ico">${ICONS.idCard}</div>
+      <div class="home-card-cta-meta">
+        <span class="home-card-cta-title">Crear Tarjeta de Jugador</span>
+        <span class="home-card-cta-sub">Subí tu foto, categoría, posición y mejor golpe · Generala y compartila en HD</span>
+      </div>
+      <span class="home-card-cta-go">Crear →</span>
     </button>
 
     ${compStripHtml}
@@ -7803,6 +9748,9 @@ function afterRenderQR() {
   if (compSyncCanvas) {
     const comp = getCompById(ui.compId);
     if (comp) renderQRToCanvas(compSyncCanvas, getCompShareUrl(comp, true), 230);
+  }
+  if (ui.route === 'player-card') {
+    refreshPlayerCardPreview();
   }
 }
 
@@ -9197,6 +11145,15 @@ function renderStandingsSectionHtml(players, rCtx, opts = {}) {
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
           ${shotBadges.map(b => `<span class="tag-s" style="font-size:10px">${esc(b)}</span>`).join('')}
         </div>` : ''}
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px">
+          ${rCtx?.entityMode === 'pairs'
+            ? p.name.split(/\s*[·\/]\s*/).filter(Boolean).slice(0, 2).map((nm, pIdx) => {
+                const saved = getSavedCardForPlayerName(nm);
+                const shortNm = nm.split(/\s+/)[0] || nm;
+                return `<button class="pc-mini-btn" data-open-player-card="${esc(nm)}" data-pc-default-pos="${pIdx===0?'Drive':'Revés'}" title="Tarjeta de ${esc(nm)}">${ICONS.idCard} ${saved ? 'Editar' : 'Tarjeta'} ${esc(shortNm)}</button>`;
+              }).join('')
+            : `<button class="pc-mini-btn" data-open-player-card="${esc(p.name)}" title="Generar tarjeta personalizable de ${esc(p.name)}">${ICONS.idCard} ${getSavedCardForPlayerName(p.name) ? 'Ver / Editar Tarjeta' : 'Crear Tarjeta'}</button>`}
+        </div>
       </div>
       <div class="pcard-pts-box">
         ${isEloPrimary ? `
@@ -9621,7 +11578,15 @@ function renderCompDetail() {
               <small style="display:block;color:var(--tx2)">${pt.type === 'pair' ? 'Pareja fija' : 'Individual'}</small>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+            ${pt.type === 'pair'
+              ? [0, 1].map(idxP => {
+                  const nm = (pt.players?.[idxP] || '').trim();
+                  if (!nm) return '';
+                  const shortNm = nm.split(/\s+/)[0] || nm;
+                  return `<button class="pc-mini-btn" data-open-player-card="${esc(nm)}" data-pc-default-pos="${idxP===0?'Drive':'Revés'}" title="Crear tarjeta de ${esc(nm)}">${ICONS.idCard} ${esc(shortNm)}</button>`;
+                }).join('')
+              : `<button class="pc-mini-btn" data-open-player-card="${esc(pt.name || '')}" title="Crear tarjeta de ${esc(pt.name || '')}">${ICONS.idCard} Tarjeta</button>`}
             ${comp.format === 'groups_playoff' ? `
               <select class="inp" style="width:auto;min-height:34px;padding:4px 8px;font-size:12px" data-set-part-group="${esc(comp.id)}:${esc(pt.id)}">
                 <option value="">Sin grupo</option>
@@ -10776,6 +12741,7 @@ function render() {
     case 'players': html = renderPlayers(); break;
     case 'competitions': html = renderCompetitions(); break;
     case 'comp-detail': html = renderCompDetail(); break;
+    case 'player-card': html = renderPlayerCardView(); break;
     case 'settings': html = renderSettings(); break;
     default: html = renderHome(); break;
   }
@@ -10813,6 +12779,107 @@ document.addEventListener('click', (ev) => {
     ui.statsSetFilter = 'all';
     ui.matchEndDismissed = true;
     navigate('stats');
+    return;
+  }
+
+  // Open Player Card Studio (from Home, Rankings, or Inscriptos)
+  const pcOpenEl = t.closest('[data-open-player-card]');
+  if (pcOpenEl) {
+    ev.preventDefault();
+    const nm = pcOpenEl.getAttribute('data-open-player-card') || '';
+    const defPos = pcOpenEl.getAttribute('data-pc-default-pos') || undefined;
+    openPlayerCardFor(nm, { position: defPos });
+    return;
+  }
+
+  const pcBgEl = t.closest('[data-pc-bgmode]');
+  if (pcBgEl) {
+    const mode = pcBgEl.getAttribute('data-pc-bgmode');
+    const draft = getActivePlayerCardDraft();
+    draft.bgMode = mode;
+    if (mode === 'ai' && draft.origPhoto && !draft.cutoutPhoto && !draft.origHasAlpha) {
+      render();
+      runPlayerPhotoAiCutout(draft);
+    } else {
+      ui.playerCardAiStatus = draft.origPhoto ? 'ok' : '';
+      ui.playerCardAiText = draft.origPhoto
+        ? (mode === 'ai' ? '✓ Fondo recortado automáticamente' : '⚡ Modo instantáneo activo')
+        : '';
+      render();
+    }
+    return;
+  }
+
+  const pcCatEl = t.closest('[data-pc-cat]');
+  if (pcCatEl) {
+    getActivePlayerCardDraft().category = pcCatEl.getAttribute('data-pc-cat');
+    render();
+    return;
+  }
+
+  const pcPosEl = t.closest('[data-pc-pos]');
+  if (pcPosEl) {
+    getActivePlayerCardDraft().position = pcPosEl.getAttribute('data-pc-pos');
+    render();
+    return;
+  }
+
+  const pcHandEl = t.closest('[data-pc-hand]');
+  if (pcHandEl) {
+    getActivePlayerCardDraft().hand = pcHandEl.getAttribute('data-pc-hand');
+    render();
+    return;
+  }
+
+  const pcShotEl = t.closest('[data-pc-shot]');
+  if (pcShotEl) {
+    getActivePlayerCardDraft().bestShot = pcShotEl.getAttribute('data-pc-shot');
+    render();
+    return;
+  }
+
+  const pcThemeEl = t.closest('[data-pc-theme]');
+  if (pcThemeEl) {
+    getActivePlayerCardDraft().theme = pcThemeEl.getAttribute('data-pc-theme');
+    render();
+    return;
+  }
+
+  const pcDelLogoEl = t.closest('[data-pc-del-logo]');
+  if (pcDelLogoEl) {
+    const slot = pcDelLogoEl.getAttribute('data-pc-del-logo');
+    if (slot === '1') playerCardLogos.logo1 = null;
+    else playerCardLogos.logo2 = null;
+    saveCardLogosToIDB();
+    render();
+    showToast(`Logo ${slot} quitado`);
+    return;
+  }
+
+  const pcLoadEl = t.closest('[data-pc-load]');
+  if (pcLoadEl) {
+    const id = pcLoadEl.getAttribute('data-pc-load');
+    const found = savedPlayerCards.find(c => c.id === id);
+    if (found) {
+      ui.playerCardDraft = { ...clone(found) };
+      ui.playerCardAiStatus = found.cutoutPhoto ? 'ok' : '';
+      ui.playerCardAiText = found.cutoutPhoto ? '✓ Tarjeta cargada' : '';
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    return;
+  }
+
+  const pcDelCardEl = t.closest('[data-pc-del]');
+  if (pcDelCardEl) {
+    const id = pcDelCardEl.getAttribute('data-pc-del');
+    const found = savedPlayerCards.find(c => c.id === id);
+    if (found && confirm(`¿Eliminar la tarjeta guardada de "${found.name || 'Jugador'}"?`)) {
+      deletePlayerCardFromIDB(id).then(() => {
+        render();
+        showToast('Tarjeta eliminada');
+      });
+    }
     return;
   }
 
@@ -12078,6 +14145,46 @@ document.addEventListener('click', (ev) => {
           render();
         }
         break;
+      case 'pc-share':
+        sharePlayerCardImage();
+        break;
+      case 'pc-download':
+        downloadPlayerCardImage();
+        break;
+      case 'pc-save':
+        saveCurrentPlayerCard();
+        break;
+      case 'pc-new-blank':
+        pcAiRequestToken++;
+        ui.playerCardAiBusy = false;
+        ui.playerCardDraft = createDefaultPlayerCardDraft();
+        ui.playerCardAiStatus = '';
+        ui.playerCardAiText = '';
+        render();
+        break;
+      case 'pc-clear-photo': {
+        pcAiRequestToken++;
+        ui.playerCardAiBusy = false;
+        const d = getActivePlayerCardDraft();
+        d.origPhoto = null;
+        d.cutoutPhoto = null;
+        d.origHasAlpha = false;
+        d.zoom = 1;
+        d.offsetX = 0;
+        d.offsetY = 0;
+        ui.playerCardAiStatus = '';
+        ui.playerCardAiText = '';
+        render();
+        break;
+      }
+      case 'pc-reset-frame': {
+        const d = getActivePlayerCardDraft();
+        d.zoom = 1;
+        d.offsetX = 0;
+        d.offsetY = 0;
+        render();
+        break;
+      }
     }
   }
 });
@@ -12085,6 +14192,35 @@ document.addEventListener('click', (ev) => {
 // Input & change listeners
 document.addEventListener('input', (ev) => {
   const t = ev.target;
+  if (t.id === 'pc-name') { getActivePlayerCardDraft().name = t.value; refreshPlayerCardPreview(); return; }
+  if (t.id === 'pc-cat') { getActivePlayerCardDraft().category = t.value; refreshPlayerCardPreview(); return; }
+  if (t.id === 'pc-age') { getActivePlayerCardDraft().age = t.value; refreshPlayerCardPreview(); return; }
+  if (t.id === 'pc-shot') { getActivePlayerCardDraft().bestShot = t.value; refreshPlayerCardPreview(); return; }
+  if (t.id === 'pc-subtitle') { playerCardLogos.subTitle = t.value; refreshPlayerCardPreview(); return; }
+  if (t.id === 'pc-zoom') {
+    const v = Number(t.value) || 1;
+    getActivePlayerCardDraft().zoom = v;
+    const lbl = document.getElementById('pc-zoom-val');
+    if (lbl) lbl.textContent = Math.round(v * 100) + '%';
+    refreshPlayerCardPreview();
+    return;
+  }
+  if (t.id === 'pc-offx') {
+    const v = Number(t.value) || 0;
+    getActivePlayerCardDraft().offsetX = v;
+    const lbl = document.getElementById('pc-offx-val');
+    if (lbl) lbl.textContent = String(Math.round(v));
+    refreshPlayerCardPreview();
+    return;
+  }
+  if (t.id === 'pc-offy') {
+    const v = Number(t.value) || 0;
+    getActivePlayerCardDraft().offsetY = v;
+    const lbl = document.getElementById('pc-offy-val');
+    if (lbl) lbl.textContent = String(Math.round(v));
+    refreshPlayerCardPreview();
+    return;
+  }
   if (t.hasAttribute('data-pname')) {
     const [tm, pi] = t.getAttribute('data-pname').split(',').map(Number);
     preset.teams[tm].players[pi] = t.value;
@@ -12139,6 +14275,31 @@ document.addEventListener('input', (ev) => {
 
 document.addEventListener('change', (ev) => {
   const t = ev.target;
+  if (t.id === 'pc-photo-inp' && t.files && t.files[0]) {
+    processUploadedPlayerPhoto(t.files[0]);
+    t.value = '';
+    return;
+  }
+  if (t.id === 'pc-logo1-inp' && t.files && t.files[0]) {
+    processUploadedLogo(t.files[0], 1);
+    t.value = '';
+    return;
+  }
+  if (t.id === 'pc-logo2-inp' && t.files && t.files[0]) {
+    processUploadedLogo(t.files[0], 2);
+    t.value = '';
+    return;
+  }
+  if (t.id === 'pc-subtitle') {
+    playerCardLogos.subTitle = t.value;
+    saveCardLogosToIDB();
+    return;
+  }
+  if (t.id === 'pc-show-brand') {
+    getActivePlayerCardDraft().showAppBrand = t.checked;
+    refreshPlayerCardPreview();
+    return;
+  }
   if (t.id === 'qs-sel0' || t.id === 'qs-sel1') {
     syncQuickScoreStateFromDom();
     render();
@@ -12373,7 +14534,12 @@ function checkHashRoute() {
     render();
     return;
   }
-  if (['home','new','board','stats','history','players','competitions','comp-detail','settings'].includes(h)) {
+  if (h === 'cards' || h === 'tarjetas' || h === 'player-card') {
+    ui.route = 'player-card';
+    render();
+    return;
+  }
+  if (['home','new','board','stats','history','players','competitions','comp-detail','player-card','settings'].includes(h)) {
     if (h === 'home' || h === 'new') disconnectLiveSpectator();
     ui.route = h;
     render();
@@ -12381,9 +14547,56 @@ function checkHashRoute() {
 }
 window.addEventListener('hashchange', checkHashRoute);
 
+// Pointer drag-to-reposition photo directly on Player Card preview canvas
+document.addEventListener('pointerdown', (ev) => {
+  const canvas = ev.target?.closest?.('#pc-preview-canvas');
+  if (!canvas) return;
+  const draft = getActivePlayerCardDraft();
+  if (!draft.origPhoto) return;
+  pcDragState = {
+    pointerId: ev.pointerId,
+    startX: ev.clientX,
+    startY: ev.clientY,
+    origX: Number(draft.offsetX) || 0,
+    origY: Number(draft.offsetY) || 0,
+    rectW: canvas.getBoundingClientRect().width || 360
+  };
+  canvas.classList.add('dragging');
+  try { canvas.setPointerCapture?.(ev.pointerId); } catch {}
+});
+
+document.addEventListener('pointermove', (ev) => {
+  if (!pcDragState || ev.pointerId !== pcDragState.pointerId) return;
+  const draft = getActivePlayerCardDraft();
+  const scale = 1080 / pcDragState.rectW;
+  const nx = Math.max(-350, Math.min(350, Math.round(pcDragState.origX + (ev.clientX - pcDragState.startX) * scale)));
+  const ny = Math.max(-350, Math.min(350, Math.round(pcDragState.origY + (ev.clientY - pcDragState.startY) * scale)));
+  draft.offsetX = nx;
+  draft.offsetY = ny;
+  const xInp = document.getElementById('pc-offx');
+  const yInp = document.getElementById('pc-offy');
+  const xLbl = document.getElementById('pc-offx-val');
+  const yLbl = document.getElementById('pc-offy-val');
+  if (xInp) xInp.value = nx;
+  if (yInp) yInp.value = ny;
+  if (xLbl) xLbl.textContent = String(nx);
+  if (yLbl) yLbl.textContent = String(ny);
+  refreshPlayerCardPreview();
+});
+
+function endPcDrag(ev) {
+  if (!pcDragState || (ev && ev.pointerId !== undefined && ev.pointerId !== pcDragState.pointerId)) return;
+  const canvas = document.getElementById('pc-preview-canvas');
+  if (canvas) canvas.classList.remove('dragging');
+  pcDragState = null;
+}
+document.addEventListener('pointerup', endPcDrag);
+document.addEventListener('pointercancel', endPcDrag);
+
 // Initial boot
 checkHashRoute();
 render();
+loadPlayerCardDataFromIDB();
 </script>
 </body>
 </html>
