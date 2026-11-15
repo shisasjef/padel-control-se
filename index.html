@@ -6389,23 +6389,24 @@ async function exportMatchSummaryImage(m) {
 
   ctx.restore();
 
-  canvas.toBlob(async (blob) => {
+  canvas.toBlob((blob) => {
     if (!blob) return;
-    try {
-      if (typeof File !== 'undefined' && navigator.canShare) {
-        const file = new File([blob], `padel-control-se-${m.id}.png`, {type:'image/png'});
-        if (navigator.canShare({files:[file]})) {
-          await navigator.share({files:[file], title:'Pádel Control SÉ'});
-          return;
-        }
-      }
-    } catch {}
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `padel-control-se-${new Date(m.createdAt).toISOString().slice(0,10)}.png`;
-    a.click();
+    triggerBlobDownload(blob, `padel-control-se-${new Date(m.createdAt).toISOString().slice(0,10)}.png`);
     showToast('Imagen descargada');
   }, 'image/png');
+}
+
+function triggerBlobDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body?.appendChild?.(a);
+  a.click();
+  a.remove?.();
+  if (typeof URL.revokeObjectURL === 'function') {
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
 }
 
 function roundRect(ctx, x, y, w, h, r, fill) {
@@ -7039,21 +7040,9 @@ async function exportRankingImage(overrideCtx = null) {
 
   ctx.restore();
 
-  canvas.toBlob(async (blob) => {
+  canvas.toBlob((blob) => {
     if (!blob) return;
-    try {
-      if (typeof File !== 'undefined' && navigator.canShare) {
-        const file = new File([blob], `ranking-padel-control-se.png`, {type:'image/png'});
-        if (navigator.canShare({files:[file]})) {
-          await navigator.share({files:[file], title:'Ranking Oficial · Pádel Control SÉ'});
-          return;
-        }
-      }
-    } catch {}
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `ranking-padel-control-se-${new Date().toISOString().slice(0,10)}.png`;
-    a.click();
+    triggerBlobDownload(blob, `ranking-padel-control-se-${new Date().toISOString().slice(0,10)}.png`);
     showToast('¡Imagen del Ranking descargada!');
   }, 'image/png');
 }
