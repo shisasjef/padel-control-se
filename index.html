@@ -2049,6 +2049,7 @@ html.obs-mode #app, body.obs-mode #app {
   grid-template-columns: minmax(280px, 390px) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
+  touch-action: pan-y;
 }
 @media (max-width: 820px) {
   .pc-layout {
@@ -2066,6 +2067,9 @@ html.obs-mode #app, body.obs-mode #app {
   .pc-preview-col {
     position: static;
   }
+  .pc-preview-frame {
+    max-width: min(330px, 100%);
+  }
 }
 .pc-preview-frame {
   position: relative;
@@ -2076,15 +2080,22 @@ html.obs-mode #app, body.obs-mode #app {
   overflow: hidden;
   background: #080710;
   box-shadow: 0 24px 54px -14px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(168, 85, 247, 0.35);
+  transition: box-shadow .18s var(--ease);
+}
+.pc-preview-frame.touch-drag {
+  box-shadow: 0 24px 54px -14px rgba(0, 0, 0, 0.85), 0 0 0 2px #38bdf8, 0 0 28px rgba(56, 189, 248, 0.45);
 }
 .pc-canvas {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 4 / 5;
-  touch-action: none;
+  touch-action: pan-y;
   cursor: grab;
   user-select: none;
+}
+.pc-canvas.touch-drag {
+  touch-action: none;
 }
 .pc-canvas.dragging {
   cursor: grabbing;
@@ -2094,6 +2105,29 @@ html.obs-mode #app, body.obs-mode #app {
   font-size: 11.5px;
   color: var(--tx2);
   margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.pc-touch-drag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid rgba(56, 189, 248, 0.42);
+  background: rgba(14, 165, 233, 0.12);
+  color: #bae6fd;
+}
+.pc-touch-drag-btn.on {
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  border-color: #7dd3fc;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.35);
 }
 .pc-ai-status {
   display: flex;
@@ -2605,6 +2639,8 @@ const ui = {
   voiceListening: false,
   playerCardReturnRoute: 'home',
   playerCardDraft: null,
+  playerCardDraftDirty: false,
+  playerCardTouchDrag: false,
   playerCardAiBusy: false,
   playerCardAiStatus: '', // '', 'loading', 'ok', 'err'
   playerCardAiText: ''
@@ -6923,7 +6959,7 @@ function getCompSubtitle(comp, entityMode, scoring, groupSub = '') {
   const kindWord = comp.kind === 'league' ? 'Liga' : 'Torneo';
   const modeWord = entityMode === 'pairs' ? 'Parejas' : 'Individual';
   if (isProyectoPadelComp(comp)) {
-    return `Proyecto Pádel${groupSub} · ${modeWord} · ${getCompScoringSummaryLabel(comp, scoring, false)}`;
+    return `PRO PÁDEL${groupSub} · ${modeWord} · ${getCompScoringSummaryLabel(comp, scoring, false)}`;
   }
   return `${kindWord}${groupSub} · ${modeWord} · ${getCompScoringSummaryLabel(comp, scoring, false)}`;
 }
@@ -7740,12 +7776,15 @@ const PLAYER_CARD_SHOTS = ['Víbora', 'Bandeja', 'Smash', 'Volea', 'Globo', 'Baj
 
 const PC_IDB_NAME = 'padel_se_cards_db_v1';
 const PC_LS_META_FALLBACK = 'padel_se_card_meta_v1';
+const DEFAULT_CENTER_LOGO_URL = 'logo-pro-padel.png';
+const DEFAULT_CENTER_LOGO_FALLBACK = 'Logo%20PRO%20P%C3%81DEL.png';
 let savedPlayerCards = [];
-let playerCardLogos = { logo1: null, logo2: null, subTitle: '' };
+let playerCardLogos = { logo1: null, logo2: DEFAULT_CENTER_LOGO_URL, logo2Disabled: false, subTitle: '' };
 const pcImgCache = new Map();
 let pcSegmenterPromise = null;
 let pcAiRequestToken = 0;
 let pcDragState = null;
+let pcDraftSaveTimer = null;
 
 function openPlayerCardDB() {
   return new Promise((resolve, reject) => {
@@ -7774,6 +7813,7 @@ async function loadPlayerCardDataFromIDB() {
     const tx = db.transaction(['cards', 'meta'], 'readonly');
     const cardsReq = tx.objectStore('cards').getAll();
     const logosReq = tx.objectStore('meta').get('logos');
+    const draftReq = tx.objectStore('meta').get('activeDraft');
     await new Promise((res) => {
       tx.oncomplete = res;
       tx.onerror = res;
@@ -7782,18 +7822,60 @@ async function loadPlayerCardDataFromIDB() {
       savedPlayerCards = cardsReq.result.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     }
     if (logosReq.result && logosReq.result.value) {
-      playerCardLogos = Object.assign({ logo1: null, logo2: null, subTitle: '' }, logosReq.result.value);
+      playerCardLogos = Object.assign({ logo1: null, logo2: null, logo2Disabled: false, subTitle: '' }, logosReq.result.value);
+    }
+    if (!playerCardLogos.logo2 && !playerCardLogos.logo2Disabled) {
+      playerCardLogos.logo2 = DEFAULT_CENTER_LOGO_URL;
+    }
+    if (draftReq.result && draftReq.result.value && !ui.playerCardDraftDirty) {
+      ui.playerCardDraft = Object.assign(createDefaultPlayerCardDraft(), clone(draftReq.result.value));
+      if (ui.route === 'player-card') {
+        ui.playerCardAiStatus = ui.playerCardDraft.cutoutPhoto ? 'ok' : '';
+        ui.playerCardAiText = ui.playerCardDraft.cutoutPhoto
+          ? '✓ Borrador y recorte restaurados'
+          : (ui.playerCardDraft.origPhoto ? '✓ Foto del borrador restaurada' : '');
+      }
     }
     db.close();
   } catch {
     try {
       const fb = loadJSON(PC_LS_META_FALLBACK, null);
-      if (fb) playerCardLogos = Object.assign({ logo1: null, logo2: null, subTitle: '' }, fb);
+      if (fb) playerCardLogos = Object.assign({ logo1: null, logo2: null, logo2Disabled: false, subTitle: '' }, fb);
+      if (!playerCardLogos.logo2 && !playerCardLogos.logo2Disabled) {
+        playerCardLogos.logo2 = DEFAULT_CENTER_LOGO_URL;
+      }
     } catch {}
   }
   if (ui.route === 'player-card' || ui.route === 'players' || ui.route === 'comp-detail') {
     render();
   }
+}
+
+async function saveActiveDraftToIDBNow() {
+  if (!ui.playerCardDraft) return;
+  try {
+    const db = await openPlayerCardDB();
+    const tx = db.transaction(['meta'], 'readwrite');
+    tx.objectStore('meta').put({ key: 'activeDraft', value: clone(ui.playerCardDraft) });
+    await new Promise((res) => {
+      tx.oncomplete = res;
+      tx.onerror = res;
+    });
+    db.close();
+  } catch {}
+}
+
+function scheduleSaveActiveDraftToIDB(immediate = false) {
+  clearTimeout(pcDraftSaveTimer);
+  if (immediate) {
+    pcDraftSaveTimer = null;
+    saveActiveDraftToIDBNow();
+    return;
+  }
+  pcDraftSaveTimer = setTimeout(() => {
+    pcDraftSaveTimer = null;
+    saveActiveDraftToIDBNow();
+  }, 260);
 }
 
 async function savePlayerCardToIDB(cardObj) {
@@ -7902,6 +7984,8 @@ function getSavedCardForPlayerName(name) {
 
 function openPlayerCardFor(playerName = '', opts = {}) {
   ui.playerCardReturnRoute = opts.returnRoute || ui.route || 'home';
+  ui.playerCardTouchDrag = false;
+  ui.playerCardDraftDirty = true;
   const cleanName = String(playerName || '').trim();
   const isPlaceholder = /^(DRIVE|REV[EÉ]S)\s*[12]?$/i.test(cleanName);
   const existing = (!isPlaceholder && cleanName) ? getSavedCardForPlayerName(cleanName) : null;
@@ -7918,6 +8002,7 @@ function openPlayerCardFor(playerName = '', opts = {}) {
     ui.playerCardAiStatus = '';
     ui.playerCardAiText = '';
   }
+  scheduleSaveActiveDraftToIDB(true);
   navigate('player-card');
 }
 
@@ -7927,6 +8012,7 @@ function loadCachedCardImage(src) {
   if (hit && hit.complete && hit.naturalWidth > 0) return Promise.resolve(hit);
   return new Promise((resolve) => {
     const img = new Image();
+    let triedFallback = false;
     img.onload = () => {
       if (pcImgCache.size > 40) {
         const firstKey = pcImgCache.keys().next().value;
@@ -7935,7 +8021,14 @@ function loadCachedCardImage(src) {
       pcImgCache.set(src, img);
       resolve(img);
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => {
+      if (!triedFallback && src === DEFAULT_CENTER_LOGO_URL) {
+        triedFallback = true;
+        img.src = DEFAULT_CENTER_LOGO_FALLBACK;
+        return;
+      }
+      resolve(null);
+    };
     img.src = src;
   });
 }
@@ -7945,6 +8038,7 @@ function getSyncCachedCardImage(src) {
   const hit = pcImgCache.get(src);
   if (hit) return (hit.complete && hit.naturalWidth > 0) ? hit : null;
   const img = new Image();
+  let triedFallback = false;
   img.onload = () => {
     if (pcImgCache.size > 40) {
       const firstKey = pcImgCache.keys().next().value;
@@ -7953,22 +8047,75 @@ function getSyncCachedCardImage(src) {
     pcImgCache.set(src, img);
     if (ui.route === 'player-card') refreshPlayerCardPreview();
   };
+  img.onerror = () => {
+    if (!triedFallback && src === DEFAULT_CENTER_LOGO_URL) {
+      triedFallback = true;
+      img.src = DEFAULT_CENTER_LOGO_FALLBACK;
+    }
+  };
   pcImgCache.set(src, img);
   img.src = src;
   return null;
 }
 
-function readFileAsImage(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('No se pudo leer la imagen'));
-      img.src = reader.result;
-    };
-    reader.onerror = () => reject(new Error('Error leyendo archivo'));
-    reader.readAsDataURL(file);
+async function readFileScaledToDataUrl(file, maxDim = 1500) {
+  let bmp = null;
+  let objUrl = '';
+  let srcEl = null;
+  let w = 0;
+  let h = 0;
+  try {
+    if (typeof createImageBitmap === 'function') {
+      try {
+        bmp = await createImageBitmap(file);
+        srcEl = bmp;
+        w = bmp.width;
+        h = bmp.height;
+      } catch {
+        bmp = null;
+      }
+    }
+    if (!srcEl) {
+      objUrl = URL.createObjectURL(file);
+      srcEl = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('No se pudo leer la imagen'));
+        img.src = objUrl;
+      });
+      w = srcEl.naturalWidth || srcEl.width;
+      h = srcEl.naturalHeight || srcEl.height;
+    }
+    const scale = Math.min(1, maxDim / Math.max(w || 1, h || 1));
+    const tw = Math.max(1, Math.round((w || 1) * scale));
+    const th = Math.max(1, Math.round((h || 1) * scale));
+    const tmpCanvas = document.createElement('canvas');
+    tmpCanvas.width = tw;
+    tmpCanvas.height = th;
+    const tctx = tmpCanvas.getContext('2d');
+    tctx.drawImage(srcEl, 0, 0, tw, th);
+    const usePng = /png|webp|svg/i.test(file.type || file.name || '');
+    const outUrl = usePng ? tmpCanvas.toDataURL('image/png') : tmpCanvas.toDataURL('image/jpeg', 0.9);
+    tmpCanvas.width = 0;
+    tmpCanvas.height = 0;
+    return outUrl;
+  } finally {
+    if (bmp && typeof bmp.close === 'function') {
+      try { bmp.close(); } catch {}
+    }
+    if (objUrl) {
+      try { URL.revokeObjectURL(objUrl); } catch {}
+    }
+  }
+}
+
+async function readFileAsImage(file, maxDim = 1500) {
+  const dataUrl = await readFileScaledToDataUrl(file, maxDim);
+  return await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('No se pudo decodificar la imagen'));
+    img.src = dataUrl;
   });
 }
 
@@ -7989,6 +8136,11 @@ function detectImageAlpha(img) {
 async function processUploadedPlayerPhoto(file) {
   if (!file) return;
   const draft = getActivePlayerCardDraft();
+  ui.playerCardDraftDirty = true;
+  ui.playerCardTouchDrag = false;
+  ui.playerCardAiStatus = 'loading';
+  ui.playerCardAiText = '⏳ Cargando y optimizando foto...';
+  updatePcAiStatusDom();
   try {
     const img = await readFileAsImage(file);
     const maxDim = 960;
@@ -8001,12 +8153,14 @@ async function processUploadedPlayerPhoto(file) {
     ctx.drawImage(img, 0, 0, w, h);
 
     const hasAlpha = detectImageAlpha(img);
-    draft.origPhoto = hasAlpha ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.92);
+    draft.origPhoto = hasAlpha ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.90);
+    c.width = 0; c.height = 0;
     draft.origHasAlpha = hasAlpha;
     draft.cutoutPhoto = hasAlpha ? draft.origPhoto : null;
     draft.zoom = 1;
     draft.offsetX = 0;
     draft.offsetY = 0;
+    scheduleSaveActiveDraftToIDB(true);
 
     if (hasAlpha) {
       ui.playerCardAiStatus = 'ok';
@@ -8025,6 +8179,9 @@ async function processUploadedPlayerPhoto(file) {
     }
   } catch (err) {
     console.error(err);
+    ui.playerCardAiStatus = '';
+    ui.playerCardAiText = '';
+    render();
     showToast('No se pudo cargar esa imagen');
   }
 }
@@ -8042,7 +8199,10 @@ async function processUploadedLogo(file, slot) {
     c.getContext('2d').drawImage(img, 0, 0, w, h);
     const dataUrl = c.toDataURL('image/png');
     if (slot === 1) playerCardLogos.logo1 = dataUrl;
-    else playerCardLogos.logo2 = dataUrl;
+    else {
+      playerCardLogos.logo2 = dataUrl;
+      playerCardLogos.logo2Disabled = false;
+    }
     await saveCardLogosToIDB();
     render();
     showToast(`Logo ${slot} guardado`);
@@ -8167,10 +8327,14 @@ async function runPlayerPhotoAiCutout(draft) {
 
     if (token !== pcAiRequestToken) return;
     draft.cutoutPhoto = outCanvas.toDataURL('image/png');
+    maskCanvas.width = 0; maskCanvas.height = 0;
+    outCanvas.width = 0; outCanvas.height = 0;
     draft.bgMode = 'ai';
     ui.playerCardAiBusy = false;
     ui.playerCardAiStatus = 'ok';
     ui.playerCardAiText = '✓ Fondo recortado automáticamente';
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB(true);
     updatePcAiStatusDom();
     refreshPlayerCardPreview();
   } catch (err) {
@@ -8180,6 +8344,8 @@ async function runPlayerPhotoAiCutout(draft) {
     draft.bgMode = 'instant';
     ui.playerCardAiStatus = 'err';
     ui.playerCardAiText = 'No se pudo usar IA (sin conexión o foto compleja) · Aplicado Modo Instantáneo';
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB(true);
     render();
   }
 }
@@ -9310,8 +9476,16 @@ function drawPlayerCardCanvas(canvas, draft, preloadedImgs = null) {
       ctx.restore();
     }
   } else if (logo2Img) {
-    drawPadelControlEmblemCanvas(ctx, 134, 128, 132, theme);
-    drawLogoFit(ctx, logo2Img, 232, 40, 418, 150);
+    drawPadelControlEmblemCanvas(ctx, 124, 124, 128, theme);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(202, 178);
+    ctx.lineTo(226, 54);
+    ctx.stroke();
+    ctx.restore();
+    drawLogoFit(ctx, logo2Img, 226, 36, 424, 156);
   } else {
     drawPadelControlEmblemCanvas(ctx, 142, 134, 150, theme);
     ctx.save();
@@ -9748,10 +9922,17 @@ function renderPlayerCardView() {
     <div class="pc-layout">
       <!-- Live Card Preview Column -->
       <div class="pc-preview-col">
-        <div class="pc-preview-frame">
-          <canvas id="pc-preview-canvas" class="pc-canvas" width="1080" height="1350"></canvas>
+        <div class="pc-preview-frame ${ui.playerCardTouchDrag ? 'touch-drag' : ''}">
+          <canvas id="pc-preview-canvas" class="pc-canvas ${ui.playerCardTouchDrag ? 'touch-drag' : ''}" width="1080" height="1350"></canvas>
         </div>
-        ${draft.origPhoto ? `<div class="pc-drag-hint">💡 Tocá y arrastrá sobre la foto para reencuadrar</div>` : ''}
+        ${draft.origPhoto ? `
+          <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button type="button" class="pc-touch-drag-btn ${ui.playerCardTouchDrag ? 'active' : ''}" data-act="pc-toggle-touch-drag">
+              ${ui.playerCardTouchDrag ? '✓ Listo (volver a deslizar página)' : '✥ Mover foto en tarjeta'}
+            </button>
+          </div>
+          <div class="pc-drag-hint">${ui.playerCardTouchDrag ? '📌 Arrastrá sobre la tarjeta para encuadrar la foto (scroll bloqueado)' : '💡 En celular deslizás normal. Tocá "Mover foto en tarjeta" o usá los controles de abajo.'}</div>
+        ` : `<div class="pc-drag-hint" style="opacity:.75">📱 Podés deslizar la pantalla normalmente por toda la tarjeta.</div>`}
         <div class="btn-row">
           <button class="btn primary big" data-act="pc-share">${ICONS.share} Compartir</button>
           <button class="btn big" data-act="pc-download">${ICONS.dl} Descargar HD</button>
@@ -9766,8 +9947,8 @@ function renderPlayerCardView() {
           <h3>${ICONS.camera} Foto y Recorte</h3>
           <div class="btn-row">
             <label class="btn primary" style="cursor:pointer;flex:2 1 180px">
-              ${ICONS.camera} ${draft.origPhoto ? 'Cambiar Foto' : 'Subir Foto del Jugador/a'}
-              <input type="file" id="pc-photo-inp" accept="image/*" style="display:none">
+              ${ICONS.up} ${draft.origPhoto ? 'Cambiar Foto (Galería / Archivo)' : 'Elegir Foto (Galería / Archivos)'}
+              <input type="file" id="pc-photo-inp" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,.jpg,.jpeg,.png,.webp,.heic" style="display:none">
             </label>
             ${draft.origPhoto ? `<button class="btn danger sm" data-act="pc-clear-photo" style="flex:0 0 auto">${ICONS.trash} Quitar</button>` : ''}
           </div>
@@ -9881,27 +10062,30 @@ function renderPlayerCardView() {
               <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
                 <label class="btn sm" style="cursor:pointer">
                   ${ICONS.up} ${playerCardLogos.logo1 ? 'Cambiar' : 'Subir'}
-                  <input type="file" id="pc-logo1-inp" accept="image/*" style="display:none">
+                  <input type="file" id="pc-logo1-inp" accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg" style="display:none">
                 </label>
                 ${playerCardLogos.logo1 ? `<button class="btn danger sm" data-pc-del-logo="1">${ICONS.trash}</button>` : ''}
               </div>
             </div>
             <div class="pc-logo-box">
               <small class="muted" style="font-size:11.5px;font-weight:700">Logo 2 (Centro)</small>
-              ${playerCardLogos.logo2 ? `<img class="pc-logo-thumb" src="${playerCardLogos.logo2}" alt="Logo 2">` : `<small class="muted" style="font-size:11px">Opcional: Torneo / Club</small>`}
+              ${playerCardLogos.logo2
+                ? `<img class="pc-logo-thumb" src="${playerCardLogos.logo2}" onerror="if(this.dataset.fb||this.getAttribute('src')!=='${DEFAULT_CENTER_LOGO_URL}')return;this.dataset.fb='1';this.src='${DEFAULT_CENTER_LOGO_FALLBACK}'" alt="Logo 2">${playerCardLogos.logo2 === DEFAULT_CENTER_LOGO_URL ? `<small class="muted" style="font-size:10.5px;color:var(--cyan2)">Predeterminado: PRO PÁDEL</small>` : ''}`
+                : `<small class="muted" style="font-size:11px">Sin logo central</small>`}
               <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
                 <label class="btn sm" style="cursor:pointer">
                   ${ICONS.up} ${playerCardLogos.logo2 ? 'Cambiar' : 'Subir'}
-                  <input type="file" id="pc-logo2-inp" accept="image/*" style="display:none">
+                  <input type="file" id="pc-logo2-inp" accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg" style="display:none">
                 </label>
-                ${playerCardLogos.logo2 ? `<button class="btn danger sm" data-pc-del-logo="2">${ICONS.trash}</button>` : ''}
+                ${playerCardLogos.logo2 !== DEFAULT_CENTER_LOGO_URL ? `<button type="button" class="btn sm" data-act="pc-reset-logo2" title="Usar logo oficial PRO PÁDEL">↺ PRO PÁDEL</button>` : ''}
+                ${playerCardLogos.logo2 ? `<button type="button" class="btn danger sm" data-pc-del-logo="2">${ICONS.trash}</button>` : ''}
               </div>
             </div>
           </div>
 
           <div class="field" style="margin-top:12px">
-            <label for="pc-subtitle">Texto / Club de respaldo (si no subís ambos logos)</label>
-            <input class="inp" id="pc-subtitle" value="${esc(playerCardLogos.subTitle || '')}" placeholder="Ej: Proyecto Pádel · Torneo Apertura">
+            <label for="pc-subtitle">Texto / Club de respaldo (si quitás los logos)</label>
+            <input class="inp" id="pc-subtitle" value="${esc(playerCardLogos.subTitle || '')}" placeholder="Ej: PRO PÁDEL · Torneo Apertura">
           </div>
 
           <div class="tog" style="margin-top:10px;padding:10px 0 0">
@@ -9951,6 +10135,15 @@ function navigate(route, extra = {}) {
   ui.route = route;
   ui.menuOpen = false;
   ui.shotSheet = null;
+  ui.playerCardTouchDrag = false;
+  try {
+    const h = String(location.hash || '');
+    const isSharedHash = /^#(v|live|s|r|rk_id|c|join|comp|share|rk|ranking)=/.test(h);
+    const navHash = (route === 'comp-detail' && ui.compId) ? ('#comp=' + ui.compId) : ('#' + route);
+    if ((route === 'player-card' || !isSharedHash) && h !== navHash) {
+      history.replaceState(null, '', navHash);
+    }
+  } catch {}
   updateWakeLock();
   render();
   window.scrollTo(0, 0);
@@ -10099,7 +10292,7 @@ function renderHome() {
         <div class="comp-card-top">
           <div>
             <div class="comp-pills" style="margin-bottom:6px">
-              <span class="badge ${isPP ? 'pp' : (c.kind==='league'?'league':'tourn')}">${isPP ? '⚡ Proyecto Pádel' : (c.kind==='league'?'🏅 Liga':'🏆 Torneo')}</span>
+              <span class="badge ${isPP ? 'pp' : (c.kind==='league'?'league':'tourn')}">${isPP ? '⚡ PRO PÁDEL' : (c.kind==='league'?'🏅 Liga':'🏆 Torneo')}</span>
               <span class="badge">${(c.participants||[]).length} inscriptos · ${matchesCount} PJ</span>
             </div>
             <div class="comp-card-title">${esc(c.name)}</div>
@@ -11972,7 +12165,7 @@ function renderStandingsSectionHtml(players, rCtx, opts = {}) {
 
 function getCompFormatLabel(comp) {
   if (!comp) return '';
-  if (comp.format === 'proyecto_padel') return '⚡ Proyecto Pádel';
+  if (comp.format === 'proyecto_padel') return '⚡ PRO PÁDEL';
   if (comp.format === 'league_rr') return 'Todos contra Todos';
   if (comp.format === 'league_rr2') return 'Ida y Vuelta';
   if (comp.format === 'knockout') return 'Eliminación Directa';
@@ -12026,7 +12219,7 @@ function renderCompetitions() {
         <div class="comp-card-top">
           <div style="min-width:0;flex:1">
             <div class="comp-pills" style="margin-bottom:6px">
-              <span class="badge ${isPP ? 'pp' : (c.kind==='league'?'league':'tourn')}">${isPP ? '⚡ Proyecto Pádel' : (c.kind==='league'?'🏅 Liga':'🏆 Torneo')}</span>
+              <span class="badge ${isPP ? 'pp' : (c.kind==='league'?'league':'tourn')}">${isPP ? '⚡ PRO PÁDEL' : (c.kind==='league'?'🏅 Liga':'🏆 Torneo')}</span>
               ${!isPP ? `<span class="badge">${esc(getCompFormatLabel(c))}</span>` : `<span class="badge">👤 Individual · ELO Principal</span>`}
               <span class="badge">${esc(getCompScoringSummaryLabel(c, sc, true))}</span>
               ${c.syncCode ? `<span class="badge sync">📡 Sala #${esc(c.syncCode)}</span>` : ''}
@@ -12257,7 +12450,7 @@ function renderCompDetail() {
       ${groupsHtml}
       ${renderStandingsSectionHtml(players, rCtx, {
         tableTitle: isPP
-          ? 'Tabla Proyecto Pádel · ELO Principal'
+          ? 'Tabla PRO PÁDEL · ELO Principal'
           : (comp.format === 'groups_playoff' ? 'Ranking General + ELO del Torneo' : 'Tabla de Posiciones + ELO'),
         emptyText: isPP
           ? 'Tocá «⚡ Cargar Resultado Final» arriba para sumar el primer resultado (ej: Lucía-Juan vs Marcos-Noelia 4-2) o agregá inscriptos.'
@@ -12414,7 +12607,7 @@ function renderCompDetail() {
     </div>
 
     <div class="comp-pills" style="justify-content:center;margin-bottom:10px">
-      <span class="badge ${isPP ? 'pp' : (comp.kind==='league'?'league':'tourn')}">${isPP ? '⚡ Proyecto Pádel' : (comp.kind==='league'?'🏅 Liga':'🏆 Torneo')}</span>
+      <span class="badge ${isPP ? 'pp' : (comp.kind==='league'?'league':'tourn')}">${isPP ? '⚡ PRO PÁDEL' : (comp.kind==='league'?'🏅 Liga':'🏆 Torneo')}</span>
       ${!isPP ? `<span class="badge">${esc(getCompFormatLabel(comp))}</span>` : `<span class="badge">👤 Individual · Parejas Libres</span>`}
       <span class="badge">${esc(getCompScoringSummaryLabel(comp, sc, true))}</span>
       ${comp.syncCode ? `<span class="badge sync">📡 Sala #${esc(comp.syncCode)}</span>` : ''}
@@ -12593,7 +12786,7 @@ function renderCompetitionModals() {
     const isTourn = f.kind === 'tournament';
     const isPP = isTourn && f.format === 'proyecto_padel';
     const formats = isTourn
-      ? [['proyecto_padel','⚡ Proyecto Pádel'], ['knockout','Eliminación Directa'], ['groups_playoff','Grupos + Playoffs'], ['open','Libre / Americano']]
+      ? [['proyecto_padel','⚡ PRO PÁDEL'], ['knockout','Eliminación Directa'], ['groups_playoff','Grupos + Playoffs'], ['open','Libre / Americano']]
       : [['league_rr','Todos contra Todos'], ['league_rr2','Ida y Vuelta'], ['open','Liga Libre']];
     const dr = f.defaultRules || {};
 
@@ -12615,7 +12808,7 @@ function renderCompetitionModals() {
 
         <div class="field" style="margin-bottom:10px">
           <label>Nombre</label>
-          <input class="inp" id="cf-name" value="${esc(f.name || '')}" placeholder="${isPP ? 'Ej: Torneo Proyecto Pádel #1' : (isTourn ? 'Ej: Copa Nocturna / Open SÉ' : 'Ej: Liga del Jueves / Apertura')}">
+          <input class="inp" id="cf-name" value="${esc(f.name || '')}" placeholder="${isPP ? 'Ej: Torneo PRO PÁDEL #1' : (isTourn ? 'Ej: Copa Nocturna / Open SÉ' : 'Ej: Liga del Jueves / Apertura')}">
         </div>
 
         <div class="field" style="margin-bottom:10px">
@@ -12627,7 +12820,7 @@ function renderCompetitionModals() {
 
         ${isPP ? `
           <div style="padding:10px 12px;border-radius:12px;background:rgba(212,175,55,0.10);border:1px solid rgba(212,175,55,0.32);margin-bottom:10px;font-size:12.5px;color:var(--tx2);line-height:1.4">
-            <b style="color:var(--gold2);display:block;margin-bottom:2px">⚡ Modo Proyecto Pádel · ELO Principal</b>
+            <b style="color:var(--gold2);display:block;margin-bottom:2px">⚡ Modo PRO PÁDEL · ELO Principal</b>
             Carga directa de resultados finales (ej. <i>Lucía-Juan vs Marcos-Noelia 4-2</i> o empate <i>3-3</i>), sin fiscalización ni marcador punto a punto. Contabiliza ranking <b>Individual por ELO</b> y puntaje secundario por <b>Games + Bonus</b>.
           </div>
         ` : ''}
@@ -13593,6 +13786,8 @@ document.addEventListener('click', (ev) => {
     const mode = pcBgEl.getAttribute('data-pc-bgmode');
     const draft = getActivePlayerCardDraft();
     draft.bgMode = mode;
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB();
     if (mode === 'ai' && draft.origPhoto && !draft.cutoutPhoto && !draft.origHasAlpha) {
       render();
       runPlayerPhotoAiCutout(draft);
@@ -13609,6 +13804,8 @@ document.addEventListener('click', (ev) => {
   const pcCatEl = t.closest('[data-pc-cat]');
   if (pcCatEl) {
     getActivePlayerCardDraft().category = pcCatEl.getAttribute('data-pc-cat');
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB();
     render();
     return;
   }
@@ -13616,6 +13813,8 @@ document.addEventListener('click', (ev) => {
   const pcPosEl = t.closest('[data-pc-pos]');
   if (pcPosEl) {
     getActivePlayerCardDraft().position = pcPosEl.getAttribute('data-pc-pos');
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB();
     render();
     return;
   }
@@ -13623,6 +13822,8 @@ document.addEventListener('click', (ev) => {
   const pcHandEl = t.closest('[data-pc-hand]');
   if (pcHandEl) {
     getActivePlayerCardDraft().hand = pcHandEl.getAttribute('data-pc-hand');
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB();
     render();
     return;
   }
@@ -13630,6 +13831,8 @@ document.addEventListener('click', (ev) => {
   const pcShotEl = t.closest('[data-pc-shot]');
   if (pcShotEl) {
     getActivePlayerCardDraft().bestShot = pcShotEl.getAttribute('data-pc-shot');
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB();
     render();
     return;
   }
@@ -13643,6 +13846,8 @@ document.addEventListener('click', (ev) => {
       const thObj = PLAYER_CARD_THEMES[newThemeId] || PLAYER_CARD_THEMES.diamond;
       d.metalFinish = thObj.defaultMetal || 'chrome';
     }
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB();
     render();
     return;
   }
@@ -13652,6 +13857,8 @@ document.addEventListener('click', (ev) => {
     const d = getActivePlayerCardDraft();
     d.metalFinish = pcMetalEl.getAttribute('data-pc-metal');
     d.metalCustom = true;
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB();
     render();
     return;
   }
@@ -13659,8 +13866,12 @@ document.addEventListener('click', (ev) => {
   const pcDelLogoEl = t.closest('[data-pc-del-logo]');
   if (pcDelLogoEl) {
     const slot = pcDelLogoEl.getAttribute('data-pc-del-logo');
-    if (slot === '1') playerCardLogos.logo1 = null;
-    else playerCardLogos.logo2 = null;
+    if (slot === '1') {
+      playerCardLogos.logo1 = null;
+    } else {
+      playerCardLogos.logo2 = null;
+      playerCardLogos.logo2Disabled = true;
+    }
     saveCardLogosToIDB();
     render();
     showToast(`Logo ${slot} quitado`);
@@ -13673,8 +13884,11 @@ document.addEventListener('click', (ev) => {
     const found = savedPlayerCards.find(c => c.id === id);
     if (found) {
       ui.playerCardDraft = { ...clone(found) };
+      ui.playerCardDraftDirty = true;
+      ui.playerCardTouchDrag = false;
       ui.playerCardAiStatus = found.cutoutPhoto ? 'ok' : '';
       ui.playerCardAiText = found.cutoutPhoto ? '✓ Tarjeta cargada' : '';
+      scheduleSaveActiveDraftToIDB(true);
       render();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -14969,8 +15183,11 @@ document.addEventListener('click', (ev) => {
         pcAiRequestToken++;
         ui.playerCardAiBusy = false;
         ui.playerCardDraft = createDefaultPlayerCardDraft();
+        ui.playerCardDraftDirty = true;
+        ui.playerCardTouchDrag = false;
         ui.playerCardAiStatus = '';
         ui.playerCardAiText = '';
+        scheduleSaveActiveDraftToIDB(true);
         render();
         break;
       case 'pc-clear-photo': {
@@ -14983,8 +15200,11 @@ document.addEventListener('click', (ev) => {
         d.zoom = 1;
         d.offsetX = 0;
         d.offsetY = 0;
+        ui.playerCardDraftDirty = true;
+        ui.playerCardTouchDrag = false;
         ui.playerCardAiStatus = '';
         ui.playerCardAiText = '';
+        scheduleSaveActiveDraftToIDB(true);
         render();
         break;
       }
@@ -14993,9 +15213,22 @@ document.addEventListener('click', (ev) => {
         d.zoom = 1;
         d.offsetX = 0;
         d.offsetY = 0;
+        ui.playerCardDraftDirty = true;
+        scheduleSaveActiveDraftToIDB(true);
         render();
         break;
       }
+      case 'pc-toggle-touch-drag':
+        ui.playerCardTouchDrag = !ui.playerCardTouchDrag;
+        render();
+        break;
+      case 'pc-reset-logo2':
+        playerCardLogos.logo2 = DEFAULT_CENTER_LOGO_URL;
+        playerCardLogos.logo2Disabled = false;
+        saveCardLogosToIDB();
+        render();
+        showToast('Logo oficial PRO PÁDEL restaurado');
+        break;
     }
   }
 });
@@ -15003,16 +15236,18 @@ document.addEventListener('click', (ev) => {
 // Input & change listeners
 document.addEventListener('input', (ev) => {
   const t = ev.target;
-  if (t.id === 'pc-name') { getActivePlayerCardDraft().name = t.value; refreshPlayerCardPreview(); return; }
-  if (t.id === 'pc-cat') { getActivePlayerCardDraft().category = t.value; refreshPlayerCardPreview(); return; }
-  if (t.id === 'pc-age') { getActivePlayerCardDraft().age = t.value; refreshPlayerCardPreview(); return; }
-  if (t.id === 'pc-shot') { getActivePlayerCardDraft().bestShot = t.value; refreshPlayerCardPreview(); return; }
+  if (t.id === 'pc-name') { getActivePlayerCardDraft().name = t.value; ui.playerCardDraftDirty = true; scheduleSaveActiveDraftToIDB(); refreshPlayerCardPreview(); return; }
+  if (t.id === 'pc-cat') { getActivePlayerCardDraft().category = t.value; ui.playerCardDraftDirty = true; scheduleSaveActiveDraftToIDB(); refreshPlayerCardPreview(); return; }
+  if (t.id === 'pc-age') { getActivePlayerCardDraft().age = t.value; ui.playerCardDraftDirty = true; scheduleSaveActiveDraftToIDB(); refreshPlayerCardPreview(); return; }
+  if (t.id === 'pc-shot') { getActivePlayerCardDraft().bestShot = t.value; ui.playerCardDraftDirty = true; scheduleSaveActiveDraftToIDB(); refreshPlayerCardPreview(); return; }
   if (t.id === 'pc-subtitle') { playerCardLogos.subTitle = t.value; refreshPlayerCardPreview(); return; }
   if (t.id === 'pc-zoom') {
     const v = Number(t.value) || 1;
     getActivePlayerCardDraft().zoom = v;
     const lbl = document.getElementById('pc-zoom-val');
     if (lbl) lbl.textContent = Math.round(v * 100) + '%';
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB();
     refreshPlayerCardPreview();
     return;
   }
@@ -15021,6 +15256,8 @@ document.addEventListener('input', (ev) => {
     getActivePlayerCardDraft().offsetX = v;
     const lbl = document.getElementById('pc-offx-val');
     if (lbl) lbl.textContent = String(Math.round(v));
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB();
     refreshPlayerCardPreview();
     return;
   }
@@ -15029,6 +15266,8 @@ document.addEventListener('input', (ev) => {
     getActivePlayerCardDraft().offsetY = v;
     const lbl = document.getElementById('pc-offy-val');
     if (lbl) lbl.textContent = String(Math.round(v));
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB();
     refreshPlayerCardPreview();
     return;
   }
@@ -15108,6 +15347,8 @@ document.addEventListener('change', (ev) => {
   }
   if (t.id === 'pc-show-brand') {
     getActivePlayerCardDraft().showAppBrand = t.checked;
+    ui.playerCardDraftDirty = true;
+    scheduleSaveActiveDraftToIDB();
     refreshPlayerCardPreview();
     return;
   }
@@ -15362,6 +15603,7 @@ window.addEventListener('hashchange', checkHashRoute);
 document.addEventListener('pointerdown', (ev) => {
   const canvas = ev.target?.closest?.('#pc-preview-canvas');
   if (!canvas) return;
+  if (ev.pointerType !== 'mouse' && !ui.playerCardTouchDrag) return;
   const draft = getActivePlayerCardDraft();
   if (!draft.origPhoto) return;
   pcDragState = {
@@ -15400,6 +15642,8 @@ function endPcDrag(ev) {
   const canvas = document.getElementById('pc-preview-canvas');
   if (canvas) canvas.classList.remove('dragging');
   pcDragState = null;
+  ui.playerCardDraftDirty = true;
+  scheduleSaveActiveDraftToIDB();
 }
 document.addEventListener('pointerup', endPcDrag);
 document.addEventListener('pointercancel', endPcDrag);
