@@ -3,14 +3,15 @@
 
 🌐 **Idioma / Language:** **Español** · [English Version (README.en.md)](./README.en.md)
 
-[![PWA Ready](https://img.shields.io/badge/PWA-Ready-gold?style=for-the-badge&logo=pwa&logoColor=black)](https://shisasjef.github.io/padel-control-se/)
+[![PWA Offline](https://img.shields.io/badge/PWA-Offline_Completa-gold?style=for-the-badge&logo=pwa&logoColor=black)](https://shisasjef.github.io/padel-control-se/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](./tsconfig.json)
+[![Vitest](https://img.shields.io/badge/Vitest-29_Tests-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](./tests)
 [![Player Cards HD](https://img.shields.io/badge/Tarjetas_HD-Diamond_Edition-8b5cf6?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/#player-card)
 [![OBS Compatible](https://img.shields.io/badge/OBS-Overlay_Transparente-blue?style=for-the-badge&logo=obsstudio&logoColor=white)](https://shisasjef.github.io/padel-control-se/#obs)
 [![FIP Regulations](https://img.shields.io/badge/FIP-Reglamento_Oficial-darkgreen?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
 [![Multi-Device Sync](https://img.shields.io/badge/Sync-QR_%26_Multi--Cancha-gold?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
-[![Zero Install](https://img.shields.io/badge/Instalación-Cero_(Navegador)-black?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
 
-**Pádel Control SÉ** es una suite profesional e integral diseñada para jugadores, árbitros, organizadores, clubes y creadores de contenido de pádel (**2 vs 2**). Funciona 100% en el navegador (móviles, tablets, PC y TV), sin descargas de tiendas ni configuraciones complejas, guardando el historial de forma privada en cada dispositivo y ofreciendo sincronización multi-cancha por QR cuando administrás ligas o torneos.
+**Pádel Control SÉ** es una suite profesional e integral diseñada para jugadores, árbitros, organizadores, clubes y creadores de contenido de pádel (**2 vs 2**). Funciona como **PWA instalable 100% offline** en móviles, tablets, PC y TV, sin tiendas ni servidores propios obligatorios: protege los datos localmente combinando `localStorage` + espejo automático en **IndexedDB** + exportación/importación **Backup JSON v3**, y ofrece sincronización multi-cancha por QR cuando administrás ligas o torneos.
 
 🔗 **Acceso a la Aplicación:** **[https://shisasjef.github.io/padel-control-se/](https://shisasjef.github.io/padel-control-se/)**
 
@@ -36,7 +37,7 @@ Elegí el contexto antes de iniciar cualquier partido para mantener cada ranking
 
 ---
 
-### 🔗 2. Sincronización Multi-Dispositivo por QR y Enlace (Multi-Cancha)
+### 🔗 2. Sincronización Multi-Dispositivo por QR y Enlace (Multi-Cancha + Relay Configurable)
 Ideal para torneos o ligas donde se juegan **varios partidos en paralelo** y cada cancha necesita cargar sus resultados al finalizar:
 
 * **Sala por Código QR y Enlace**:
@@ -44,8 +45,9 @@ Ideal para torneos o ligas donde se juegan **varios partidos en paralelo** y cad
 * **Conexión en Segundos desde Cualquier Celular**:
   * Escaneá el QR, abrí el link compartido o entrá a **Ligas y Torneos → `📲 Unirse`** e ingresá el código de sala.
   * Incluye precarga instantánea en el QR para bootstrap offline (nombre, reglas e inscriptos al momento) y sincronización completa del fixture al estar en línea.
-* **Fusión Concurrente sin Sobrescribirse**:
-  * Cada dispositivo publica resultados atómicos por partido/cruce mediante **Server-Sent Events (`ntfy.sh`) + polling automático**, calculando posiciones y ELO de forma determinista y avanzando llaves en todos los celulares conectados en tiempo real.
+* **Fusión Concurrente Optimizada (`ntfy.sh` o Servidor Propio)**:
+  * Cada dispositivo publica eventos atómicos por partido/cruce mediante **Server-Sent Events + polling incremental** (`?poll=1&since=...`), sin encabezados CORS extra (evitando doble petición `OPTIONS`) y con **backoff exponencial ante `HTTP 429` / `Retry-After`**, calculando posiciones, ELO y llaves de forma determinista en todos los celulares conectados.
+  * **Servidor Relay Configurable**: Desde **Ajustes → Servidor Relay de Sincronización**, podés reemplazar `https://ntfy.sh` por tu propia instancia de `ntfy` en torneos masivos.
   * **Cola Offline Automática**: Si una cancha pierde conexión al cerrar un partido, el resultado se guarda localmente en cola y se publica automáticamente en cuanto vuelve internet.
 
 ---
@@ -98,9 +100,10 @@ Ideal para torneos o ligas donde se juegan **varios partidos en paralelo** y cad
 
 ---
 
-### 📱 6. Código QR Offline Embebido
-* Generador de códigos QR integrado localmente (`QRious`, sin dependencias externas de red para generar el gráfico).
-* Disponible para compartir la aplicación desde el Inicio y Ajustes, y para generar QR de salas multi-dispositivo en Ligas y Torneos.
+### 📱 6. PWA Offline Completa y Código QR Embebido
+* **Instalable y 100% Offline**: Manifiesto [manifest.webmanifest](./manifest.webmanifest), íconos `192×192`, `512×512`, `maskable` y `apple-touch-icon`, más Service Worker ([sw.js](./sw.js)) que precachea todo el shell de la app (`index.html`, JS/CSS y logo WebP) para arrancar y arbitrar sin conexión incluso tras cerrar el navegador.
+* **Panel de Estado en Ajustes + Banners en Inicio**: Indicador de conexión (`En línea` / `Modo Offline activo`), estado de caché offline, salud/uso de almacenamiento persistente, botón **`Instalar App`** y actualización en un toque cuando hay nueva versión.
+* **Generador QR Local (`QRious`)**: Códigos QR generados 100% en el cliente desde Inicio, Ajustes y salas multi-dispositivo, sin llamadas externas para el gráfico.
 
 ---
 
@@ -131,8 +134,8 @@ Estudio integrado para crear fichas coleccionables de cada jugador o jugadora en
   * **✨ Recorte IA (Sin fondo)**: Segmentación de silueta en el navegador mediante **MediaPipe SelfieSegmenter**, con respaldo a **⚡ Modo Instantáneo** para fotos complejas o sin conexión.
   * Controles de **Zoom**, **Posición X / Y**, botón **Centrar foto**, arrastre directo con mouse en PC y botón explícito **`✥ Mover foto en tarjeta`** en celulares para mantener libre el desplazamiento vertical de la pantalla (`touch-action: pan-y`).
 * **Estética Diamond Edition y Logos Personalizados**:
-  * **6 temas visuales** y **4 acabados metálicos 3D** para tipografía y escudos (ej. Cromo y Oro), con textura de trama de carbono, bisel facetado, escudo de categoría y placas de estadísticas (**Categoría**, **Edad**, **Posición en cancha**: *Drive / Revés / Ambos*, **Perfil**: *Diestro / Zurdo*, y **Mejor Golpe**: *Víbora, Bandeja, Smash, Volea, Globo, Bajada, Dejada, Chiquita* o personalizado).
-  * **2 espacios para logos en cabecera**: Emblema de **Pádel Control SÉ** y logo oficial de **PRO PÁDEL** (`logo-pro-padel.png`) configurados de forma predeterminada en el centro, con opción de subir logos propios, editar texto de respaldo, restaurar **PRO PÁDEL** o quitar cada logo.
+  * **6 temas visuales** y **4 acabados metálicos 3D** para tipografía y escudos (Cromo Diamante, Oro 24K Pulido, Platino Zafiro y Esmeralda Puro), con textura de trama de carbono, bisel facetado, escudo de categoría y placas de estadísticas (**Nombre**, **Apodo opcional**, **Categoría**, **Edad**, **Posición en cancha**: *Drive / Revés / Ambos*, **Perfil**: *Diestro / Zurdo*, y **Mejor Golpe**: *Víbora, Bandeja, Smash, Volea, Globo, Bajada, Dejada, Chiquita* o personalizado).
+  * **2 espacios para logos en cabecera**: Emblema de **Pádel Control SÉ** y logo oficial de **PRO PÁDEL** (servido como recurso binario optimizado `./assets/pro-padel-logo.webp` precargado offline por el Service Worker), con opción de subir logos propios, editar texto de respaldo, restaurar **PRO PÁDEL** o quitar cada logo.
 * **Descarga Directa y Persistencia Local**:
   * Exportación directa con **`Descargar Imagen HD`** (PNG `1080×1350`), evitando ventanas emergentes de compartir del sistema operativo en PC.
   * Guardado en **Mis Tarjetas**, almacenamiento local de logos y persistencia automática del borrador activo en **IndexedDB** junto con la ruta `#player-card` ante recargas de pestaña en celulares.
@@ -196,13 +199,50 @@ Compatible con teclados inalámbricos y pulsadores Bluetooth para usar desde la 
 
 ---
 
-## 🔒 Privacidad y Rendimiento
+## 💾 Respaldo, Privacidad y Rendimiento
 
-* **Sin Base de Datos Externa Obligatoria**: Toda la información de partidos, rankings y torneos se guarda localmente mediante `localStorage` (con exportación/importación JSON de respaldo), mientras que las tarjetas de jugador, borradores activos y logos se almacenan localmente en **IndexedDB** en tu dispositivo.
-* **Sincronización e IA Bajo Demanda**: La nube efímera (`ntfy.sh`) solo se utiliza cuando activás la transmisión en vivo, el overlay remoto de OBS o una sala multi-dispositivo; el módulo de **Recorte IA** (`MediaPipe SelfieSegmenter`) se descarga en el navegador únicamente la primera vez que activás el recorte de fondo.
-* **Enlaces y Exportación Sin Fricción en PC**: En computadoras de escritorio, los botones para compartir enlaces (en vivo, estadísticas, salas y rankings) copian directamente el texto al portapapeles evitando diálogos nativos bloqueantes del sistema operativo.
-* **Caché Instantáneo y Modo Offline**: Aplicación web ligera lista para usar en navegadores móviles y de escritorio.
+* **Doble Resguardo Local (`localStorage` + IndexedDB)**: Partidos, competencias, preferencias y presets se guardan en `localStorage` y se espejan automáticamente en **IndexedDB** (`padel_se_backup_db_v1`), junto con solicitud de almacenamiento persistente (`navigator.storage.persist()`) y almacenamiento en IndexedDB para tarjetas HD, borradores y logos.
+* **Backup JSON v3 en 1 Clic**: Desde **Historial → `Backup JSON`** o **Ajustes → `Descargar Backup JSON` / `Compartir JSON`** podés descargar una copia completa (con opción de incluir/excluir tarjetas HD) e importarla en cualquier dispositivo sin perder historial ni ligas/torneos, con recordatorio automático en Inicio ante cambios pendientes de resguardo.
+* **Sincronización e IA Bajo Demanda**: El relay (`ntfy.sh` o servidor propio configurado en Ajustes) solo se contacta cuando activás transmisión en vivo, overlay remoto de OBS o sala multi-dispositivo; el módulo de **Recorte IA** (`MediaPipe SelfieSegmenter`) se descarga únicamente al usar recorte de fondo.
+* **Enlaces y Exportación Sin Fricción en PC**: En computadoras de escritorio, los botones para compartir enlaces copian el texto directo al portapapeles evitando diálogos nativos bloqueantes del sistema operativo.
 * **Estética Obsidian & Gold**: Diseño Obsidian Black & Oro 24K con tipografía condensada de alta visibilidad para pistas y retransmisiones.
+
+---
+
+## 🛠️ Arquitectura, Desarrollo y Tests (TypeScript + Vite + Vitest)
+
+El código fuente está organizado en módulos **TypeScript estricto** bajo `src/` y se compila con **Vite** directamente hacia la raíz del repositorio (`index.html`, `assets/`, `sw.js`) para mantener compatibilidad inmediata con **GitHub Pages** (con `.nojekyll`):
+
+```text
+src/
+├── index.html                   # Entrada HTML de Vite
+├── main.ts                      # Boot de la app, enrutado y delegación de eventos DOM
+├── types.ts                     # Contratos e interfaces TypeScript
+├── sw.template.js               # Plantilla del Service Worker (genera ./sw.js en build)
+├── styles/main.css              # Hoja de estilos principal extraída
+├── public/assets/pro-padel-logo.webp
+├── core/                        # constants.ts, utils.ts
+├── engines/                     # Motores puros testeables: matchEngine, statsEngine, eloEngine, fixtureEngine
+├── codecs/shareCodec.ts         # Códecs URL compartidos, mensajes PCS1:, rankings v2 y validación relay
+├── state/                       # store.ts (localStorage + espejo IDB) y runtime.ts
+├── services/                    # pwaBackup, matchActions, audioVoice, liveBroadcast, competitionSync
+├── cards/playerCardStudio.ts    # Estudio de Tarjetas HD (Canvas 1080×1350 + MediaPipe)
+├── views/                       # Vistas HTML/DOM por pantalla
+└── vendor/qrious.ts             # Generador QR offline tipado
+tests/                           # Suites Vitest (matchEngine, eloEngine, fixtureEngine, statsEngine, shareCodec)
+```
+
+### Comandos locales
+
+```bash
+npm install          # Instalar dependencias de desarrollo (Vite, TypeScript, Vitest)
+npm run dev          # Servidor local con soporte PWA/Service Worker en desarrollo
+npm run typecheck    # Verificación estricta de TypeScript (tsc --noEmit)
+npm test             # Ejecutar los 29 tests unitarios en 5 suites (Vitest)
+npm run build        # Compilar hacia la raíz (index.html, assets/*, sw.js) listo para GitHub Pages
+```
+
+> **Nota para desplegar en GitHub Pages:** Ejecutá `npm run build` antes de hacer `git push` para que queden actualizados en la raíz `index.html`, `assets/` y `sw.js` con el hash de caché nuevo. *(En PowerShell con restricciones de ejecución para scripts `.ps1`, podés usar `npm.cmd` / `npx.cmd`).*
 
 ---
 

@@ -3,14 +3,15 @@
 
 🌐 **Language / Idioma:** [Versión en Español (README.md)](./README.md) · **English**
 
-[![PWA Ready](https://img.shields.io/badge/PWA-Ready-gold?style=for-the-badge&logo=pwa&logoColor=black)](https://shisasjef.github.io/padel-control-se/)
+[![PWA Offline](https://img.shields.io/badge/PWA-Full_Offline-gold?style=for-the-badge&logo=pwa&logoColor=black)](https://shisasjef.github.io/padel-control-se/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](./tsconfig.json)
+[![Vitest](https://img.shields.io/badge/Vitest-29_Tests-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](./tests)
 [![Player Cards HD](https://img.shields.io/badge/Player_Cards_HD-Diamond_Edition-8b5cf6?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/#player-card)
 [![OBS Compatible](https://img.shields.io/badge/OBS-Transparent_Overlay-blue?style=for-the-badge&logo=obsstudio&logoColor=white)](https://shisasjef.github.io/padel-control-se/#obs)
 [![FIP Regulations](https://img.shields.io/badge/FIP-Official_Rules-darkgreen?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
 [![Multi-Device Sync](https://img.shields.io/badge/Sync-QR_%26_Multi--Court-gold?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
-[![Zero Install](https://img.shields.io/badge/Zero_Install-Browser_App-black?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
 
-**Pádel Control SÉ** is a comprehensive, pro-grade browser suite designed for padel (**2 vs 2**) players, umpires, club organizers, and live streamers. It runs 100% in the browser across phones, tablets, PCs, and TVs with zero app-store downloads, storing match history privately on each device while offering QR-based multi-court sync whenever you run leagues or tournaments.
+**Pádel Control SÉ** is a comprehensive, pro-grade browser suite designed for padel (**2 vs 2**) players, umpires, club organizers, and live streamers. It works as an installable **full-offline PWA** across phones, tablets, PCs, and TVs with zero app-store downloads or mandatory servers: local data is safeguarded via `localStorage` + automatic **IndexedDB** mirroring + **Backup JSON v3** export/import, with optional QR-based multi-court sync whenever you run leagues or tournaments.
 
 🔗 **Live Web App:** **[https://shisasjef.github.io/padel-control-se/](https://shisasjef.github.io/padel-control-se/)**
 
@@ -36,7 +37,7 @@ Pick the match mode before starting any match so every ranking, points table, an
 
 ---
 
-### 🔗 2. QR & Link Multi-Device Sync (Multi-Court Support)
+### 🔗 2. QR & Link Multi-Device Sync (Multi-Court Support + Custom Relay)
 Built for tournaments and leagues running **multiple matches simultaneously**, allowing every court or umpire phone to submit results into the same event without overwriting other courts:
 
 * **QR Room & Invite Link**:
@@ -44,9 +45,10 @@ Built for tournaments and leagues running **multiple matches simultaneously**, a
 * **Instant Multi-Phone Join**:
   * Scan the QR code, open the invite link (`#c=...`), or open **Leagues & Tournaments → Join (`📲 Unirse`)** and enter the room code.
   * Embeds competition metadata and participants right inside the QR URL for instant offline bootstrapping, then pulls full fixtures/brackets as soon as the phone goes online.
-* **Concurrent Merging Without Clobbering**:
-  * Each court publishes atomic match/fixture events over **Server-Sent Events (`ntfy.sh`) + automatic polling**, deterministically recomputing standings, ELO ratings, and knockout bracket progression across all connected phones.
-  * **Offline Outbox Queue**: If a court loses internet connectivity when a match finishes, the result queues locally in `localStorage` and flushes automatically as soon as the device reconnects.
+* **Optimized Concurrent Merging (`ntfy.sh` or Self-Hosted Relay)**:
+  * Each court publishes atomic match/fixture events over **Server-Sent Events + incremental polling** (`?poll=1&since=...`), avoiding custom CORS headers (no extra `OPTIONS` preflight requests) and handling **`HTTP 429` / `Retry-After`** with exponential backoff, while deterministically recomputing standings, ELO ratings, and knockout brackets across all connected phones.
+  * **Configurable Sync Relay URL**: Under **Settings (`Ajustes`) → Sync Relay Server**, replace `https://ntfy.sh` with your own `ntfy` instance for large tournaments.
+  * **Offline Outbox Queue**: If a court loses internet connectivity when a match finishes, the result queues locally and flushes automatically as soon as the device reconnects.
 
 ---
 
@@ -94,9 +96,10 @@ Built for tournaments and leagues running **multiple matches simultaneously**, a
 
 ---
 
-### 📱 6. Built-In Offline QR Generator
-* Bundled client-side QR rendering (`QRious`) requiring no external image APIs for core usage.
-* Accessible from Home, Settings, and every synced League or Tournament room.
+### 📱 6. Full Offline PWA & Built-In QR Generator
+* **Installable & 100% Offline**: Complete [manifest.webmanifest](./manifest.webmanifest), PNG icon suite (`192×192`, `512×512`, `maskable`, and `apple-touch-icon`), and Service Worker ([sw.js](./sw.js)) precaching the full app shell (`index.html`, JS/CSS bundles, and WebP logo) so matches and rankings work offline even after closing the browser.
+* **System Status & Home Banners**: Shows connection status (`Online` / `Offline Mode Active`), offline cache readiness, persistent storage health/usage, one-tap **`Install App`** button, and SW update prompts.
+* **Bundled Client-Side QR (`QRious`)**: Generates QR codes completely offline from Home, Settings, and every synced League or Tournament room.
 
 ---
 
@@ -127,8 +130,8 @@ Built-in trading-card studio generating **`1080×1350` px** HD PNG player cards:
   * **✨ AI Cutout (`Recorte IA`)**: Runs client-side person segmentation via **MediaPipe SelfieSegmenter** with seamless fallback to **⚡ Instant Mode** for complex shots or offline environments.
   * **Zoom**, **X / Y Position** sliders, **Center Photo**, direct mouse drag on desktop, and an explicit mobile **`✥ Mover foto en tarjeta`** toggle so vertical page scrolling (`touch-action: pan-y`) never gets hijacked on phones.
 * **Diamond Edition Styling & Custom Logos**:
-  * **6 visual themes** and **4 3D metallic finishes** (Chrome, Gold, and more), featuring carbon-weave backdrops, faceted diamond bezels, category shield, and armored stat plates (**Category**, **Age**, **Position**: *Drive / Revés / Ambos*, **Hand**: *Diestro / Zurdo*, and **Best Shot**: *Víbora, Bandeja, Smash, Volea, Globo, Bajada, Dejada, Chiquita*, or custom).
-  * **2 Header Logo Slots**: Defaults to the **Pádel Control SÉ** emblem + centered official **PRO PÁDEL** logo (`logo-pro-padel.png`), with options to upload custom club/sponsor logos, restore **PRO PÁDEL**, remove either logo, or customize fallback footer text.
+  * **6 visual themes** and **4 3D metallic finishes** (Chrome Diamond, 24K Gold, Sapphire Platinum, and Pure Emerald), featuring carbon-weave backdrops, faceted diamond bezels, category shield, and armored stat plates (**Name**, **Optional Nickname**, **Category**, **Age**, **Position**: *Drive / Revés / Ambos*, **Hand**: *Diestro / Zurdo*, and **Best Shot**: *Víbora, Bandeja, Smash, Volea, Globo, Bajada, Dejada, Chiquita*, or custom).
+  * **2 Header Logo Slots**: Defaults to the **Pádel Control SÉ** emblem + centered official **PRO PÁDEL** logo (served as an optimized static binary `./assets/pro-padel-logo.webp` precached offline by the Service Worker), with options to upload custom club/sponsor logos, restore **PRO PÁDEL**, remove either logo, or customize fallback footer text.
 * **Direct HD Download & Draft Persistence**:
   * Exports directly via **`Descargar Imagen HD`** (`1080×1350` PNG), avoiding desktop OS share-sheet popups on PC.
   * Saves cards to **My Cards (`Mis Tarjetas`)**, custom logos, and active editing drafts (including photo/cutout) in **IndexedDB** alongside `#player-card` URL hash state so mobile tab reloads return straight to your card.
@@ -192,12 +195,50 @@ Works with wireless keyboards and Bluetooth clickers directly from the court:
 
 ---
 
-## 🔒 Privacy & Performance
+## 💾 Backups, Privacy & Performance
 
-* **No Mandatory Backend**: Match history, rankings, and competitions are stored locally on your device via `localStorage` (with JSON backup export/import), while Player Cards, active drafts, and custom logos persist locally in **IndexedDB**.
-* **On-Demand Lightweight Sync & AI**: Public `ntfy.sh` channels are only contacted when you actively enable Live Match Broadcast, Remote OBS Overlay, or a Multi-Device League/Tournament Room; the **MediaPipe SelfieSegmenter** WASM module is loaded on demand only when running AI background removal.
+* **Dual Local Persistence (`localStorage` + IndexedDB)**: Matches, competitions, preferences, and presets persist in `localStorage` and automatically mirror into **IndexedDB** (`padel_se_backup_db_v1`), alongside `navigator.storage.persist()` requests and dedicated IndexedDB storage for HD player cards, drafts, and logos.
+* **1-Click Backup JSON v3**: Export a complete JSON snapshot via **History (`Historial`) → `Backup JSON`** or **Settings (`Ajustes`) → `Descargar Backup JSON` / `Compartir JSON`** (with a toggle to include/exclude HD player cards), restore cleanly across devices, and get non-intrusive Home reminders when `>= 5` unsaved changes accumulate.
+* **On-Demand Lightweight Sync & AI**: Public `ntfy.sh` (or your custom relay configured in Settings) is only contacted when actively using Live Match Broadcast, Remote OBS Overlay, or Multi-Device Rooms; the **MediaPipe SelfieSegmenter** WASM module loads only when running AI background removal.
 * **Desktop-Safe Link Sharing**: On desktop PCs, link-sharing buttons across Rankings, Competitions, Live Match, and Stats copy invitations directly to the clipboard instead of invoking OS share overlays.
-* **Offline-Ready Design**: Lightweight PWA web app styled in Obsidian Black & 24K Gold for high visibility courtside and on broadcasts.
+* **Obsidian & Gold Visual Identity**: Styled in Obsidian Black & 24K Gold for high contrast courtside and on broadcasts.
+
+---
+
+## 🛠️ Architecture, Development & Tests (TypeScript + Vite + Vitest)
+
+The codebase is modularized in **strict TypeScript** under `src/` and builds with **Vite** directly to the repository root (`index.html`, `assets/`, `sw.js`) so static hosting on **GitHub Pages** works seamlessly (with `.nojekyll`):
+
+```text
+src/
+├── index.html                   # Vite HTML entry
+├── main.ts                      # App bootstrap, routing & DOM event delegation
+├── types.ts                     # Shared TypeScript interfaces
+├── sw.template.js               # Service Worker template (builds root ./sw.js with asset hashes)
+├── styles/main.css              # Extracted application stylesheet
+├── public/assets/pro-padel-logo.webp
+├── core/                        # constants.ts, utils.ts
+├── engines/                     # Pure testable engines: matchEngine, statsEngine, eloEngine, fixtureEngine
+├── codecs/shareCodec.ts         # Share URL codecs, PCS1: sync envelopes, v2 rankings & relay validation
+├── state/                       # store.ts (localStorage + IDB mirror) & runtime.ts
+├── services/                    # pwaBackup, matchActions, audioVoice, liveBroadcast, competitionSync
+├── cards/playerCardStudio.ts    # HD Player Card Studio (1080×1350 Canvas + MediaPipe)
+├── views/                       # Screen view renderers
+└── vendor/qrious.ts             # Typed offline QR code generator
+tests/                           # Vitest suites (matchEngine, eloEngine, fixtureEngine, statsEngine, shareCodec)
+```
+
+### Local commands
+
+```bash
+npm install          # Install dev dependencies (Vite, TypeScript, Vitest)
+npm run dev          # Start dev server with PWA/Service Worker support
+npm run typecheck    # Run strict TypeScript check (tsc --noEmit)
+npm test             # Run all 29 unit tests across 5 Vitest suites
+npm run build        # Build production assets into root (index.html, assets/*, sw.js) for GitHub Pages
+```
+
+> **GitHub Pages deployment note:** Run `npm run build` before `git push` so root `index.html`, `assets/`, and `sw.js` reflect your latest source edits. *(On Windows PowerShell with restricted `.ps1` execution policies, invoke `npm.cmd` / `npx.cmd`).*
 
 ---
 
