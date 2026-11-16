@@ -28,6 +28,7 @@ import {
   DEFAULT_SYNC_SERVER,
   normalizeSyncServerUrl
 } from './codecs/shareCodec';
+import { COLORS } from './core/constants';
 import { clone, esc, formatPairLabel, getMatchCompId, playerLabel } from './core/utils';
 import {
   assignPlayerRanks,
@@ -37,9 +38,15 @@ import {
   sortStandingsRows
 } from './engines/eloEngine';
 import {
+  clampCourtsCount,
   generateGroupsFixtures,
+  generateNextPairRoundFixtures,
   generatePlayoffBracket,
   generateRoundRobinFixtures,
+  generateSocialCycleFixtures,
+  generateSocialRoundFixtures,
+  getCompCourtsCount,
+  isCompFinished,
   newCompId,
   participantToTeamObj,
   resolveQuickScoreOutcome
@@ -152,6 +159,103 @@ import {
 import { applyTheme, navigate } from './views/sharedUi';
 import { getStatsTargetMatch, renderStats } from './views/statsViews';
 
+function guardCompMutable(comp: Competition | null): comp is Competition {
+  if (!comp) return false;
+  if (isCompFinished(comp)) {
+    showToast('El torneo está finalizado. Reabrilo para hacer cambios.');
+    return false;
+  }
+  return true;
+}
+
+function addSingleParticipantFromDom(comp: Competition): void {
+  if (!guardCompMutable(comp)) return;
+  const col = (document.getElementById('part-color') as HTMLSelectElement | null)?.value || '#d4af37';
+  const grp = (document.getElementById('part-group') as HTMLSelectElement | null)?.value || null;
+  let addedPart: Participant | null = null;
+  let focusId = 'part-p0';
+  if (comp.rankingMode === 'individual') {
+    focusId = 'part-ind-name';
+    const nm = (document.getElementById('part-ind-name') as HTMLInputElement | null)?.value.trim();
+    if (!nm) {
+      showToast('Ingresá el nombre del jugador');
+      return;
+    }
+    comp.participants = comp.participants || [];
+    if (comp.participants.some((p) => p.type === 'player' && (p.name || '').trim().toUpperCase() === nm.toUpperCase())) {
+      showToast('Ese jugador ya está inscripto');
+      return;
+    }
+    addedPart = { id: newCompId('pt'), type: 'player', name: nm, color: col, group: grp, ...(grp ? { groupManual: true } : {}) };
+    comp.participants.push(addedPart);
+  } else {
+    const p0 = (document.getElementById('part-p0') as HTMLInputElement | null)?.value.trim();
+    const p1 = (document.getElementById('part-p1') as HTMLInputElement | null)?.value.trim();
+    if (!p0 && !p1) {
+      showToast('Ingresá al menos un jugador de la pareja');
+      return;
+    }
+    comp.participants = comp.participants || [];
+    addedPart = {
+      id: newCompId('pt'),
+      type: 'pair',
+      players: [p0 || 'DRIVE', p1 || 'REVÉS'],
+      color: col,
+      group: grp,
+      ...(grp ? { groupManual: true } : {})
+    };
+    comp.participants.push(addedPart);
+  }
+  saveCompetitions();
+  if (comp.syncCode && addedPart) void publishCompParticipant(comp, addedPart);
+  render();
+  showToast('Inscripto agregado');
+  document.getElementById(focusId)?.focus();
+}
+
+function addBatchPlayersFromDom(comp: Competition): void {
+  if (!guardCompMutable(comp)) return;
+  const raw = (document.getElementById('part-batch-names') as HTMLTextAreaElement | null)?.value || '';
+  const names = raw
+    .split(/[\r\n,;]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!names.length) {
+    showToast('Pegá o escribí al menos un nombre');
+    return;
+  }
+  comp.participants = comp.participants || [];
+  const existingKeys = new Set(
+    comp.participants
+      .filter((p) => p.type === 'player')
+      .map((p) => (p.name || '').trim().toUpperCase())
+      .filter(Boolean)
+  );
+  let addedCount = 0;
+  names.forEach((nm) => {
+    const key = nm.toUpperCase();
+    if (existingKeys.has(key)) return;
+    existingKeys.add(key);
+    const col = COLORS[(comp.participants.length + addedCount) % COLORS.length]?.c || '#d4af37';
+    comp.participants.push({
+      id: newCompId('pt'),
+      type: 'player',
+      name: nm,
+      color: col,
+      group: null
+    });
+    addedCount++;
+  });
+  if (!addedCount) {
+    showToast('Todos esos jugadores ya estaban inscriptos');
+    return;
+  }
+  saveCompetitions();
+  if (comp.syncCode) void publishCompSetup(comp, true);
+  render();
+  showToast(`${addedCount} ${addedCount === 1 ? 'jugador agregado' : 'jugadores agregados'}`);
+}
+
 function syncCompFormFromDom(): void {
   const f = store.ui.compFormState;
   if (!f) return;
@@ -171,6 +275,8 @@ function syncCompFormFromDom(): void {
   if (ng) f.numGroups = Math.max(2, Math.min(4, Number(ng.value) || 2));
   const adv = document.getElementById('cf-adv') as HTMLSelectElement | null;
   if (adv) f.advancePerGroup = Math.max(1, Math.min(4, Number(adv.value) || 2));
+  const cc = document.getElementById('cf-courts') as HTMLSelectElement | null;
+  if (cc) f.courtsCount = clampCourtsCount(cc.value, 4);
   const sets = document.getElementById('cf-sets') as HTMLSelectElement | null;
   const deuce = document.getElementById('cf-deuce') as HTMLSelectElement | null;
   if (sets || deuce) {
@@ -198,6 +304,7 @@ function openCompModal(mode: 'create' | 'edit', kindOrComp: string | Competition
       gameBonusPts: sc.gameBonusPts,
       numGroups: Number(c.numGroups) || 2,
       advancePerGroup: Number(c.advancePerGroup) || 2,
+      courtsCount: getCompCourtsCount(c, 4),
       defaultRules: clone(
         c.defaultRules || {
           totalSets: 3,
@@ -227,6 +334,7 @@ function openCompModal(mode: 'create' | 'edit', kindOrComp: string | Competition
     gameBonusPts: 0,
     numGroups: 2,
     advancePerGroup: 2,
+    courtsCount: 4,
     defaultRules: {
       totalSets: preset.totalSets || 3,
       gamesPerSet: preset.gamesPerSet || 6,
@@ -559,6 +667,7 @@ document.addEventListener('click', (ev) => {
     ev.preventDefault();
     const c = getCompById(picEl.getAttribute('data-play-in-comp'));
     if (c) {
+      if (!guardCompMutable(c)) return;
       fillPresetFromComp(c, null);
       saveJSON(LS_PRESET, preset);
       navigate('new');
@@ -735,7 +844,7 @@ document.addEventListener('click', (ev) => {
   if (dFxEl) {
     const [cid, fxid] = (dFxEl.getAttribute('data-del-fixture') || '').split(':');
     const c = getCompById(cid);
-    if (c) {
+    if (guardCompMutable(c)) {
       c.fixtures = (c.fixtures || []).filter((f) => f.id !== fxid);
       saveCompetitions();
       if (c.syncCode) void publishCompSetup(c, true);
@@ -749,12 +858,27 @@ document.addEventListener('click', (ev) => {
   if (dPartEl) {
     const [cid, ptid] = (dPartEl.getAttribute('data-del-part') || '').split(':');
     const c = getCompById(cid);
-    if (c) {
+    if (guardCompMutable(c)) {
       c.participants = (c.participants || []).filter((p) => p.id !== ptid);
       saveCompetitions();
       if (c.syncCode) void publishCompParticipantChange(c, 'del', ptid);
       render();
       showToast('Inscripto eliminado');
+    }
+    return;
+  }
+
+  const pausePartEl = t.closest<HTMLElement>('[data-toggle-part-pause]');
+  if (pausePartEl) {
+    const [cid, ptid] = (pausePartEl.getAttribute('data-toggle-part-pause') || '').split(':');
+    const c = getCompById(cid);
+    const pt = (c?.participants || []).find((p) => p.id === ptid);
+    if (guardCompMutable(c) && pt) {
+      pt.paused = !pt.paused;
+      saveCompetitions();
+      if (c.syncCode) void publishCompParticipantChange(c, 'pause', ptid, pt.paused ? '1' : '0');
+      render();
+      showToast(pt.paused ? `${pt.name || 'Jugador'} en pausa` : `${pt.name || 'Jugador'} activado`);
     }
     return;
   }
@@ -1389,6 +1513,7 @@ document.addEventListener('click', (ev) => {
             ? Number(f.gameBonusPts)
             : 1
           : Number(f.gameBonusPts) || 0;
+        const courtsCount = clampCourtsCount(f.courtsCount, 4);
         if (ui.compModal === 'edit' && f.id) {
           const comp = getCompById(f.id);
           if (comp) {
@@ -1403,6 +1528,7 @@ document.addEventListener('click', (ev) => {
             comp.gameBonusPts = gameBonusPts;
             comp.numGroups = Number(f.numGroups) || 2;
             comp.advancePerGroup = Number(f.advancePerGroup) || 2;
+            comp.courtsCount = courtsCount;
             comp.defaultRules = cleanRules;
             saveCompetitions();
             if (comp.syncCode) void publishCompSetup(comp, false);
@@ -1424,6 +1550,8 @@ document.addEventListener('click', (ev) => {
             gameBonusPts,
             numGroups: Number(f.numGroups) || 2,
             advancePerGroup: Number(f.advancePerGroup) || 2,
+            courtsCount,
+            status: 'active',
             defaultRules: cleanRules,
             participants: [],
             fixtures: [],
@@ -1439,7 +1567,7 @@ document.addEventListener('click', (ev) => {
             render();
           } else {
             ui.compId = newComp.id;
-            ui.compTab = isPP ? 'standings' : 'participants';
+            ui.compTab = 'participants';
             navigate('comp-detail');
           }
           showToast(`${newComp.kind === 'league' ? 'Liga' : 'Torneo'} creado`);
@@ -1453,83 +1581,66 @@ document.addEventListener('click', (ev) => {
         break;
       case 'add-part': {
         const comp = getCompById(actEl.getAttribute('data-comp'));
-        if (!comp) break;
-        const col = (document.getElementById('part-color') as HTMLSelectElement | null)?.value || '#d4af37';
-        const grp = (document.getElementById('part-group') as HTMLSelectElement | null)?.value || null;
-        let addedPart: Participant | null = null;
-        if (comp.rankingMode === 'individual') {
-          const nm = (document.getElementById('part-ind-name') as HTMLInputElement | null)?.value.trim();
-          if (!nm) {
-            showToast('Ingresá el nombre del jugador');
-            break;
-          }
-          comp.participants = comp.participants || [];
-          addedPart = { id: newCompId('pt'), type: 'player', name: nm, color: col, group: grp };
-          comp.participants.push(addedPart);
-        } else {
-          const p0 = (document.getElementById('part-p0') as HTMLInputElement | null)?.value.trim();
-          const p1 = (document.getElementById('part-p1') as HTMLInputElement | null)?.value.trim();
-          if (!p0 && !p1) {
-            showToast('Ingresá al menos un jugador de la pareja');
-            break;
-          }
-          comp.participants = comp.participants || [];
-          addedPart = {
-            id: newCompId('pt'),
-            type: 'pair',
-            players: [p0 || 'DRIVE', p1 || 'REVÉS'],
-            color: col,
-            group: grp
-          };
-          comp.participants.push(addedPart);
-        }
-        saveCompetitions();
-        if (comp.syncCode && addedPart) void publishCompParticipant(comp, addedPart);
-        render();
-        showToast('Inscripto agregado');
+        if (comp) addSingleParticipantFromDom(comp);
+        break;
+      }
+      case 'add-part-batch': {
+        const comp = getCompById(actEl.getAttribute('data-comp'));
+        if (comp) addBatchPlayersFromDom(comp);
         break;
       }
       case 'gen-rr': {
         const comp = getCompById(actEl.getAttribute('data-comp'));
-        if (!comp) break;
-        if ((comp.fixtures || []).some((f) => f.matchId) && !confirm('Ya hay partidos jugados en el fixture. ¿Regenerar todos los cruces?'))
+        if (!guardCompMutable(comp)) break;
+        if ((comp.fixtures || []).some((f) => f.matchId) && !confirm('Ya hay partidos jugados en el fixture. ¿Re-sortear todos los cruces?'))
           break;
-        comp.fixtures = generateRoundRobinFixtures(comp, { doubleRound: comp.format === 'league_rr2' });
+        comp.fixtures = generateRoundRobinFixtures(comp, {
+          doubleRound: comp.format === 'league_rr2',
+          shuffle: true,
+          courtsCount: getCompCourtsCount(comp, 4),
+          historyMatches: store.historyList
+        });
         saveCompetitions();
         if (comp.syncCode) void publishCompSetup(comp, true);
         render();
-        showToast(`${comp.fixtures.length} cruces generados`);
+        showToast(`${comp.fixtures.length} cruces sorteados`);
         break;
       }
       case 'gen-groups': {
         const comp = getCompById(actEl.getAttribute('data-comp'));
-        if (!comp) break;
+        if (!guardCompMutable(comp)) break;
         if ((comp.fixtures || []).some((f) => f.matchId) && !confirm('Ya hay partidos jugados en grupos. ¿Re-sortear grupos y fixture?'))
           break;
-        const groupFx = generateGroupsFixtures(comp, comp.numGroups || 2);
+        const groupFx = generateGroupsFixtures(comp, comp.numGroups || 2, {
+          shuffle: true,
+          courtsCount: getCompCourtsCount(comp, 4)
+        });
         comp.fixtures = groupFx;
         saveCompetitions();
         if (comp.syncCode) void publishCompSetup(comp, true);
         render();
-        showToast(`${groupFx.length} partidos de grupos generados`);
+        showToast(`${groupFx.length} partidos de grupos sorteados`);
         break;
       }
       case 'gen-bracket': {
         const comp = getCompById(actEl.getAttribute('data-comp'));
-        if (!comp) break;
-        if ((comp.fixtures || []).some((f) => f.matchId) && !confirm('Ya hay partidos jugados en el cuadro. ¿Regenerar las llaves?'))
+        if (!guardCompMutable(comp)) break;
+        if ((comp.fixtures || []).some((f) => f.matchId) && !confirm('Ya hay partidos jugados en el cuadro. ¿Re-sortear las llaves?'))
           break;
-        comp.fixtures = generatePlayoffBracket(comp);
+        comp.fixtures = generatePlayoffBracket(comp, null, {
+          shuffle: true,
+          courtsCount: getCompCourtsCount(comp, 4)
+        });
         resolveCompetitionFixtures(comp);
         saveCompetitions();
         if (comp.syncCode) void publishCompSetup(comp, true);
         render();
-        showToast('Cuadro eliminatorio generado');
+        showToast('Llaves eliminatorias sorteadas');
         break;
       }
       case 'advance-playoffs': {
         const comp = getCompById(actEl.getAttribute('data-comp'));
-        if (!comp) break;
+        if (!guardCompMutable(comp)) break;
         if (
           (comp.fixtures || []).some((f) => f.phase === 'playoff' && f.matchId) &&
           !confirm('Ya hay cruces jugados en Playoffs. ¿Regenerar llaves eliminatorias?')
@@ -1545,15 +1656,119 @@ document.addEventListener('click', (ev) => {
         }
         break;
       }
-      case 'open-add-fixture':
-        ui.compId = actEl.getAttribute('data-comp') || ui.compId;
+      case 'gen-social-round': {
+        const comp = getCompById(actEl.getAttribute('data-comp'));
+        if (!guardCompMutable(comp)) break;
+        const courts = getCompCourtsCount(comp, 4);
+        const newFx = generateSocialRoundFixtures(comp, store.historyList, { courtsCount: courts });
+        if (!newFx.length) {
+          showToast('Necesitás al menos 4 jugadores activos en Inscriptos');
+          break;
+        }
+        comp.fixtures = [...(comp.fixtures || []), ...newFx];
+        ui.compTab = 'fixtures';
+        saveCompetitions();
+        if (comp.syncCode) void publishCompSetup(comp, true);
+        render();
+        showToast(`Ronda ${newFx[0].roundIdx + 1} sorteada (${newFx.length} ${newFx.length === 1 ? 'cancha' : 'canchas'})`);
+        break;
+      }
+      case 'gen-social-cycle': {
+        const comp = getCompById(actEl.getAttribute('data-comp'));
+        if (!guardCompMutable(comp)) break;
+        if (
+          (comp.fixtures || []).some((f) => f.matchId) &&
+          !confirm('Ya hay partidos jugados en este torneo. ¿Re-sortear el ciclo completo de rondas?')
+        ) {
+          break;
+        }
+        if (
+          (comp.fixtures || []).length &&
+          !(comp.fixtures || []).some((f) => f.matchId) &&
+          !confirm('¿Reemplazar las rondas actuales por un ciclo completo nuevo?')
+        ) {
+          break;
+        }
+        const courts = getCompCourtsCount(comp, 4);
+        const cycleFx = generateSocialCycleFixtures(comp, store.historyList, {
+          courtsCount: courts,
+          ignoreExistingFixtures: true
+        });
+        if (!cycleFx.length) {
+          showToast('Necesitás al menos 4 jugadores activos en Inscriptos');
+          break;
+        }
+        comp.fixtures = cycleFx;
+        ui.compTab = 'fixtures';
+        saveCompetitions();
+        if (comp.syncCode) void publishCompSetup(comp, true);
+        render();
+        const totalRounds = new Set(cycleFx.map((f) => f.roundIdx)).size;
+        showToast(`Ciclo sorteado: ${totalRounds} rondas (${cycleFx.length} partidos)`);
+        break;
+      }
+      case 'gen-pairs-round': {
+        const comp = getCompById(actEl.getAttribute('data-comp'));
+        if (!guardCompMutable(comp)) break;
+        const courts = getCompCourtsCount(comp, 4);
+        const newFx = generateNextPairRoundFixtures(comp, store.historyList, { courtsCount: courts });
+        if (!newFx.length) {
+          showToast('Necesitás al menos 2 parejas activas en Inscriptos');
+          break;
+        }
+        comp.fixtures = [...(comp.fixtures || []), ...newFx];
+        ui.compTab = 'fixtures';
+        saveCompetitions();
+        if (comp.syncCode) void publishCompSetup(comp, true);
+        render();
+        showToast(`Fecha ${newFx[0].roundIdx + 1} sorteada (${newFx.length} ${newFx.length === 1 ? 'cancha' : 'canchas'})`);
+        break;
+      }
+      case 'finish-comp': {
+        const comp = getCompById(actEl.getAttribute('data-comp'));
+        if (!comp || isCompFinished(comp)) break;
+        const pending = (comp.fixtures || []).filter(
+          (f) => !f.isBye && f.team0 && f.team1 && (f.winnerSide === null || f.winnerSide === undefined)
+        ).length;
+        const msg =
+          pending > 0
+            ? `Todavía hay ${pending} cruce(s) sin resultado. ¿Marcar "${comp.name}" como terminado igual? No se generarán nuevos encuentros.`
+            : `¿Marcar "${comp.name}" como terminado? Se cerrarán los sorteos y dejarán de generarse encuentros.`;
+        if (!confirm(msg)) break;
+        comp.status = 'finished';
+        comp.finishedAt = Date.now();
+        saveCompetitions();
+        if (comp.syncCode) void publishCompSetup(comp, false);
+        render();
+        showToast(`🏁 ${comp.name} terminado`);
+        break;
+      }
+      case 'reopen-comp': {
+        const comp = getCompById(actEl.getAttribute('data-comp'));
+        if (!comp) break;
+        comp.status = 'active';
+        comp.finishedAt = null;
+        saveCompetitions();
+        if (comp.syncCode) void publishCompSetup(comp, false);
+        render();
+        showToast(`🔓 ${comp.name} reabierto`);
+        break;
+      }
+      case 'open-add-fixture': {
+        const cid = actEl.getAttribute('data-comp') || ui.compId;
+        const comp = getCompById(cid);
+        if (comp && !guardCompMutable(comp)) break;
+        ui.compId = cid;
         ui.compModal = 'add-fixture';
         render();
         break;
+      }
       case 'save-manual-fixture': {
         const comp = getCompById(actEl.getAttribute('data-comp'));
-        if (!comp) break;
+        if (!guardCompMutable(comp)) break;
         const rLabel = (document.getElementById('af-round') as HTMLInputElement | null)?.value.trim() || 'Cruce';
+        const courtRaw = Number((document.getElementById('af-court') as HTMLSelectElement | null)?.value);
+        const courtNum = Number.isFinite(courtRaw) && courtRaw >= 1 ? courtRaw : null;
         let team0 = null;
         let team1 = null;
         const sel0 = document.getElementById('af-sel0') as HTMLSelectElement | null;
@@ -1563,8 +1778,10 @@ document.addEventListener('click', (ev) => {
             showToast('Elegí dos parejas distintas');
             break;
           }
-          team0 = participantToTeamObj((comp.participants || []).find((p) => p.id === sel0.value));
-          team1 = participantToTeamObj((comp.participants || []).find((p) => p.id === sel1.value));
+          const idx0 = (comp.participants || []).findIndex((p) => p.id === sel0.value);
+          const idx1 = (comp.participants || []).findIndex((p) => p.id === sel1.value);
+          team0 = participantToTeamObj(idx0 >= 0 ? comp.participants[idx0] : null, idx0 >= 0 ? idx0 + 1 : null);
+          team1 = participantToTeamObj(idx1 >= 0 ? comp.participants[idx1] : null, idx1 >= 0 ? idx1 + 1 : null);
         } else {
           const p00 = (document.getElementById('af-t0p0') as HTMLInputElement | null)?.value.trim() || 'DRIVE 1';
           const p01 = (document.getElementById('af-t0p1') as HTMLInputElement | null)?.value.trim() || 'REVÉS 1';
@@ -1582,6 +1799,7 @@ document.addEventListener('click', (ev) => {
             roundLabel: rLabel,
             slotIdx: comp.fixtures.length,
             group: null,
+            ...(courtNum ? { court: courtNum } : {}),
             team0,
             team1,
             source0: null,
@@ -2134,12 +2352,25 @@ document.addEventListener('change', (ev) => {
     }
     return;
   }
+  if (t.hasAttribute('data-set-comp-courts')) {
+    const cid = t.getAttribute('data-set-comp-courts');
+    const c = getCompById(cid);
+    if (guardCompMutable(c)) {
+      c.courtsCount = clampCourtsCount(t.value, 4);
+      saveCompetitions();
+      if (c.syncCode) void publishCompSetup(c, false);
+      render();
+      showToast(`Canchas actualizadas: ${c.courtsCount}`);
+    }
+    return;
+  }
   if (t.hasAttribute('data-set-part-group')) {
     const [cid, ptid] = (t.getAttribute('data-set-part-group') || '').split(':');
     const c = getCompById(cid);
     const pt = (c?.participants || []).find((p) => p.id === ptid);
-    if (c && pt) {
+    if (guardCompMutable(c) && pt) {
       pt.group = t.value || null;
+      pt.groupManual = !!t.value;
       saveCompetitions();
       if (c.syncCode) void publishCompParticipantChange(c, 'grp', ptid, pt.group);
       render();
@@ -2166,6 +2397,16 @@ document.addEventListener('change', (ev) => {
 // Keyboard shortcuts (PC & Bluetooth clickers)
 document.addEventListener('keydown', (ev) => {
   const target = ev.target as HTMLElement | null;
+  if (
+    ev.key === 'Enter' &&
+    target instanceof HTMLInputElement &&
+    target.hasAttribute('data-enter-add-part')
+  ) {
+    ev.preventDefault();
+    const comp = getCompById(target.getAttribute('data-enter-add-part'));
+    if (comp) addSingleParticipantFromDom(comp);
+    return;
+  }
   if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
   const { ui, activeMatch, prefs } = store;
 

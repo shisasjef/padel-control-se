@@ -182,6 +182,8 @@ export interface Participant {
   players?: string[];
   color?: string;
   group?: string | null;
+  groupManual?: boolean;
+  paused?: boolean;
 }
 
 export interface BracketTeamObj {
@@ -189,6 +191,7 @@ export interface BracketTeamObj {
   color: string;
   label?: string;
   participantId?: string;
+  teamNum?: number | null;
 }
 
 export interface FixtureSource {
@@ -203,6 +206,8 @@ export interface Fixture {
   roundLabel: string;
   slotIdx: number;
   group: string | null;
+  court?: number | null;
+  resting?: string[];
   team0: BracketTeamObj | null;
   team1: BracketTeamObj | null;
   source0: FixtureSource | null;
@@ -225,6 +230,9 @@ export interface Competition {
   gameBonusPts?: number;
   numGroups?: number;
   advancePerGroup?: number;
+  courtsCount?: number;
+  status?: 'active' | 'finished' | string;
+  finishedAt?: number | null;
   defaultRules?: Partial<MatchRules>;
   participants: Participant[];
   fixtures: Fixture[];
@@ -500,6 +508,7 @@ export interface CompFormState {
   gameBonusPts: number;
   numGroups: number;
   advancePerGroup: number;
+  courtsCount: number;
   defaultRules: Partial<MatchRules>;
 }
 

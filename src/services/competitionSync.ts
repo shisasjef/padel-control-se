@@ -15,7 +15,9 @@ import { clone, formatPairLabel, teamLabel } from '../core/utils';
 import { isProyectoPadelComp } from '../engines/eloEngine';
 import {
   advanceGroupsToPlayoffsPure,
+  clampCourtsCount,
   getGroupStandingsForCompPure,
+  isCompFinished,
   newCompId,
   resolveCompetitionFixturesPure
 } from '../engines/fixtureEngine';
@@ -137,7 +139,8 @@ export function fillPresetFromComp(comp: Competition, fx: Fixture | null = null)
 
   if (fx) {
     preset.fixtureId = fx.id;
-    preset.stageLabel = fx.roundLabel || '';
+    const courtTxt = fx.court ? ` · Cancha ${fx.court}` : '';
+    preset.stageLabel = fx.roundLabel ? `${fx.roundLabel}${courtTxt}` : courtTxt.replace(/^ · /, '');
     if (fx.team0) {
       preset.teams[0].players = [fx.team0.players?.[0] || 'DRIVE 1', fx.team0.players?.[1] || 'REVÉS 1'];
       if (fx.team0.color) preset.teams[0].color = fx.team0.color;
@@ -153,8 +156,13 @@ export function fillPresetFromComp(comp: Competition, fx: Fixture | null = null)
 
 export function startFixtureMatch(compId: string, fxId: string): void {
   const comp = getCompById(compId);
-  const fx = (comp?.fixtures || []).find((f) => f.id === fxId);
-  if (!comp || !fx || !fx.team0 || !fx.team1) {
+  if (!comp) return;
+  if (isCompFinished(comp)) {
+    showToast('El torneo está finalizado. Reabrilo para jugar nuevos cruces.');
+    return;
+  }
+  const fx = (comp.fixtures || []).find((f) => f.id === fxId);
+  if (!fx || !fx.team0 || !fx.team1) {
     showToast('Este cruce todavía espera parejas definidas');
     return;
   }
@@ -212,7 +220,7 @@ export function buildQuickScoreState(opts: {
       compId: cid || null,
       fixtureId: fxid || null,
       fixtureKey: opts.fixtureKey,
-      stageLabel: fx?.roundLabel || 'Cruce',
+      stageLabel: `${fx?.roundLabel || 'Cruce'}${fx?.court ? ` · Cancha ${fx.court}` : ''}`,
       teams,
       selPartIds: ['', ''],
       useManualTeams: false,
@@ -292,6 +300,12 @@ export function openQuickScoreModal(opts: {
   fixtureKey?: string;
   compId?: string | null;
 } = {}): void {
+  const targetCid = opts.compId || (opts.fixtureKey ? String(opts.fixtureKey).split(':')[0] : '');
+  const targetComp = targetCid ? getCompById(targetCid) : null;
+  if (targetComp && isCompFinished(targetComp)) {
+    showToast('El torneo está finalizado. Reabrilo para cargar más resultados.');
+    return;
+  }
   store.ui.quickScoreFixtureId = opts.fixtureKey || null;
   store.ui.quickScoreState = buildQuickScoreState({
     mode: opts.mode,
@@ -786,6 +800,9 @@ export function upsertCompFromSetupData(
       gameBonusPts: Number.isFinite(Number(meta.gb)) ? Number(meta.gb) : meta.f === 'proyecto_padel' ? 1 : 0,
       numGroups: Number(meta.ng) || 2,
       advancePerGroup: Number(meta.ag) || 2,
+      ...(meta.cc !== undefined ? { courtsCount: clampCourtsCount(meta.cc, 4) } : {}),
+      status: meta.st === 'finished' ? 'finished' : 'active',
+      ...(meta.fa ? { finishedAt: Number(meta.fa) } : {}),
       defaultRules: meta.dr || {},
       participants: Array.isArray(setupData.pt) ? setupData.pt : [],
       fixtures: hydrateFixturesFromCompact(setupData.fx),
@@ -808,6 +825,9 @@ export function upsertCompFromSetupData(
       if (Number.isFinite(Number(meta.gb))) comp.gameBonusPts = Number(meta.gb);
       comp.numGroups = Number(meta.ng) || comp.numGroups;
       comp.advancePerGroup = Number(meta.ag) || comp.advancePerGroup;
+      if (meta.cc !== undefined) comp.courtsCount = clampCourtsCount(meta.cc, 4);
+      comp.status = meta.st === 'finished' ? 'finished' : 'active';
+      comp.finishedAt = meta.st === 'finished' ? Number(meta.fa) || comp.finishedAt || Date.now() : null;
       if (meta.dr) comp.defaultRules = meta.dr;
     }
 
@@ -932,6 +952,14 @@ export function applyIncomingCompEvent(evt: Record<string, any> | null, sourceSy
         const pt = comp.participants.find((p) => p.id === evt.pid);
         if (pt && pt.group !== evt.group) {
           pt.group = evt.group || null;
+          pt.groupManual = !!evt.group;
+          saveCompetitions();
+          changed = true;
+        }
+      } else if (evt.op === 'pause') {
+        const pt = comp.participants.find((p) => p.id === evt.pid);
+        if (pt) {
+          pt.paused = evt.group === '1';
           saveCompetitions();
           changed = true;
         }

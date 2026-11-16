@@ -240,4 +240,54 @@ describe('shareCodec', () => {
       winners: 42
     });
   });
+
+  it('preserves courtsCount, finished status, fixture court, resting players, and team numbers in compact sync setup', () => {
+    const comp: Competition = {
+      id: 'comp-pp',
+      kind: 'tournament',
+      name: 'PRO PÁDEL Noche',
+      format: 'proyecto_padel',
+      rankingMode: 'individual',
+      winPts: 3,
+      drawPts: 2,
+      lossPts: 1,
+      gameBonusPts: 1,
+      courtsCount: 4,
+      status: 'finished',
+      finishedAt: 1700000000000,
+      participants: [{ id: 'p1', type: 'player', name: 'Walter', color: '#d4af37' }],
+      fixtures: [
+        {
+          id: 'fx-c1',
+          phase: 'social',
+          roundIdx: 0,
+          roundLabel: 'Ronda 1',
+          slotIdx: 0,
+          group: null,
+          court: 2,
+          resting: ['Sofía', 'Lucas'],
+          team0: { players: ['Walter', 'Mati'], color: '#d4af37', teamNum: 1 },
+          team1: { players: ['Juan', 'Pedro'], color: '#2f8cff', teamNum: 7 },
+          source0: null,
+          source1: null,
+          matchId: null,
+          winnerSide: null,
+          isBye: false
+        }
+      ]
+    };
+
+    const compact = buildCompactSetupData(comp);
+    expect(compact.c.cc).toBe(4);
+    expect(compact.c.st).toBe('finished');
+    expect(compact.c.fa).toBe(1700000000000);
+    expect(compact.fx[0].ct).toBe(2);
+    expect(compact.fx[0].rp).toEqual(['Sofía', 'Lucas']);
+
+    const hydrated = hydrateFixturesFromCompact(compact.fx);
+    expect(hydrated[0].court).toBe(2);
+    expect(hydrated[0].resting).toEqual(['Sofía', 'Lucas']);
+    expect(hydrated[0].team0?.teamNum).toBe(1);
+    expect(hydrated[0].team1?.teamNum).toBe(7);
+  });
 });

@@ -10,7 +10,15 @@ import {
   isProyectoPadelComp,
   sortStandingsRows
 } from '../engines/eloEngine';
-import { participantToTeamObj } from '../engines/fixtureEngine';
+import {
+  getCompCourtsCount,
+  getSocialCycleRoundCount,
+  isCompFinished,
+  isSocialDrawComp,
+  MAX_COMP_COURTS,
+  MIN_COMP_COURTS,
+  participantToTeamObj
+} from '../engines/fixtureEngine';
 import { computeMatch } from '../engines/matchEngine';
 import {
   buildQuickScoreState,
@@ -303,6 +311,12 @@ export function renderStandingsSectionHtml(
   return tableHtml + cardsHtml;
 }
 
+function renderTeamLabelWithNumHtml(team: { players?: string[]; label?: string; teamNum?: number | null } | null | undefined): string {
+  if (!team) return '';
+  const nameTxt = esc(team.label || formatPairLabel(team.players?.[0], team.players?.[1]));
+  return team.teamNum ? `<span class="fx-team-num">#${team.teamNum}</span>${nameTxt}` : nameTxt;
+}
+
 export function getCompFormatLabel(comp: Competition | null | undefined): string {
   if (!comp) return '';
   if (comp.format === 'proyecto_padel') return '⚡ PRO PÁDEL';
@@ -345,6 +359,8 @@ export function renderCompetitions(): string {
             .map((c) => {
               const sc = getCompetitionScoringConfig(c);
               const isPP = isProyectoPadelComp(c);
+              const finished = isCompFinished(c);
+              const courts = getCompCourtsCount(c);
               const matches = getCompetitionMatches(c, true);
               const finCount = matches.filter((m) => m.status === 'finished').length;
               const pendingFx = (c.fixtures || []).filter((fx) => !fx.isBye && fx.team0 && fx.team1 && fx.winnerSide === null).length;
@@ -371,6 +387,8 @@ export function renderCompetitions(): string {
             <div class="comp-pills" style="margin-bottom:6px">
               <span class="badge ${isPP ? 'pp' : c.kind === 'league' ? 'league' : 'tourn'}">${isPP ? '⚡ PRO PÁDEL' : c.kind === 'league' ? '🏅 Liga' : '🏆 Torneo'}</span>
               ${!isPP ? `<span class="badge">${esc(getCompFormatLabel(c))}</span>` : `<span class="badge">👤 Individual · ELO Principal</span>`}
+              <span class="badge court">🏟️ ${courts} ${courts === 1 ? 'cancha' : 'canchas'}</span>
+              ${finished ? `<span class="badge done">🏁 Finalizado</span>` : ''}
               <span class="badge">${esc(getCompScoringSummaryLabel(c, sc, true))}</span>
               ${c.syncCode ? `<span class="badge sync">📡 Sala #${esc(c.syncCode)}</span>` : ''}
             </div>
@@ -383,7 +401,7 @@ export function renderCompetitions(): string {
         </div>
 
         <div style="font-size:12.5px;color:var(--tx2)">
-          ${(c.participants || []).length} inscriptos · ${finCount} partidos jugados${pendingFx ? ` · ${pendingFx} cruces pendientes` : ''}
+          ${(c.participants || []).length} inscriptos · ${finCount} partidos jugados${pendingFx && !finished ? ` · ${pendingFx} cruces pendientes` : ''}
         </div>
 
         ${
@@ -391,18 +409,20 @@ export function renderCompetitions(): string {
             ? `<div class="comp-leader">🏆 Campeón: <b>${esc(champTeam.label || formatPairLabel(champTeam.players?.[0], champTeam.players?.[1]))}</b></div>`
             : leader && leader.matches > 0
               ? isPP
-                ? `<div class="comp-leader">🥇 Líder ELO: <b>${esc(leader.name)}</b> · ${leader.elo} ELO (${leader.pts} pts · ${leader.gamesWon || 0}G)</div>`
-                : `<div class="comp-leader">🥇 Líder: <b>${esc(leader.name)}</b> · ${leader.pts} pts · ${leader.elo} ELO (${leader.wins}V)</div>`
+                ? `<div class="comp-leader">${finished ? '🏆 Ganador Final' : '🥇 Líder ELO'}: <b>${esc(leader.name)}</b> · ${leader.elo} ELO (${leader.pts} pts · ${leader.gamesWon || 0}G)</div>`
+                : `<div class="comp-leader">${finished ? '🏆 Campeón' : '🥇 Líder'}: <b>${esc(leader.name)}</b> · ${leader.pts} pts · ${leader.elo} ELO (${leader.wins}V)</div>`
               : ''
         }
 
         <div class="btn-row" style="margin-top:2px">
-          <button class="btn primary sm" data-open-comp="${esc(c.id)}">${isPP ? 'Gestionar / Cargar' : 'Gestionar'}</button>
+          <button class="btn primary sm" data-open-comp="${esc(c.id)}">${isPP ? 'Gestionar / Sorteo' : 'Gestionar'}</button>
           <button class="btn sm" data-open-comp-rank="${esc(c.id)}">${ICONS.trophy} Ver Ranking</button>
           ${
-            isPP
-              ? `<button class="btn sm" data-act="open-comp-quick-score" data-comp="${esc(c.id)}">${ICONS.check} Cargar Resultado</button>`
-              : `<button class="btn sm" data-play-in-comp="${esc(c.id)}">${ICONS.play} Jugar aquí</button>`
+            !finished
+              ? isPP
+                ? `<button class="btn sm" data-act="open-comp-quick-score" data-comp="${esc(c.id)}">${ICONS.check} Cargar Resultado</button>`
+                : `<button class="btn sm" data-play-in-comp="${esc(c.id)}">${ICONS.play} Jugar aquí</button>`
+              : ''
           }
         </div>
       </div>`;
@@ -428,6 +448,7 @@ export function renderCompetitions(): string {
 export function renderBracketHtml(comp: Competition): string {
   const playoffs = (comp.fixtures || []).filter((f) => f.phase === 'playoff');
   if (!playoffs.length) return '';
+  const finished = isCompFinished(comp);
 
   const roundsMap = new Map<number, Fixture[]>();
   playoffs.forEach((fx) => {
@@ -463,7 +484,7 @@ export function renderBracketHtml(comp: Competition): string {
     return `
       <div class="b-team ${isWin ? 'win' : ''}">
         <span class="bar" style="--c:${esc(team.color || '#d4af37')}"></span>
-        <span class="nm">${esc(team.label || formatPairLabel(team.players?.[0], team.players?.[1]))}</span>
+        <span class="nm">${renderTeamLabelWithNumHtml(team)}</span>
         ${sc ? `<span class="sc">${esc(sc)}</span>` : ''}
       </div>`;
   };
@@ -482,9 +503,10 @@ export function renderBracketHtml(comp: Competition): string {
           <div class="bracket-matches">
             ${list
               .map((fx) => {
-                const playable = !fx.isBye && fx.team0 && fx.team1 && fx.winnerSide === null;
+                const playable = !finished && !fx.isBye && fx.team0 && fx.team1 && fx.winnerSide === null;
                 return `
               <div class="bracket-match ${fx.winnerSide !== null ? 'done' : ''}">
+                ${fx.court && !fx.isBye ? `<div class="b-court-hdr">🏟️ Cancha ${fx.court}</div>` : ''}
                 ${renderSlotTeam(fx, 0)}
                 ${renderSlotTeam(fx, 1)}
                 <div class="b-actions">
@@ -515,6 +537,8 @@ export function renderBracketHtml(comp: Competition): string {
 export function renderFixtureListHtml(comp: Competition, fixturesList: Fixture[], title: string): string {
   if (!fixturesList.length) return '';
   const { activeMatch } = store;
+  const finished = isCompFinished(comp);
+  const isPP = isProyectoPadelComp(comp);
   const groups = new Map<string, Fixture[]>();
   fixturesList.forEach((fx) => {
     const key = fx.roundLabel || 'Cruces';
@@ -523,39 +547,194 @@ export function renderFixtureListHtml(comp: Competition, fixturesList: Fixture[]
   });
 
   let html = `<div class="sec-t">${esc(title)}</div>`;
-  groups.forEach((items, label) => {
+  groups.forEach((rawItems, label) => {
+    const items = rawItems.slice().sort((a, b) => (a.court ?? a.slotIdx) - (b.court ?? b.slotIdx));
+    const restingNames = Array.from(new Set(items.flatMap((x) => x.resting || []).filter(Boolean)));
     html += `<div class="fx-round-hdr"><span>${esc(label)}</span><small class="muted">${items.filter((x) => x.winnerSide !== null).length}/${items.length}</small></div>`;
+    if (restingNames.length) {
+      html += `<div class="fx-rest-row"><span>💤 Descansan:</span> ${restingNames.map((nm) => `<span class="fx-rest-chip">${esc(nm)}</span>`).join('')}</div>`;
+    }
     html += items
       .map((fx) => {
         const sc = formatFixtureScoreSummary(fx);
         const isLiveFx = fx.matchId && activeMatch && activeMatch.id === fx.matchId && activeMatch.status === 'playing';
-        const playable = !fx.isBye && fx.team0 && fx.team1 && fx.winnerSide === null;
+        const playable = !finished && !fx.isBye && fx.team0 && fx.team1 && fx.winnerSide === null;
         return `
       <div class="fx-card">
         <div class="fx-teams">
+          ${fx.court && !fx.isBye ? `<div style="margin-bottom:2px"><span class="fx-court-pill">🏟️ Cancha ${fx.court}</span></div>` : ''}
           <div class="fx-team-row ${fx.winnerSide === 0 ? 'win' : ''}">
             <span class="dot" style="--c:${esc(fx.team0?.color || '#d4af37')}"></span>
-            <span>${esc(fx.team0 ? fx.team0.label || formatPairLabel(fx.team0.players?.[0], fx.team0.players?.[1]) : fx.isBye ? 'BYE' : 'Por definir')}</span>
+            <span>${fx.team0 ? renderTeamLabelWithNumHtml(fx.team0) : fx.isBye ? 'BYE' : 'Por definir'}</span>
             ${sc.s0 ? `<span class="fx-sc">${esc(sc.s0)}</span>` : ''}
           </div>
           <div class="fx-team-row ${fx.winnerSide === 1 ? 'win' : ''}">
             <span class="dot" style="--c:${esc(fx.team1?.color || '#2f8cff')}"></span>
-            <span>${esc(fx.team1 ? fx.team1.label || formatPairLabel(fx.team1.players?.[0], fx.team1.players?.[1]) : fx.isBye ? 'BYE' : 'Por definir')}</span>
+            <span>${fx.team1 ? renderTeamLabelWithNumHtml(fx.team1) : fx.isBye ? 'BYE' : 'Por definir'}</span>
             ${sc.s1 ? `<span class="fx-sc">${esc(sc.s1)}</span>` : ''}
           </div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           ${isLiveFx ? `<span class="badge live">En juego</span>` : ''}
-          ${playable ? `<button class="btn primary sm" data-play-fixture="${esc(comp.id)}:${esc(fx.id)}">${ICONS.play} Jugar</button>` : ''}
-          ${playable ? `<button class="btn sm" data-quick-score="${esc(comp.id)}:${esc(fx.id)}">${ICONS.check} Resultado</button>` : ''}
+          ${
+            playable
+              ? isPP
+                ? `<button class="btn primary sm" data-quick-score="${esc(comp.id)}:${esc(fx.id)}">${ICONS.check} Resultado</button>
+                   <button class="btn sm" data-play-fixture="${esc(comp.id)}:${esc(fx.id)}">${ICONS.play} Jugar</button>`
+                : `<button class="btn primary sm" data-play-fixture="${esc(comp.id)}:${esc(fx.id)}">${ICONS.play} Jugar</button>
+                   <button class="btn sm" data-quick-score="${esc(comp.id)}:${esc(fx.id)}">${ICONS.check} Resultado</button>`
+              : ''
+          }
           ${fx.matchId ? `<button class="btn sm" data-open-stats="${esc(fx.matchId)}">${ICONS.chart} Detalles</button>` : ''}
-          ${!fx.matchId && !fx.isBye ? `<button class="icon-btn" data-del-fixture="${esc(comp.id)}:${esc(fx.id)}" title="Quitar cruce" style="width:34px;height:34px">${ICONS.trash}</button>` : ''}
+          ${!finished && !fx.matchId && !fx.isBye ? `<button class="icon-btn" data-del-fixture="${esc(comp.id)}:${esc(fx.id)}" title="Quitar cruce" style="width:34px;height:34px">${ICONS.trash}</button>` : ''}
         </div>
       </div>`;
       })
       .join('');
   });
   return html;
+}
+
+function renderCourtsSelectOptionsHtml(selectedCourts: number): string {
+  const options: string[] = [];
+  for (let n = MIN_COMP_COURTS; n <= MAX_COMP_COURTS; n++) {
+    options.push(`<option value="${n}" ${selectedCourts === n ? 'selected' : ''}>${n} ${n === 1 ? 'cancha' : 'canchas'}</option>`);
+  }
+  return options.join('');
+}
+
+function renderFixturesPanelHtml(comp: Competition): string {
+  const fixtures = comp.fixtures || [];
+  const playoffFx = fixtures.filter((f) => f.phase === 'playoff');
+  const nonPlayoffFx = fixtures.filter((f) => f.phase !== 'playoff');
+  const parts = comp.participants || [];
+  const finished = isCompFinished(comp);
+  const courts = getCompCourtsCount(comp);
+  const isSocial = isSocialDrawComp(comp);
+  const nextRoundNum = fixtures.reduce((mx, f) => Math.max(mx, f.roundIdx), -1) + 2;
+
+  let controlsCardHtml = '';
+  if (finished) {
+    controlsCardHtml = `
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div>
+            <h3 style="margin-bottom:4px">🏁 El torneo terminó</h3>
+            <small class="muted">Los sorteos están cerrados y no se generan más encuentros.</small>
+          </div>
+          <button class="btn sm" data-act="reopen-comp" data-comp="${esc(comp.id)}">🔓 Reabrir Torneo</button>
+        </div>
+      </div>`;
+  } else if (isSocial) {
+    const activePlayers = parts.filter((p) => p.type === 'player' && !p.paused && (p.name || '').trim());
+    const needPlayers = activePlayers.length < 4;
+    const courtsUsed = Math.min(courts, Math.floor(activePlayers.length / 4));
+    const restingCount = Math.max(0, activePlayers.length - courtsUsed * 4);
+    const cycleRounds = getSocialCycleRoundCount(activePlayers.length, courts);
+
+    controlsCardHtml = `
+      <div class="card" style="margin-bottom:14px">
+        <div class="draw-hdr-row">
+          <h3>🎲 Sorteo Social · Parejas y Canchas</h3>
+          <label class="draw-courts-ctl">
+            <span>Canchas:</span>
+            <select class="inp" data-set-comp-courts="${esc(comp.id)}">${renderCourtsSelectOptionsHtml(courts)}</select>
+          </label>
+        </div>
+        <div class="draw-summary-bar">
+          ${
+            needPlayers
+              ? `Agregá al menos <b>4 jugadores activos</b> en «Inscriptos» para empezar a sortear parejas.`
+              : `<b>${activePlayers.length}</b> jugadores activos · <b>${courtsUsed}</b> ${courtsUsed === 1 ? 'cancha en uso' : 'canchas en uso'} → <b>${courtsUsed}</b> ${courtsUsed === 1 ? 'partido' : 'partidos'} por ronda${restingCount ? ` (<b>${restingCount}</b> descansan por rotación)` : ' (juegan todos)'}.`
+          }
+        </div>
+        <div class="btn-row">
+          <button class="btn primary sm" data-act="gen-social-round" data-comp="${esc(comp.id)}" ${needPlayers ? 'disabled' : ''}>🎲 Sortear Ronda ${nextRoundNum}</button>
+          <button class="btn sm" data-act="gen-social-cycle" data-comp="${esc(comp.id)}" ${needPlayers ? 'disabled' : ''}>📅 Sortear Ciclo (${cycleRounds || 0} rondas)</button>
+          <button class="btn sm" data-act="open-add-fixture" data-comp="${esc(comp.id)}">${ICONS.plus} Partido manual</button>
+          <button class="btn sm" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Resultado</button>
+          <button class="btn finish-btn sm" data-act="finish-comp" data-comp="${esc(comp.id)}">🏁 El torneo terminó</button>
+        </div>
+      </div>`;
+  } else {
+    const activePairs = parts.filter((p) => !p.paused);
+    const needParts = activePairs.length < 2;
+    const isOpenPairs = comp.format === 'open';
+    const formatTitle =
+      comp.format === 'knockout'
+        ? '🎲 Sorteo de Llaves Eliminatorias'
+        : comp.format === 'groups_playoff'
+          ? '🎲 Sorteo de Grupos y Playoffs'
+          : isOpenPairs
+            ? '🎲 Sorteo de Fechas · Parejas Fijas'
+            : '🎲 Sorteo de Fixture (Todos contra Todos)';
+
+    controlsCardHtml = `
+      <div class="card" style="margin-bottom:14px">
+        <div class="draw-hdr-row">
+          <h3>${formatTitle}</h3>
+          <label class="draw-courts-ctl">
+            <span>Canchas:</span>
+            <select class="inp" data-set-comp-courts="${esc(comp.id)}">${renderCourtsSelectOptionsHtml(courts)}</select>
+          </label>
+        </div>
+        <div class="draw-summary-bar">
+          ${
+            needParts
+              ? `Agregá al menos <b>2 parejas</b> en «Inscriptos» para sortear encuentros.`
+              : `<b>${activePairs.length}</b> ${comp.rankingMode === 'individual' ? 'jugadores' : 'parejas'} (#1 a #${activePairs.length}) · <b>${courts}</b> ${courts === 1 ? 'cancha disponible' : 'canchas disponibles'}.`
+          }
+        </div>
+        <div class="btn-row">
+          ${
+            comp.format === 'league_rr' || comp.format === 'league_rr2'
+              ? `<button class="btn primary sm" data-act="gen-rr" data-comp="${esc(comp.id)}" ${needParts ? 'disabled' : ''}>🎲 ${fixtures.length ? 'Re-sortear Fixture' : 'Sortear Fixture al Azar'}</button>`
+              : ''
+          }
+          ${
+            comp.format === 'knockout'
+              ? `<button class="btn primary sm" data-act="gen-bracket" data-comp="${esc(comp.id)}" ${needParts ? 'disabled' : ''}>🎲 ${playoffFx.length ? 'Re-sortear Llaves' : 'Sortear Llaves al Azar'}</button>`
+              : ''
+          }
+          ${
+            comp.format === 'groups_playoff'
+              ? `
+            <button class="btn primary sm" data-act="gen-groups" data-comp="${esc(comp.id)}" ${activePairs.length < 4 ? 'disabled' : ''}>🎲 1. Sortear Grupos y Fechas</button>
+            <button class="btn sm" data-act="advance-playoffs" data-comp="${esc(comp.id)}" ${activePairs.length < 4 ? 'disabled' : ''}>${ICONS.trophy} 2. Clasificar a Llaves</button>
+          `
+              : ''
+          }
+          ${
+            isOpenPairs
+              ? `
+            <button class="btn primary sm" data-act="gen-pairs-round" data-comp="${esc(comp.id)}" ${needParts ? 'disabled' : ''}>🎲 Sortear Fecha ${nextRoundNum}</button>
+            <button class="btn sm" data-act="gen-rr" data-comp="${esc(comp.id)}" ${needParts ? 'disabled' : ''}>📅 Sortear Todos contra Todos</button>
+          `
+              : ''
+          }
+          <button class="btn sm" data-act="open-add-fixture" data-comp="${esc(comp.id)}">${ICONS.plus} Partido manual</button>
+          <button class="btn sm" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Resultado</button>
+          <button class="btn finish-btn sm" data-act="finish-comp" data-comp="${esc(comp.id)}">🏁 El torneo terminó</button>
+        </div>
+      </div>`;
+  }
+
+  return `
+    ${controlsCardHtml}
+    ${playoffFx.length ? `<div class="sec-t">Cuadro Eliminatorio (Playoffs)</div>${renderBracketHtml(comp)}` : ''}
+    ${renderFixtureListHtml(comp, nonPlayoffFx, comp.format === 'groups_playoff' ? 'Fase de Grupos' : isSocial ? 'Rondas Sorteadas' : 'Fixture / Fechas')}
+    ${
+      !fixtures.length
+        ? `<div class="empty">${ICONS.calendar}<br>${
+            finished
+              ? 'Este torneo terminó sin cruces sorteados.'
+              : isSocial
+                ? 'Todavía no sorteaste ninguna ronda.<br>Cargá los jugadores en «Inscriptos» y tocá «Sortear Ronda 1» arriba.'
+                : 'Todavía no hay cruces sorteados.<br>Tocá el botón de sorteo automático arriba o agregá un partido manual.'
+          }</div>`
+        : ''
+    }
+  `;
 }
 
 export function renderCompDetail(): string {
@@ -569,9 +748,11 @@ export function renderCompDetail(): string {
   }
   ui.compId = comp.id;
   const isPP = isProyectoPadelComp(comp);
+  const finished = isCompFinished(comp);
+  const courts = getCompCourtsCount(comp);
+  const isSocial = isSocialDrawComp(comp);
   const fixtures = comp.fixtures || [];
-  let tab = ui.compTab || 'standings';
-  if (isPP && tab === 'fixtures' && !fixtures.length) tab = 'standings';
+  const tab = ui.compTab || 'standings';
   const sc = getCompetitionScoringConfig(comp);
   const parts = comp.participants || [];
   const matches = getCompetitionMatches(comp, true);
@@ -597,6 +778,10 @@ export function renderCompDetail(): string {
     sortKey,
     players
   };
+
+  const nextRoundNum = fixtures.reduce((mx, f) => Math.max(mx, f.roundIdx), -1) + 2;
+  const activePlayerCount = parts.filter((p) => p.type === 'player' && !p.paused).length;
+  const leader = players[0];
 
   let bodyHtml = '';
 
@@ -636,7 +821,7 @@ export function renderCompDetail(): string {
             ? 'Ranking General + ELO del Torneo'
             : 'Tabla de Posiciones + ELO',
         emptyText: isPP
-          ? 'Tocá «⚡ Cargar Resultado Final» arriba para sumar el primer resultado (ej: Lucía-Juan vs Marcos-Noelia 4-2) o agregá inscriptos.'
+          ? 'Agregá jugadores en «Inscriptos», sorteá una ronda o tocá «Cargar Resultado Final».'
           : 'Inscribí participantes o jugá un partido en esta competencia para ver la tabla.'
       })}
       ${
@@ -650,56 +835,23 @@ export function renderCompDetail(): string {
       }
     `;
   } else if (tab === 'fixtures') {
-    const playoffFx = fixtures.filter((f) => f.phase === 'playoff');
-    const nonPlayoffFx = fixtures.filter((f) => f.phase !== 'playoff');
-    const needParts = parts.length < 2;
-
-    bodyHtml = `
-      <div class="card" style="margin-bottom:14px">
-        <h3>Generar y Gestionar Cruces</h3>
-        <div class="btn-row">
-          ${
-            comp.format === 'league_rr' || comp.format === 'league_rr2'
-              ? `
-            <button class="btn primary sm" data-act="gen-rr" data-comp="${esc(comp.id)}" ${needParts ? 'disabled' : ''}>${ICONS.calendar} ${fixtures.length ? 'Regenerar Fixture' : 'Generar Fixture (Fechas)'}</button>
-          `
-              : ''
-          }
-          ${
-            comp.format === 'knockout'
-              ? `
-            <button class="btn primary sm" data-act="gen-bracket" data-comp="${esc(comp.id)}" ${needParts ? 'disabled' : ''}>${ICONS.trophy} ${playoffFx.length ? 'Regenerar Cuadro' : 'Generar Cuadro Eliminatorio'}</button>
-          `
-              : ''
-          }
-          ${
-            comp.format === 'groups_playoff'
-              ? `
-            <button class="btn primary sm" data-act="gen-groups" data-comp="${esc(comp.id)}" ${parts.length < 4 ? 'disabled' : ''}>${ICONS.calendar} 1. Sortear Grupos y Fechas</button>
-            <button class="btn sm" data-act="advance-playoffs" data-comp="${esc(comp.id)}" ${parts.length < 4 ? 'disabled' : ''}>${ICONS.trophy} 2. Clasificar a Llaves</button>
-          `
-              : ''
-          }
-          <button class="btn sm" data-act="open-add-fixture" data-comp="${esc(comp.id)}">${ICONS.plus} Partido manual</button>
-          <button class="btn sm" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Resultado</button>
-        </div>
-        ${needParts ? `<small class="muted" style="display:block;margin-top:8px">Agregá al menos 2 participantes en la pestaña "Inscriptos" para generar cruces automáticos.</small>` : ''}
-      </div>
-
-      ${playoffFx.length ? `<div class="sec-t">Cuadro Eliminatorio (Playoffs)</div>${renderBracketHtml(comp)}` : ''}
-      ${renderFixtureListHtml(comp, nonPlayoffFx, comp.format === 'groups_playoff' ? 'Fase de Grupos' : 'Fixture / Fechas')}
-      ${!fixtures.length ? `<div class="empty">${ICONS.calendar}<br>Todavía no hay cruces generados.<br>Generá el fixture automático arriba o agregá un partido manual / resultado directo.</div>` : ''}
-    `;
+    bodyHtml = renderFixturesPanelHtml(comp);
   } else if (tab === 'matches') {
     bodyHtml = `
-      <div class="btn-row" style="margin-bottom:14px">
-        ${
-          isPP
-            ? `<button class="btn primary" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Resultado Final</button>`
-            : `<button class="btn primary" data-play-in-comp="${esc(comp.id)}">${ICONS.play} Jugar en vivo</button>
-             <button class="btn" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Sets / Games</button>`
-        }
-      </div>
+      ${
+        !finished
+          ? `
+        <div class="btn-row" style="margin-bottom:14px">
+          ${
+            isPP
+              ? `<button class="btn primary" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Resultado Final</button>`
+              : `<button class="btn primary" data-play-in-comp="${esc(comp.id)}">${ICONS.play} Jugar en vivo</button>
+                 <button class="btn" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Sets / Games</button>`
+          }
+        </div>
+      `
+          : ''
+      }
       ${matches.length ? matches.map(renderMatchCard).join('') : `<div class="empty">${ICONS.ball}<br>Aún no se registraron partidos en este torneo.</div>`}
     `;
   } else if (tab === 'participants') {
@@ -710,63 +862,92 @@ export function renderCompDetail(): string {
 
     bodyHtml = `
       ${datalist}
-      <div class="card">
-        <h3>Inscribir ${isIndOnly ? 'Jugador' : 'Pareja / Jugador'}</h3>
-        ${
-          isIndOnly
-            ? `
-          <div class="row wrap">
-            <div class="field" style="flex:1 1 200px">
-              <label>Nombre del Jugador</label>
-              <input class="inp" id="part-ind-name" list="known-players" placeholder="Ej: Matías">
+      ${
+        finished
+          ? `
+        <div class="card" style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+            <div>
+              <h3 style="margin-bottom:4px">🏁 Lista de inscriptos cerrada</h3>
+              <small class="muted">El torneo finalizó. Reabrilo si necesitás modificar jugadores o parejas.</small>
             </div>
-            ${
-              comp.format === 'groups_playoff'
-                ? `
-              <div class="field" style="flex:0 0 110px">
-                <label>Grupo</label>
-                <select class="inp" id="part-group">
-                  <option value="">Auto</option>
-                  ${gLetters.map((g) => `<option value="${g}">Grupo ${g}</option>`).join('')}
-                </select>
-              </div>`
-                : ''
-            }
+            <button class="btn sm" data-act="reopen-comp" data-comp="${esc(comp.id)}">🔓 Reabrir Torneo</button>
           </div>
-        `
-            : `
-          <div class="row wrap">
-            <div class="field">
-              <label>Drive (Derecha)</label>
-              <input class="inp" id="part-p0" list="known-players" placeholder="Jugador 1">
-            </div>
-            <div class="field">
-              <label>Revés (Izquierda)</label>
-              <input class="inp" id="part-p1" list="known-players" placeholder="Jugador 2">
-            </div>
-            ${
-              comp.format === 'groups_playoff'
-                ? `
-              <div class="field" style="flex:0 0 100px">
-                <label>Grupo</label>
-                <select class="inp" id="part-group">
-                  <option value="">Auto</option>
-                  ${gLetters.map((g) => `<option value="${g}">Grupo ${g}</option>`).join('')}
-                </select>
-              </div>`
-                : ''
-            }
-          </div>
-        `
-        }
-        <div class="field" style="margin-top:8px">
-          <label>Color identificatorio</label>
-          <select class="inp" id="part-color">
-            ${COLORS.map((c) => `<option value="${c.c}">${esc(c.n)}</option>`).join('')}
-          </select>
         </div>
-        <button class="btn primary block" style="margin-top:12px" data-act="add-part" data-comp="${esc(comp.id)}">${ICONS.plus} Agregar Inscripto</button>
-      </div>
+      `
+          : `
+        <div class="card">
+          <h3>Inscribir ${isIndOnly ? 'Jugador' : 'Pareja / Jugador'}</h3>
+          ${
+            isIndOnly
+              ? `
+            <div class="row wrap">
+              <div class="field" style="flex:1 1 200px">
+                <label>Nombre del Jugador</label>
+                <input class="inp" id="part-ind-name" list="known-players" data-enter-add-part="${esc(comp.id)}" placeholder="Ej: Matías (Enter agrega)">
+              </div>
+              ${
+                comp.format === 'groups_playoff'
+                  ? `
+                <div class="field" style="flex:0 0 110px">
+                  <label>Grupo</label>
+                  <select class="inp" id="part-group">
+                    <option value="">Auto</option>
+                    ${gLetters.map((g) => `<option value="${g}">Grupo ${g}</option>`).join('')}
+                  </select>
+                </div>`
+                  : ''
+              }
+            </div>
+          `
+              : `
+            <div class="row wrap">
+              <div class="field">
+                <label>Drive (Derecha)</label>
+                <input class="inp" id="part-p0" list="known-players" placeholder="Jugador 1">
+              </div>
+              <div class="field">
+                <label>Revés (Izquierda)</label>
+                <input class="inp" id="part-p1" list="known-players" data-enter-add-part="${esc(comp.id)}" placeholder="Jugador 2">
+              </div>
+              ${
+                comp.format === 'groups_playoff'
+                  ? `
+                <div class="field" style="flex:0 0 100px">
+                  <label>Grupo</label>
+                  <select class="inp" id="part-group">
+                    <option value="">Auto</option>
+                    ${gLetters.map((g) => `<option value="${g}">Grupo ${g}</option>`).join('')}
+                  </select>
+                </div>`
+                  : ''
+              }
+            </div>
+          `
+          }
+          <div class="field" style="margin-top:8px">
+            <label>Color identificatorio</label>
+            <select class="inp" id="part-color">
+              ${COLORS.map((c) => `<option value="${c.c}">${esc(c.n)}</option>`).join('')}
+            </select>
+          </div>
+          <button class="btn primary block" style="margin-top:12px" data-act="add-part" data-comp="${esc(comp.id)}">${ICONS.plus} Agregar Inscripto</button>
+          ${
+            isIndOnly
+              ? `
+            <details class="batch-part-box">
+              <summary>⚡ Carga rápida de varios jugadores (pegar lista)</summary>
+              <div style="margin-top:8px">
+                <textarea class="inp" id="part-batch-names" rows="3" placeholder="Ej: Walter, Mati, Lucía, Juan, Marcos, Noelia (separados por coma o uno por línea)"></textarea>
+                <button class="btn sm block" style="margin-top:8px" data-act="add-part-batch" data-comp="${esc(comp.id)}">${ICONS.plus} Cargar Lista Completa</button>
+              </div>
+            </details>
+          `
+              : ''
+          }
+        </div>
+      `
+      }
 
       <div class="sec-t">Lista de Inscriptos (${parts.length})</div>
       ${
@@ -774,13 +955,17 @@ export function renderCompDetail(): string {
           ? parts
               .map((pt, idx) => {
                 const label = pt.type === 'pair' ? formatPairLabel(pt.players?.[0], pt.players?.[1]) : pt.name || '';
+                const subTxt =
+                  pt.type === 'pair'
+                    ? `Equipo #${idx + 1} · Pareja fija`
+                    : `Jugador #${idx + 1}${pt.paused ? ' · En pausa (no entra al sorteo)' : ''}`;
                 return `
-        <div class="fx-card">
+        <div class="fx-card ${pt.paused ? 'part-paused' : ''}">
           <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
             <span style="width:10px;height:28px;border-radius:4px;background:${esc(pt.color || '#d4af37')};flex:none"></span>
             <div style="min-width:0">
-              <b style="font-size:15px;color:var(--tx)">${idx + 1}. ${esc(label)}</b>
-              <small style="display:block;color:var(--tx2)">${pt.type === 'pair' ? 'Pareja fija' : 'Individual'}</small>
+              <b style="font-size:15px;color:var(--tx)">${idx + 1}. ${esc(label)} ${pt.paused ? `<span class="badge">Pausado</span>` : ''}</b>
+              <small style="display:block;color:var(--tx2)">${subTxt}</small>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
@@ -797,16 +982,21 @@ export function renderCompDetail(): string {
                 : `<button class="pc-mini-btn" data-open-player-card="${esc(pt.name || '')}" title="Crear tarjeta de ${esc(pt.name || '')}">${ICONS.idCard} Tarjeta</button>`
             }
             ${
-              comp.format === 'groups_playoff'
+              !finished && isSocial
+                ? `<button class="btn sm" data-toggle-part-pause="${esc(comp.id)}:${esc(pt.id)}" title="${pt.paused ? 'Volver al sorteo' : 'Pausar en próximos sorteos'}">${pt.paused ? '▶ Activar' : '⏸ Pausa'}</button>`
+                : ''
+            }
+            ${
+              !finished && comp.format === 'groups_playoff'
                 ? `
               <select class="inp" style="width:auto;min-height:34px;padding:4px 8px;font-size:12px" data-set-part-group="${esc(comp.id)}:${esc(pt.id)}">
-                <option value="">Sin grupo</option>
+                <option value="">Auto</option>
                 ${gLetters.map((g) => `<option value="${g}" ${pt.group === g ? 'selected' : ''}>Grupo ${g}</option>`).join('')}
               </select>
             `
                 : ''
             }
-            <button class="icon-btn" data-del-part="${esc(comp.id)}:${esc(pt.id)}" title="Quitar inscripto" style="width:36px;height:36px">${ICONS.trash}</button>
+            ${!finished ? `<button class="icon-btn" data-del-part="${esc(comp.id)}:${esc(pt.id)}" title="Quitar inscripto" style="width:36px;height:36px">${ICONS.trash}</button>` : ''}
           </div>
         </div>`;
               })
@@ -827,9 +1017,11 @@ export function renderCompDetail(): string {
         <button class="icon-btn" data-open-comp-sync="${esc(comp.id)}" title="Sincronizar varios dispositivos (QR / Link)">${ICONS.qr}</button>
         <button class="icon-btn" data-edit-comp="${esc(comp.id)}" title="Editar">${ICONS.edit}</button>
         ${
-          isPP
-            ? `<button class="icon-btn" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}" title="Cargar resultado rápido">${ICONS.plus}</button>`
-            : `<button class="icon-btn" data-play-in-comp="${esc(comp.id)}" title="Jugar partido aquí">${ICONS.play}</button>`
+          !finished
+            ? isPP
+              ? `<button class="icon-btn" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}" title="Cargar resultado rápido">${ICONS.plus}</button>`
+              : `<button class="icon-btn" data-play-in-comp="${esc(comp.id)}" title="Jugar partido aquí">${ICONS.play}</button>`
+            : ''
         }
         <button class="icon-btn" data-del-comp="${esc(comp.id)}" title="Eliminar">${ICONS.trash}</button>
       </div>
@@ -837,20 +1029,44 @@ export function renderCompDetail(): string {
 
     <div class="comp-pills" style="justify-content:center;margin-bottom:10px">
       <span class="badge ${isPP ? 'pp' : comp.kind === 'league' ? 'league' : 'tourn'}">${isPP ? '⚡ PRO PÁDEL' : comp.kind === 'league' ? '🏅 Liga' : '🏆 Torneo'}</span>
-      ${!isPP ? `<span class="badge">${esc(getCompFormatLabel(comp))}</span>` : `<span class="badge">👤 Individual · Parejas Libres</span>`}
+      ${!isPP ? `<span class="badge">${esc(getCompFormatLabel(comp))}</span>` : `<span class="badge">👤 Individual · Parejas Rotativas</span>`}
+      <span class="badge court">🏟️ ${courts} ${courts === 1 ? 'cancha' : 'canchas'}</span>
+      ${finished ? `<span class="badge done">🏁 Finalizado</span>` : ''}
       <span class="badge">${esc(getCompScoringSummaryLabel(comp, sc, true))}</span>
       ${comp.syncCode ? `<span class="badge sync">📡 Sala #${esc(comp.syncCode)}</span>` : ''}
     </div>
 
     ${
-      isPP
+      finished
+        ? `
+      <div class="comp-finished-banner">
+        <div style="min-width:0;flex:1">
+          <b>🏁 Torneo Terminado</b>
+          <small>No se generan nuevos sorteos ni cruces.${leader && leader.matches > 0 ? ` Líder final: ${esc(leader.name)} (${isPP ? `${leader.elo} ELO` : `${leader.pts} pts`}).` : ''}</small>
+        </div>
+        <button class="btn sm" data-act="reopen-comp" data-comp="${esc(comp.id)}">🔓 Reabrir Torneo</button>
+      </div>
+    `
+        : ''
+    }
+
+    ${
+      isPP && !finished
         ? `
       <div class="pp-hero-bar">
         <div style="min-width:0;flex:1">
-          <b style="font-size:14px;color:var(--acc-ink);display:block">⚡ Mesa de Resultados · ELO Principal</b>
-          <small style="color:var(--tx2);font-size:12px;display:block">Cargá solo los marcadores finales (ej. Lucía-Juan vs Marcos-Noelia 4-2 o 3-3 empate).</small>
+          <b style="font-size:14px;color:var(--acc-ink);display:block">⚡ Mesa PRO PÁDEL · ELO Principal</b>
+          <small style="color:var(--tx2);font-size:12px;display:block">Cargá jugadores en Inscriptos y sorteá rondas automáticas por canchas, o cargá resultados sueltos.</small>
         </div>
-        <button class="btn primary" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Cargar Resultado Final</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${
+            activePlayerCount >= 4
+              ? `<button class="btn primary sm" data-act="gen-social-round" data-comp="${esc(comp.id)}">🎲 Sortear Ronda ${nextRoundNum}</button>`
+              : `<button class="btn sm" data-set-ctab="participants">👥 Cargar Jugadores</button>`
+          }
+          <button class="btn sm" data-act="open-comp-quick-score" data-comp="${esc(comp.id)}">${ICONS.check} Resultado</button>
+          <button class="btn finish-btn sm" data-act="finish-comp" data-comp="${esc(comp.id)}">🏁 Terminó</button>
+        </div>
       </div>
     `
         : ''
@@ -886,7 +1102,7 @@ export function renderCompDetail(): string {
 
     <div class="seg" style="margin-bottom:16px">
       <button class="${tab === 'standings' ? 'on' : ''}" data-set-ctab="standings">Tabla</button>
-      ${!isPP || fixtures.length > 0 ? `<button class="${tab === 'fixtures' ? 'on' : ''}" data-set-ctab="fixtures">Fixture</button>` : ''}
+      <button class="${tab === 'fixtures' ? 'on' : ''}" data-set-ctab="fixtures">${isSocial ? 'Sorteo / Rondas' : 'Fixture / Sorteo'}</button>
       <button class="${tab === 'matches' ? 'on' : ''}" data-set-ctab="matches">Partidos (${matches.length})</button>
       <button class="${tab === 'participants' ? 'on' : ''}" data-set-ctab="participants">Inscriptos (${parts.length})</button>
     </div>
@@ -1104,6 +1320,13 @@ export function renderCompetitionModals(): string {
           </div>`
             : ''
         }
+
+        <div class="field" style="margin-bottom:10px">
+          <label>Cantidad de canchas disponibles (1 a 10)</label>
+          <select class="inp" id="cf-courts">
+            ${renderCourtsSelectOptionsHtml(Number(f.courtsCount) || 4)}
+          </select>
+        </div>
 
         ${
           !isPP
@@ -1360,13 +1583,23 @@ export function renderCompetitionModals(): string {
     const comp = getCompById(ui.compId);
     if (!comp) return '';
     const pairParts = (comp.participants || []).filter((p) => p.type === 'pair');
+    const maxCourts = Math.max(MAX_COMP_COURTS, getCompCourtsCount(comp));
     return `
     <div class="scrim" data-close-comp-modal="1">
       <div class="sheet" style="max-width:500px">
         <h2>Agregar Cruce Manual</h2>
-        <div class="field" style="margin-bottom:10px">
-          <label>Etapa / Fecha</label>
-          <input class="inp" id="af-round" value="Fecha 1" placeholder="Ej: Fecha 1 / Semifinal">
+        <div class="row wrap" style="margin-bottom:10px">
+          <div class="field" style="flex:1 1 180px">
+            <label>Etapa / Fecha</label>
+            <input class="inp" id="af-round" value="Fecha 1" placeholder="Ej: Fecha 1 / Semifinal">
+          </div>
+          <div class="field" style="flex:0 0 140px">
+            <label>Cancha</label>
+            <select class="inp" id="af-court">
+              <option value="">Sin asignar</option>
+              ${Array.from({ length: maxCourts }, (_, i) => `<option value="${i + 1}">Cancha ${i + 1}</option>`).join('')}
+            </select>
+          </div>
         </div>
         ${
           pairParts.length >= 2

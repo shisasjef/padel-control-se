@@ -1,5 +1,5 @@
 /* Pádel Control SÉ · Service Worker (Offline-first PWA for GitHub Pages & standalone installs) */
-const APP_VERSION = 'padel-se-edad7a866a';
+const APP_VERSION = 'padel-se-ae60d5ba3a';
 const APP_CACHE = `${APP_VERSION}-shell`;
 const RUNTIME_CACHE = `${APP_VERSION}-runtime`;
 
@@ -11,8 +11,8 @@ const CORE_ASSETS = [
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",
   "./icons/apple-touch-icon.png",
-  "./assets/index-BCr-rFeY.css",
-  "./assets/index-D18sPvT8.js",
+  "./assets/index-BfCfaKvm.js",
+  "./assets/index-rLecd84U.css",
   "./assets/pro-padel-logo.webp"
 ];
 

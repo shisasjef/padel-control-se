@@ -405,11 +405,13 @@ export function renderNewMatch(): string {
 
   const compsOfKind = ctx === 'league' || ctx === 'tournament' ? competitionsList.filter((c) => c.kind === ctx) : [];
   const selComp = compsOfKind.find((c) => c.id === p.compId) || null;
-  const pendingFixtures = selComp
-    ? (selComp.fixtures || []).filter(
-        (f) => !f.isBye && f.team0 && f.team1 && !f.matchId && (f.winnerSide === null || f.winnerSide === undefined)
-      )
-    : [];
+  const selCompFinished = selComp?.status === 'finished';
+  const pendingFixtures =
+    selComp && !selCompFinished
+      ? (selComp.fixtures || []).filter(
+          (f) => !f.isBye && f.team0 && f.team1 && !f.matchId && (f.winnerSide === null || f.winnerSide === undefined)
+        )
+      : [];
   const activePickedFx = selComp && p.fixtureId ? (selComp.fixtures || []).find((f) => f.id === p.fixtureId) : null;
   const partPairs = (selComp?.participants || []).filter((pt) => pt.type === 'pair');
 
@@ -465,7 +467,7 @@ export function renderNewMatch(): string {
                     .map(
                       (fx) => `
                     <button type="button" class="pill" data-pick-fixture="${esc(selComp.id)}:${esc(fx.id)}">
-                      ${esc(fx.roundLabel)}: ${esc(fx.team0?.label || '')} vs ${esc(fx.team1?.label || '')}
+                      ${esc(fx.roundLabel)}${fx.court ? ` · C${fx.court}` : ''}: ${esc(fx.team0?.label || '')} vs ${esc(fx.team1?.label || '')}
                     </button>
                   `
                     )

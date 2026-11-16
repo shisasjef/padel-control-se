@@ -1,13 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import {
   advanceGroupsToPlayoffsPure,
+  clampCourtsCount,
   generateGroupsFixtures,
+  generateNextPairRoundFixtures,
   generatePlayoffBracket,
   generateRoundRobinFixtures,
+  generateSocialCycleFixtures,
+  generateSocialRoundFixtures,
+  isCompFinished,
+  isSocialDrawComp,
   resolveCompetitionFixturesPure,
   resolveQuickScoreOutcome
 } from '../src/engines/fixtureEngine';
 import type { Competition, Match, Participant } from '../src/types';
+
+function makeDeterministicRng(seed = 42): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
 
 function makePairParticipants(count: number): Participant[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -216,6 +230,158 @@ describe('fixtureEngine', () => {
       ok: true,
       winnerSide: 'draw',
       isDraw: true
+    });
+  });
+
+  it('draws social PRO PÁDEL rounds respecting 1..10 courts, fair resting rotation, paused players, and zero early partner repeats', () => {
+    expect(clampCourtsCount(0)).toBe(4);
+    expect(clampCourtsCount(1)).toBe(1);
+    expect(clampCourtsCount(25)).toBe(10);
+
+    const comp = makeComp({
+      format: 'proyecto_padel',
+      rankingMode: 'individual',
+      courtsCount: 4,
+      participants: makePlayerParticipants(18)
+    });
+    expect(isSocialDrawComp(comp)).toBe(true);
+    expect(isCompFinished(comp)).toBe(false);
+
+    const rng = makeDeterministicRng(1234);
+    const playCounts: Record<string, number> = {};
+    const partnerPairs = new Set<string>();
+
+    // Over 9 rounds with 18 players and 4 courts (16 play, 2 rest per round):
+    // total slots = 9 * 16 = 144 -> every player must play exactly 8 matches!
+    for (let r = 0; r < 9; r++) {
+      const roundFx = generateSocialRoundFixtures(comp, [], { courtsCount: 4, rng });
+      expect(roundFx).toHaveLength(4);
+      expect(roundFx.map((f) => f.court)).toEqual([1, 2, 3, 4]);
+      expect(roundFx[0].resting).toHaveLength(2);
+      expect(roundFx[0].roundIdx).toBe(r);
+      expect(roundFx[0].roundLabel).toBe(`Ronda ${r + 1}`);
+
+      const activeInRound = roundFx.flatMap((f) => [...(f.team0?.players || []), ...(f.team1?.players || [])]);
+      expect(new Set(activeInRound).size).toBe(16);
+      roundFx[0].resting!.forEach((restName) => {
+        expect(activeInRound).not.toContain(restName);
+      });
+
+      roundFx.forEach((f) => {
+        const p0 = [...(f.team0?.players || [])].sort().join('+');
+        const p1 = [...(f.team1?.players || [])].sort().join('+');
+        expect(partnerPairs.has(p0)).toBe(false);
+        expect(partnerPairs.has(p1)).toBe(false);
+        partnerPairs.add(p0);
+        partnerPairs.add(p1);
+      });
+
+      activeInRound.forEach((nm) => {
+        playCounts[nm] = (playCounts[nm] || 0) + 1;
+      });
+      comp.fixtures.push(...roundFx);
+    }
+
+    expect(Object.keys(playCounts)).toHaveLength(18);
+    expect(new Set(Object.values(playCounts))).toEqual(new Set([8]));
+
+    // Pausing a player excludes them from subsequent rounds
+    comp.participants[0].paused = true;
+    const afterPauseFx = generateSocialRoundFixtures(comp, [], { courtsCount: 4, rng });
+    const playersAfterPause = afterPauseFx.flatMap((f) => [...(f.team0?.players || []), ...(f.team1?.players || [])]);
+    expect(playersAfterPause).not.toContain('Player1');
+    expect(afterPauseFx[0].resting).not.toContain('Player1');
+  });
+
+  it('generates full social cycle for 16 players on 4 courts and avoids repeats from ad-hoc matches', () => {
+    const comp16 = makeComp({
+      format: 'proyecto_padel',
+      rankingMode: 'individual',
+      courtsCount: 4,
+      participants: makePlayerParticipants(16)
+    });
+    const cycle = generateSocialCycleFixtures(comp16, [], {
+      courtsCount: 4,
+      rng: makeDeterministicRng(99)
+    });
+    expect(cycle).toHaveLength(15 * 4); // 15 rounds * 4 courts
+
+    // Ad-hoc match between Player1 & Player2 prevents pairing them on the first drawn round for 4 players
+    const comp4 = makeComp({
+      format: 'proyecto_padel',
+      rankingMode: 'individual',
+      courtsCount: 2,
+      participants: makePlayerParticipants(4)
+    });
+    const adHoc = makeFinishedMatch('adhoc-1', 4, 2, comp4.id, '');
+    adHoc.teams = [
+      { players: ['Player1', 'Player2'], color: '#d4af37' },
+      { players: ['Player3', 'Player4'], color: '#2f8cff' }
+    ];
+    const nextFx = generateSocialRoundFixtures(comp4, [adHoc], {
+      courtsCount: 2,
+      rng: makeDeterministicRng(7)
+    });
+    expect(nextFx).toHaveLength(1);
+    expect(nextFx[0].court).toBe(1);
+    const pair0 = [...(nextFx[0].team0?.players || [])].sort().join('+');
+    const pair1 = [...(nextFx[0].team1?.players || [])].sort().join('+');
+    expect(pair0).not.toBe('Player1+Player2');
+    expect(pair1).not.toBe('Player3+Player4');
+  });
+
+  it('shuffles knockout brackets, groups, and fixed-pair rounds preserving team numbers and courts', () => {
+    const pairs6 = makePairParticipants(6);
+    const koComp = makeComp({ format: 'knockout', courtsCount: 3, participants: pairs6 });
+    const koFx = generatePlayoffBracket(koComp, null, {
+      shuffle: true,
+      courtsCount: 3,
+      rng: makeDeterministicRng(777)
+    });
+    const r0 = koFx.filter((f) => f.roundIdx === 0);
+    const playableR0 = r0.filter((f) => !f.isBye);
+    expect(r0).toHaveLength(4);
+    expect(playableR0).toHaveLength(2);
+    expect(playableR0.map((f) => f.court)).toEqual([1, 2]);
+    const assignedNums = r0
+      .flatMap((f) => [f.team0?.teamNum, f.team1?.teamNum])
+      .filter((n): n is number => typeof n === 'number')
+      .sort((a, b) => a - b);
+    expect(assignedNums).toEqual([1, 2, 3, 4, 5, 6]);
+
+    // Groups shuffle respects groupManual pins and assigns courts across groups
+    const pairs8 = makePairParticipants(8);
+    pairs8[0].group = 'B';
+    pairs8[0].groupManual = true;
+    const grpComp = makeComp({ format: 'groups_playoff', courtsCount: 4, participants: pairs8 });
+    const grpFx = generateGroupsFixtures(grpComp, 2, {
+      shuffle: true,
+      courtsCount: 4,
+      rng: makeDeterministicRng(55)
+    });
+    expect(pairs8[0].group).toBe('B');
+    expect(pairs8.filter((p) => p.group === 'A')).toHaveLength(4);
+    expect(pairs8.filter((p) => p.group === 'B')).toHaveLength(4);
+    const grpR0 = grpFx.filter((f) => f.roundIdx === 0);
+    expect(grpR0.map((f) => f.court)).toEqual([1, 2, 3, 4]);
+
+    // Open pairs round-by-round respects courtsCount and rotates resting pairs fairly
+    const openComp = makeComp({ format: 'open', courtsCount: 3, participants: pairs8 });
+    const openR1 = generateNextPairRoundFixtures(openComp, [], {
+      courtsCount: 3,
+      rng: makeDeterministicRng(12)
+    });
+    expect(openR1).toHaveLength(3);
+    expect(openR1.map((f) => f.court)).toEqual([1, 2, 3]);
+    expect(openR1[0].resting).toHaveLength(2);
+    openComp.fixtures.push(...openR1);
+    const openR2 = generateNextPairRoundFixtures(openComp, [], {
+      courtsCount: 3,
+      rng: makeDeterministicRng(13)
+    });
+    const playedR2Names = openR2.flatMap((f) => [f.team0?.label, f.team1?.label]);
+    openR1[0].resting!.forEach((restingPairLabel) => {
+      expect(playedR2Names).toContain(restingPairLabel);
     });
   });
 });
