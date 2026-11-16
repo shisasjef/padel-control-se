@@ -5570,6 +5570,39 @@ function publishLiveMatchState(m, immediate = false, force = false) {
   livePubTimer = setTimeout(() => flushLiveMatchPublish(force), delay);
 }
 
+function canUseMobileWebShare() {
+  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return false;
+  if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean') {
+    if (!navigator.userAgentData.mobile) return false;
+  }
+  const ua = navigator.userAgent || '';
+  if (/Windows|Win32|Win64|CrOS|X11/i.test(ua)) return false;
+  if (/Linux/i.test(ua) && !/Android/i.test(ua)) return false;
+  return /Android|iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+}
+
+/** Shares text/URL via native sheet only on mobile devices; copies to clipboard on desktop. */
+async function shareOrCopyText({ title, text, url, copyText, toastMsg, promptMsg }) {
+  if (canUseMobileWebShare()) {
+    try {
+      const payload = { title, text };
+      if (url) payload.url = url;
+      await navigator.share(payload);
+      return true;
+    } catch {}
+  }
+  const finalText = copyText != null ? copyText : (url ? `${text}\n${url}` : text);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(finalText);
+      showToast(toastMsg || 'Enlace copiado al portapapeles');
+      return true;
+    } catch {}
+  }
+  prompt(promptMsg || 'Copiá este texto para compartir:', finalText);
+  return false;
+}
+
 async function shareLiveMatchLink(m) {
   if (!m) return;
   publishLiveMatchState(m, true, true);
@@ -5578,22 +5611,14 @@ async function shareLiveMatchLink(m) {
   const url = `${baseUrl}#v=${code}`;
   const playersLine = `${teamLabel(m,0)} vs ${teamLabel(m,1)}`;
   const waText = `🎾 *Seguí mi partido en vivo:*\n*${playersLine}*\n${url}`;
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: `🎾 Seguí mi partido en vivo · ${playersLine}`,
-        text: `🎾 Seguí mi partido en vivo: ${playersLine}`,
-        url
-      });
-      return;
-    } catch {}
-  }
-  try {
-    await navigator.clipboard.writeText(waText);
-    showToast('📡 Invitación corta EN VIVO copiada para pegar en WhatsApp');
-  } catch {
-    prompt('Copiá este mensaje para compartir el partido en vivo:', waText);
-  }
+  await shareOrCopyText({
+    title: `🎾 Seguí mi partido en vivo · ${playersLine}`,
+    text: `🎾 Seguí mi partido en vivo: ${playersLine}`,
+    url,
+    copyText: waText,
+    toastMsg: '📡 Invitación corta EN VIVO copiada para pegar en WhatsApp',
+    promptMsg: 'Copiá este mensaje para compartir el partido en vivo:'
+  });
 }
 
 function applyIncomingLiveSnapshot(b64, isInitial = false) {
@@ -5836,22 +5861,14 @@ async function shareMatchLink(m) {
   const url = `${baseUrl}#s=${code}`;
   const playersLine = `${teamLabel(m,0)} vs ${teamLabel(m,1)}`;
   const waText = `🏆 *Resultado y estadísticas del partido:*\n*${playersLine}*\n${url}`;
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: `🏆 Estadísticas: ${playersLine}`,
-        text: `🏆 Resultado y estadísticas del partido: ${playersLine}`,
-        url
-      });
-      return;
-    } catch {}
-  }
-  try {
-    await navigator.clipboard.writeText(waText);
-    showToast('Enlace corto del partido copiado al portapapeles');
-  } catch {
-    prompt('Copiá este enlace para compartir el partido:', waText);
-  }
+  await shareOrCopyText({
+    title: `🏆 Estadísticas: ${playersLine}`,
+    text: `🏆 Resultado y estadísticas del partido: ${playersLine}`,
+    url,
+    copyText: waText,
+    toastMsg: 'Enlace corto del partido copiado al portapapeles',
+    promptMsg: 'Copiá este enlace para compartir el partido:'
+  });
 }
 
 // ==================== MULTI-DEVICE COMPETITION SYNC ENGINE ====================
@@ -6686,23 +6703,14 @@ function shareCompInvite(comp) {
   const kindWord = comp.kind === 'tournament' ? 'Torneo' : 'Liga';
   const sc = comp.syncCode;
   const text = `🎾 *${kindWord}: ${comp.name}* (Pádel Control SÉ)\n📡 Código de Sala: *#${sc}*\n\n📲 Abrí este enlace (o escaneá el QR) para conectarte con tu celular y sumar los resultados en vivo:\n${url}`;
-  if (navigator.share) {
-    navigator.share({
-      title: `🎾 Unirse a ${comp.name} (#${sc})`,
-      text,
-      url
-    }).catch(() => {});
-    return;
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      showToast('Enlace e invitación copiados para compartir');
-    }).catch(() => {
-      prompt('Copiá esta invitación para WhatsApp:', text);
-    });
-  } else {
-    prompt('Copiá esta invitación para WhatsApp:', text);
-  }
+  shareOrCopyText({
+    title: `🎾 Unirse a ${comp.name} (#${sc})`,
+    text,
+    url,
+    copyText: text,
+    toastMsg: 'Enlace e invitación copiados para compartir',
+    promptMsg: 'Copiá esta invitación para WhatsApp:'
+  });
 }
 
 function downloadCompSyncQR(comp) {
@@ -7367,21 +7375,13 @@ async function shareRankingText(overrideCtx = null) {
 
   const text = `🎾 *RANKING OFICIAL · PÁDEL CONTROL SÉ*\n🏆 *${rankingTitle}* · ID: #${rankingId}\n📌 _${ctx.subtitle || 'Sistema Mixto: Puntos + ELO'}_\n\n📊 *Tabla de Posiciones:*\n${topRows}${moreCount}\n\n📲 Ver tabla completa interactiva y marcador:\n${rankingUrl}`;
 
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: `🎾 Ranking: ${rankingTitle} (#${rankingId})`,
-        text
-      });
-      return;
-    } catch {}
-  }
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast('¡Ranking y enlace copiados al portapapeles!');
-  } catch {
-    prompt('Copiá el texto del ranking para compartir:', text);
-  }
+  await shareOrCopyText({
+    title: `🎾 Ranking: ${rankingTitle} (#${rankingId})`,
+    text,
+    copyText: text,
+    toastMsg: '¡Ranking y enlace copiados al portapapeles!',
+    promptMsg: 'Copiá el texto del ranking para compartir:'
+  });
 }
 
 async function exportRankingImage(overrideCtx = null) {
@@ -9859,33 +9859,6 @@ async function downloadPlayerCardImage() {
   showToast('¡Tarjeta HD descargada!');
 }
 
-async function sharePlayerCardImage() {
-  const draft = getActivePlayerCardDraft();
-  const blob = await renderExportPlayerCardBlob();
-  if (!blob) {
-    showToast('No se pudo generar la imagen');
-    return;
-  }
-  const filename = getPlayerCardFileSlug(draft.name);
-  const file = new File([blob], filename, { type: 'image/png' });
-  const playerLabelTxt = (draft.name || 'Jugador').trim();
-
-  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share({
-        files: [file],
-        title: `Tarjeta de Pádel · ${playerLabelTxt}`,
-        text: `🎾 Tarjeta oficial de ${playerLabelTxt} (${draft.category || ''} · ${draft.position || ''} · ${draft.hand || ''})`
-      });
-      return;
-    } catch (err) {
-      if (err && err.name === 'AbortError') return;
-    }
-  }
-  triggerBlobDownload(blob, filename);
-  showToast('Imagen descargada (lista para compartir por WhatsApp o redes)');
-}
-
 async function saveCurrentPlayerCard() {
   const draft = getActivePlayerCardDraft();
   if (!String(draft.name || '').trim()) {
@@ -9917,7 +9890,7 @@ function renderPlayerCardView() {
         <button class="icon-btn" data-act="pc-new-blank" title="Nueva tarjeta en blanco">${ICONS.plus}</button>
       </div>
     </div>
-    <p class="muted" style="text-align:center;margin-bottom:16px">Subí una foto, completá tus datos y generá tu tarjeta HD lista para compartir.</p>
+    <p class="muted" style="text-align:center;margin-bottom:16px">Subí una foto, completá tus datos y descargá tu tarjeta HD en alta calidad.</p>
 
     <div class="pc-layout">
       <!-- Live Card Preview Column -->
@@ -9934,8 +9907,7 @@ function renderPlayerCardView() {
           <div class="pc-drag-hint">${ui.playerCardTouchDrag ? '📌 Arrastrá sobre la tarjeta para encuadrar la foto (scroll bloqueado)' : '💡 En celular deslizás normal. Tocá "Mover foto en tarjeta" o usá los controles de abajo.'}</div>
         ` : `<div class="pc-drag-hint" style="opacity:.75">📱 Podés deslizar la pantalla normalmente por toda la tarjeta.</div>`}
         <div class="btn-row">
-          <button class="btn primary big" data-act="pc-share">${ICONS.share} Compartir</button>
-          <button class="btn big" data-act="pc-download">${ICONS.dl} Descargar HD</button>
+          <button class="btn primary big" style="width:100%" data-act="pc-download">${ICONS.dl} Descargar Imagen HD</button>
         </div>
         <button class="btn block" data-act="pc-save">${ICONS.check} Guardar en Mis Tarjetas (${savedPlayerCards.length})</button>
       </div>
@@ -15169,9 +15141,6 @@ document.addEventListener('click', (ev) => {
           showToast('Ligas y Torneos eliminados');
           render();
         }
-        break;
-      case 'pc-share':
-        sharePlayerCardImage();
         break;
       case 'pc-download':
         downloadPlayerCardImage();

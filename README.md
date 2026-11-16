@@ -1,9 +1,10 @@
 # 🎾 Pádel Control SÉ
-### *Marcador Broadcast, Análisis Estadístico, Gestión de Ligas/Torneos y Transmisión en Vivo · By Sairaf Engel*
+### *Marcador Broadcast, Tarjetas de Jugador HD, Análisis Estadístico, Ligas/Torneos y Transmisión en Vivo · By Sairaf Engel*
 
 🌐 **Idioma / Language:** **Español** · [English Version (README.en.md)](./README.en.md)
 
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-gold?style=for-the-badge&logo=pwa&logoColor=black)](https://shisasjef.github.io/padel-control-se/)
+[![Player Cards HD](https://img.shields.io/badge/Tarjetas_HD-Diamond_Edition-8b5cf6?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/#player-card)
 [![OBS Compatible](https://img.shields.io/badge/OBS-Overlay_Transparente-blue?style=for-the-badge&logo=obsstudio&logoColor=white)](https://shisasjef.github.io/padel-control-se/#obs)
 [![FIP Regulations](https://img.shields.io/badge/FIP-Reglamento_Oficial-darkgreen?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
 [![Multi-Device Sync](https://img.shields.io/badge/Sync-QR_%26_Multi--Cancha-gold?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
@@ -25,13 +26,13 @@ Elegí el contexto antes de iniciar cualquier partido para mantener cada ranking
   * Puntos configurables por defecto (`+3` Victoria / `+1` Derrota), con ELO independiente.
   * Filtros instantáneos en la pestaña **Ranking**: **☀️ Hoy** (solo partidos del día) vs **📅 Acumulado**, en vista **👤 Individual** o **👥 Por Parejas**.
 * **🏅 Ligas y 🏆 Torneos Independientes**:
-  * Cada Liga o Torneo tiene su propia tabla de posiciones, puntaje personalizado (**Pts Victoria**, **Pts Empate** en Proyecto Pádel, **Pts Derrota** y **Bonus por Set o Game ganado**) y su propio **ELO aislado** (los partidos de una liga o torneo no alteran el ranking del día ni el de otras competencias).
+  * Cada Liga o Torneo tiene su propia tabla de posiciones, puntaje personalizado (**Pts Victoria**, **Pts Empate** en PRO PÁDEL, **Pts Derrota** y **Bonus por Set o Game ganado**) y su propio **ELO aislado** (los partidos de una liga o torneo no alteran el ranking del día ni el de otras competencias).
   * Modo de ranking seleccionable por competencia: **Parejas Fijas**, **Individual** o **Ambos**.
   * **Formatos de Liga**: *Todos contra Todos* (fixture por fechas), *Ida y Vuelta* o *Liga Libre*.
   * **Formatos de Torneo**:
-    * **⚡ Proyecto Pádel**: Formato especial por bloques/tiempo (sin fiscalización en pista ni fixture rígido) pensado para carga directa de resultados finales (ej. `Lucía-Juan vs Marcos-Noelia 4-2` o empate `3-3`) con rotación libre de parejas y ranking **Individual con ELO como métrica principal** (+ puntaje secundario por **Games + Bonus**: `+3` Victoria / `+2` Empate / `+1` Derrota + `+1` por game ganado, desempate `Pts → Games a favor → Dif. Games → ELO`).
+    * **⚡ PRO PÁDEL**: Formato especial por bloques/tiempo (sin fiscalización en pista ni fixture rígido) pensado para carga directa de resultados finales (ej. `Lucía-Juan vs Marcos-Noelia 4-2` o empate `3-3`) con rotación libre de parejas y ranking **Individual con ELO como métrica principal** (+ puntaje secundario por **Games + Bonus**: `+3` Victoria / `+2` Empate / `+1` Derrota + `+1` por game ganado, desempate `Pts → Games a favor → Dif. Games → ELO`).
     * *Eliminación Directa* (llaves con BYEs automáticos), *Grupos + Playoffs* (sorteo por grupos, clasificación configurable y generación de cuadro eliminatorio desde las tablas) y *Libre / Americano* (rotación automática de compañeros cuando el modo es individual).
-  * **Fixture, Carga Directa por Sets/Games y W.O.**: Ideal para torneos o jornadas **sin fiscalizadores**: desde **Nuevo Partido** (`Ya terminó · Cargar Sets y Games`), desde un cruce del **Fixture** (`Resultado`) o desde **Cargar Resultado Final / Sets / Games** dentro de una Liga o Torneo, podés elegir o tocar chips de jugadores y seleccionar directamente los games con **botones táctiles (`0–7` y `10` para Súper TB)** sin anotar punto por punto. Incluye **empates oficiales (`3-3`, `2-2`) con ajuste ELO ($S=0.5$)** en Proyecto Pádel y **Victoria por Walkover (W.O.)** en el resto de formatos.
+  * **Fixture, Carga Directa por Sets/Games y W.O.**: Ideal para torneos o jornadas **sin fiscalizadores**: desde **Nuevo Partido** (`Ya terminó · Cargar Sets y Games`), desde un cruce del **Fixture** (`Resultado`) o desde **Cargar Resultado Final / Sets / Games** dentro de una Liga o Torneo, podés elegir o tocar chips de jugadores y seleccionar directamente los games con **botones táctiles (`0–7` y `10` para Súper TB)** sin anotar punto por punto. Incluye **empates oficiales (`3-3`, `2-2`) con ajuste ELO ($S=0.5$)** en PRO PÁDEL y **Victoria por Walkover (W.O.)** en el resto de formatos.
 
 ---
 
@@ -72,7 +73,7 @@ Ideal para torneos o ligas donde se juegan **varios partidos en paralelo** y cad
 ---
 
 ### 🏆 5. Sistema de Ranking Combinado: Puntos de Tabla + ELO y Nivel Playtomic (1.00 a 7.00)
-* **Sistema Mixto (Tabla + ELO Aislado)**: Cada ámbito (*Partido del Día*, cada *Liga* y cada *Torneo*) calcula tanto los **puntos de tabla** por victoria/empate/derrota/bonus como un **ELO independiente** sobre los partidos de esa competencia (en *Torneo Proyecto Pádel*, el ELO pasa al frente como métrica y orden principal).
+* **Sistema Mixto (Tabla + ELO Aislado)**: Cada ámbito (*Partido del Día*, cada *Liga* y cada *Torneo*) calcula tanto los **puntos de tabla** por victoria/empate/derrota/bonus como un **ELO independiente** sobre los partidos de esa competencia (en *Torneo PRO PÁDEL*, el ELO pasa al frente como métrica y orden principal).
 * **Cálculo ELO de Suma Cero Determinista**: Replay ordenado cronológicamente sobre los partidos válidos (excluyendo W.O. e incluyendo empates oficiales con $S = 0.5$), produciendo resultados idénticos entre dispositivos sincronizados.
 * **Punto de Partida**: Todos los jugadores o parejas inician con **1000 puntos base** (equivalente exacto a **Nivel Playtomic 2.50**).
 * **Promedio de la Pareja**: Antes de cada partido se calcula el promedio ELO de cada pareja ($R_{\text{pareja}} = \frac{R(p_1) + R(p_2)}{2}$) para determinar la probabilidad matemática esperada de victoria:
@@ -118,6 +119,23 @@ Ideal para torneos o ligas donde se juegan **varios partidos en paralelo** y cad
 * Registro por golpe: **Smash**, **Volea**, **Bandeja**, **Bajada**, **Dejada**, **Passing**, Errores No Forzados (**ENF**) y Errores Forzados (**EF**).
 * Rendimiento bajo presión: Puntos de Oro, Star Points, bolas de break convertidas/salvadas y efectividad de 1º saque.
 * Gráfico de evolución de dominio y reporte imprimible en **PDF** con desglose punto a punto.
+
+---
+
+### 🪪 10. Generador de Tarjetas de Jugador HD (*Diamond Edition*)
+Estudio integrado para crear fichas coleccionables de cada jugador o jugadora en resolución **`1080×1350` px**:
+
+* **Accesos Rápidos**: Botón destacado **🪪 Crear Tarjeta de Jugador** en **Inicio** (`#player-card`), y accesos directos por jugador desde **Rankings** y **Inscriptos** de cada Liga o Torneo (precargando nombre y posición).
+* **Recorte con IA y Modo Instantáneo**:
+  * Carga directa de foto desde **Galería / Archivos** con decodificación liviana en memoria (y detección automática de PNGs transparentes).
+  * **✨ Recorte IA (Sin fondo)**: Segmentación de silueta en el navegador mediante **MediaPipe SelfieSegmenter**, con respaldo a **⚡ Modo Instantáneo** para fotos complejas o sin conexión.
+  * Controles de **Zoom**, **Posición X / Y**, botón **Centrar foto**, arrastre directo con mouse en PC y botón explícito **`✥ Mover foto en tarjeta`** en celulares para mantener libre el desplazamiento vertical de la pantalla (`touch-action: pan-y`).
+* **Estética Diamond Edition y Logos Personalizados**:
+  * **6 temas visuales** y **4 acabados metálicos 3D** para tipografía y escudos (ej. Cromo y Oro), con textura de trama de carbono, bisel facetado, escudo de categoría y placas de estadísticas (**Categoría**, **Edad**, **Posición en cancha**: *Drive / Revés / Ambos*, **Perfil**: *Diestro / Zurdo*, y **Mejor Golpe**: *Víbora, Bandeja, Smash, Volea, Globo, Bajada, Dejada, Chiquita* o personalizado).
+  * **2 espacios para logos en cabecera**: Emblema de **Pádel Control SÉ** y logo oficial de **PRO PÁDEL** (`logo-pro-padel.png`) configurados de forma predeterminada en el centro, con opción de subir logos propios, editar texto de respaldo, restaurar **PRO PÁDEL** o quitar cada logo.
+* **Descarga Directa y Persistencia Local**:
+  * Exportación directa con **`Descargar Imagen HD`** (PNG `1080×1350`), evitando ventanas emergentes de compartir del sistema operativo en PC.
+  * Guardado en **Mis Tarjetas**, almacenamiento local de logos y persistencia automática del borrador activo en **IndexedDB** junto con la ruta `#player-card` ante recargas de pestaña en celulares.
 
 ---
 
@@ -180,9 +198,10 @@ Compatible con teclados inalámbricos y pulsadores Bluetooth para usar desde la 
 
 ## 🔒 Privacidad y Rendimiento
 
-* **Sin Base de Datos Externa Obligatoria**: Toda la información se guarda localmente en cada dispositivo mediante `localStorage`, con exportación/importación JSON de respaldo.
-* **Sincronización Ligera Bajo Demanda**: La nube efímera (`ntfy.sh`) solo se utiliza cuando activás la transmisión en vivo, el overlay remoto de OBS o una sala multi-dispositivo de Liga/Torneo.
-* **Caché Instantáneo y Modo Offline**: Aplicación web de archivo único de alto rendimiento lista para usar en navegadores móviles y escritorio.
+* **Sin Base de Datos Externa Obligatoria**: Toda la información de partidos, rankings y torneos se guarda localmente mediante `localStorage` (con exportación/importación JSON de respaldo), mientras que las tarjetas de jugador, borradores activos y logos se almacenan localmente en **IndexedDB** en tu dispositivo.
+* **Sincronización e IA Bajo Demanda**: La nube efímera (`ntfy.sh`) solo se utiliza cuando activás la transmisión en vivo, el overlay remoto de OBS o una sala multi-dispositivo; el módulo de **Recorte IA** (`MediaPipe SelfieSegmenter`) se descarga en el navegador únicamente la primera vez que activás el recorte de fondo.
+* **Enlaces y Exportación Sin Fricción en PC**: En computadoras de escritorio, los botones para compartir enlaces (en vivo, estadísticas, salas y rankings) copian directamente el texto al portapapeles evitando diálogos nativos bloqueantes del sistema operativo.
+* **Caché Instantáneo y Modo Offline**: Aplicación web ligera lista para usar en navegadores móviles y de escritorio.
 * **Estética Obsidian & Gold**: Diseño Obsidian Black & Oro 24K con tipografía condensada de alta visibilidad para pistas y retransmisiones.
 
 ---

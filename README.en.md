@@ -1,9 +1,10 @@
 # 🎾 Pádel Control SÉ
-### *Broadcast Scoreboard, Match Analytics, Leagues & Tournaments and Live Streaming · By Sairaf Engel*
+### *Broadcast Scoreboard, HD Player Cards, Match Analytics, Leagues & Tournaments and Live Streaming · By Sairaf Engel*
 
 🌐 **Language / Idioma:** [Versión en Español (README.md)](./README.md) · **English**
 
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-gold?style=for-the-badge&logo=pwa&logoColor=black)](https://shisasjef.github.io/padel-control-se/)
+[![Player Cards HD](https://img.shields.io/badge/Player_Cards_HD-Diamond_Edition-8b5cf6?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/#player-card)
 [![OBS Compatible](https://img.shields.io/badge/OBS-Transparent_Overlay-blue?style=for-the-badge&logo=obsstudio&logoColor=white)](https://shisasjef.github.io/padel-control-se/#obs)
 [![FIP Regulations](https://img.shields.io/badge/FIP-Official_Rules-darkgreen?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
 [![Multi-Device Sync](https://img.shields.io/badge/Sync-QR_%26_Multi--Court-gold?style=for-the-badge)](https://shisasjef.github.io/padel-control-se/)
@@ -25,13 +26,13 @@ Pick the match mode before starting any match so every ranking, points table, an
   * Configurable table points (`+3` Win / `+1` Loss by default) alongside an isolated daily ELO rating.
   * Instant filters in the **Ranking** tab: **Today (`Hoy`)** vs **All-Time (`Acumulado`)**, in either **Individual** or **Pairs (`Por Parejas`)** view.
 * **🏅 Leagues & 🏆 Tournaments**:
-  * Every League or Tournament maintains its own standings table, customizable scoring (**Win Pts**, **Draw Pts** in Proyecto Pádel, **Loss Pts**, and **Set or Game Won Bonus**), default match rules, and **isolated ELO** so results never leak across competitions.
+  * Every League or Tournament maintains its own standings table, customizable scoring (**Win Pts**, **Draw Pts** in PRO PÁDEL, **Loss Pts**, and **Set or Game Won Bonus**), default match rules, and **isolated ELO** so results never leak across competitions.
   * Selectable ranking mode per competition: **Fixed Pairs**, **Individual**, or **Both**.
   * **League Formats**: *Round Robin* (auto-generated matchdays), *Double Round Robin* (home & away), or *Open League*.
   * **Tournament Formats**:
-    * **⚡ Proyecto Pádel**: Specialized time-block desk format (no live umpire tracking or rigid bracket) built for direct final-score entry (e.g. `Lucía-Juan vs Marcos-Noelia 4-2` or a `3-3` draw) with free partner rotation and an **Individual ELO-first ranking** (+ secondary **Games + Bonus** scoring: `+3` Win / `+2` Draw / `+1` Loss + `+1` per game won, tiebreak order `Pts → Games Won → Games Diff → ELO`).
+    * **⚡ PRO PÁDEL**: Specialized time-block desk format (no live umpire tracking or rigid bracket) built for direct final-score entry (e.g. `Lucía-Juan vs Marcos-Noelia 4-2` or a `3-3` draw) with free partner rotation and an **Individual ELO-first ranking** (+ secondary **Games + Bonus** scoring: `+3` Win / `+2` Draw / `+1` Loss + `+1` per game won, tiebreak order `Pts → Games Won → Games Diff → ELO`).
     * *Single Elimination Bracket* (with automatic BYEs and round progression), *Groups + Playoffs* (group draw, configurable qualifiers per group, and automatic seeding into knockout brackets), and *Open / Americano* (rotating partners when set to individual mode).
-  * **Fixtures, Quick Sets & Games Entry & Walkovers (W.O.)**: Built for events **without court umpires**: from **New Match** (`Ya terminó · Cargar Sets y Games`), any scheduled **Fixture** (`Resultado`), or directly inside a League/Tournament (**Cargar Resultado Final / Sets / Games**), pick or quick-tap player chips and select game counts with **tactile pills (`0–7` plus `10` for Super Tie-Breaks)** — no point-by-point tracking required. Supports **official draws (`3-3`, `2-2`) with ELO adjustment ($S=0.5$)** in Proyecto Pádel and **Walkover (W.O.)** wins elsewhere without affecting ELO.
+  * **Fixtures, Quick Sets & Games Entry & Walkovers (W.O.)**: Built for events **without court umpires**: from **New Match** (`Ya terminó · Cargar Sets y Games`), any scheduled **Fixture** (`Resultado`), or directly inside a League/Tournament (**Cargar Resultado Final / Sets / Games**), pick or quick-tap player chips and select game counts with **tactile pills (`0–7` plus `10` for Super Tie-Breaks)** — no point-by-point tracking required. Supports **official draws (`3-3`, `2-2`) with ELO adjustment ($S=0.5$)** in PRO PÁDEL and **Walkover (W.O.)** wins elsewhere without affecting ELO.
 
 ---
 
@@ -70,7 +71,7 @@ Built for tournaments and leagues running **multiple matches simultaneously**, a
 ---
 
 ### 🏆 5. Combined Table Points + Zero-Sum ELO & Playtomic Level (1.00 to 7.00)
-* **Dual Scoring Per Scope**: Each scope (*Match of the Day*, every *League*, and every *Tournament*) tracks both configurable **table points** and its own **isolated ELO ladder** (in *Torneo Proyecto Pádel*, ELO is promoted as the primary display metric and default sort).
+* **Dual Scoring Per Scope**: Each scope (*Match of the Day*, every *League*, and every *Tournament*) tracks both configurable **table points** and its own **isolated ELO ladder** (in *Torneo PRO PÁDEL*, ELO is promoted as the primary display metric and default sort).
 * **Deterministic Zero-Sum Replay**: Chronologically replays valid finished matches (excluding W.O., and including official draws with $S = 0.5$) so all synced devices converge on identical numbers.
 * **Starting Rating**: Players and pairs begin at **1000 ELO** (mapped to **Playtomic Level 2.50**).
 * **Pair Average Formula**: Computes team average rating ($R_{\text{pair}} = \frac{R(p_1) + R(p_2)}{2}$) to derive expected win probability:
@@ -114,6 +115,23 @@ Built for tournaments and leagues running **multiple matches simultaneously**, a
 * Shot breakdown tracking: **Smash**, **Volley (`Volea`)**, **Bandeja**, **Bajada**, **Drop Shot (`Dejada`)**, **Passing**, **Unforced Errors (`ENF`)**, and **Forced Errors (`EF`)**.
 * Clutch metrics: Golden Points, Star Points, break points converted/saved, and 1st serve effectiveness.
 * Momentum timeline chart and printable **PDF** point-by-point match report.
+
+---
+
+### 🪪 10. HD Player Card Studio (*Diamond Edition*)
+Built-in trading-card studio generating **`1080×1350` px** HD PNG player cards:
+
+* **Quick Entry Points**: Featured **🪪 Crear Tarjeta de Jugador** CTA on **Home** (`#player-card`), plus per-player shortcuts right from **Rankings** and League/Tournament **Registrations (`Inscriptos`)** with name and court position prefilled.
+* **AI Background Removal & Instant Mode**:
+  * Loads photos cleanly from **Gallery / Files** using low-memory scaled decoding (with automatic transparent PNG detection).
+  * **✨ AI Cutout (`Recorte IA`)**: Runs client-side person segmentation via **MediaPipe SelfieSegmenter** with seamless fallback to **⚡ Instant Mode** for complex shots or offline environments.
+  * **Zoom**, **X / Y Position** sliders, **Center Photo**, direct mouse drag on desktop, and an explicit mobile **`✥ Mover foto en tarjeta`** toggle so vertical page scrolling (`touch-action: pan-y`) never gets hijacked on phones.
+* **Diamond Edition Styling & Custom Logos**:
+  * **6 visual themes** and **4 3D metallic finishes** (Chrome, Gold, and more), featuring carbon-weave backdrops, faceted diamond bezels, category shield, and armored stat plates (**Category**, **Age**, **Position**: *Drive / Revés / Ambos*, **Hand**: *Diestro / Zurdo*, and **Best Shot**: *Víbora, Bandeja, Smash, Volea, Globo, Bajada, Dejada, Chiquita*, or custom).
+  * **2 Header Logo Slots**: Defaults to the **Pádel Control SÉ** emblem + centered official **PRO PÁDEL** logo (`logo-pro-padel.png`), with options to upload custom club/sponsor logos, restore **PRO PÁDEL**, remove either logo, or customize fallback footer text.
+* **Direct HD Download & Draft Persistence**:
+  * Exports directly via **`Descargar Imagen HD`** (`1080×1350` PNG), avoiding desktop OS share-sheet popups on PC.
+  * Saves cards to **My Cards (`Mis Tarjetas`)**, custom logos, and active editing drafts (including photo/cutout) in **IndexedDB** alongside `#player-card` URL hash state so mobile tab reloads return straight to your card.
 
 ---
 
@@ -176,9 +194,10 @@ Works with wireless keyboards and Bluetooth clickers directly from the court:
 
 ## 🔒 Privacy & Performance
 
-* **No Mandatory Backend**: Everything is stored locally on your device via `localStorage`, with JSON backup export/import.
-* **On-Demand Lightweight Sync**: Public `ntfy.sh` channels are only contacted when you actively enable Live Match Broadcast, Remote OBS Overlay, or a Multi-Device League/Tournament Room.
-* **Single-File Architecture**: Fast load time, offline-ready PWA design, and Obsidian Black & 24K Gold styling built for readability under stadium lights.
+* **No Mandatory Backend**: Match history, rankings, and competitions are stored locally on your device via `localStorage` (with JSON backup export/import), while Player Cards, active drafts, and custom logos persist locally in **IndexedDB**.
+* **On-Demand Lightweight Sync & AI**: Public `ntfy.sh` channels are only contacted when you actively enable Live Match Broadcast, Remote OBS Overlay, or a Multi-Device League/Tournament Room; the **MediaPipe SelfieSegmenter** WASM module is loaded on demand only when running AI background removal.
+* **Desktop-Safe Link Sharing**: On desktop PCs, link-sharing buttons across Rankings, Competitions, Live Match, and Stats copy invitations directly to the clipboard instead of invoking OS share overlays.
+* **Offline-Ready Design**: Lightweight PWA web app styled in Obsidian Black & 24K Gold for high visibility courtside and on broadcasts.
 
 ---
 
