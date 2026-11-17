@@ -37,7 +37,7 @@ import {
   store
 } from '../state/store';
 import type { Competition, CompFormState, Fixture, QuickScoreState, RankingContext, StandingRow } from '../types';
-import { renderMatchCard, renderTabbar } from './sharedUi';
+import { renderMatchCard, renderSupportButton, renderTabbar } from './sharedUi';
 
 export function formatFixtureScoreSummary(fx: Fixture | null | undefined): { s0: string; s1: string } {
   const { activeMatch, historyList } = store;
@@ -342,6 +342,7 @@ export function renderCompetitions(): string {
         <button class="btn sm" data-act="open-join-comp" title="Unirse con código o link">📲 Unirse</button>
         <button class="btn primary sm" data-act="new-comp" data-kind="league">${ICONS.plus} Liga</button>
         <button class="btn primary sm" data-act="new-comp" data-kind="tournament">${ICONS.plus} Torneo</button>
+        ${renderSupportButton()}
         <button class="icon-btn" data-nav="settings" title="Ajustes">${ICONS.gear}</button>
       </div>
     </div>
@@ -744,6 +745,7 @@ export function renderCompDetail(): string {
     return `
     <div class="page">
       <div class="empty">${ICONS.award}<br>Competencia no encontrada.<br><br><button class="btn" data-nav="competitions">Volver a Ligas y Torneos</button></div>
+      ${renderSignatureFooter()}
     </div>${renderTabbar('competitions')}`;
   }
   ui.compId = comp.id;
@@ -1024,6 +1026,7 @@ export function renderCompDetail(): string {
             : ''
         }
         <button class="icon-btn" data-del-comp="${esc(comp.id)}" title="Eliminar">${ICONS.trash}</button>
+        ${renderSupportButton()}
       </div>
     </div>
 

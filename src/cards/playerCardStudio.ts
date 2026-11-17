@@ -4,7 +4,7 @@ import { triggerBlobDownload } from '../services/liveBroadcast';
 import { appHooks, showToast } from '../state/runtime';
 import { getKnownPlayerNames, loadJSON, saveJSON, store } from '../state/store';
 import type { PlayerCardDraft, PlayerCardLogos } from '../types';
-import { navigate, renderTabbar } from '../views/sharedUi';
+import { navigate, renderSupportButton, renderTabbar } from '../views/sharedUi';
 
 export interface PlayerCardTheme {
   id: string;
@@ -2624,6 +2624,9 @@ export function renderPlayerCardView(): string {
         <button class="icon-btn" data-nav="${esc(backRoute)}" title="Volver">${ICONS.back}</button>
         <h1>Tarjeta de Jugador</h1>
         <button class="icon-btn" data-act="pc-new-blank" title="Nueva tarjeta en blanco">${ICONS.plus}</button>
+      </div>
+      <div class="page-h-acts">
+        ${renderSupportButton()}
       </div>
     </div>
     <p class="muted" style="text-align:center;margin-bottom:16px">Subí una foto, completá tus datos y descargá tu tarjeta HD en alta calidad.</p>

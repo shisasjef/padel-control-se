@@ -46,7 +46,8 @@ export const ICONS = {
   award: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>',
   check: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
   idCard: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2.2"/><path d="M6.2 16.5c.6-1.9 2.2-2.7 2.8-2.7s2.2.8 2.8 2.7"/><path d="M14.5 9.5h4M14.5 13h4M14.5 16.5h2.5"/></svg>',
-  camera: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+  camera: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  heart: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>'
 } as const;
 
 export const LOGO_SVG = `<svg class="logo-ic" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
@@ -128,6 +129,88 @@ export function renderSignatureBadge(): string {
   return `<div class="sig-sub"><span class="sig-name">Sairaf Engel</span>${SIGNATURE_PEN_SVG}</div>`;
 }
 
+export const SUPPORT_INFO = {
+  message: 'Si querés colaborar para que siga desarrollando aplicaciones podés hacerlo desde acá',
+  alias: 'apps.se',
+  cvu: '0000168300000027791956'
+} as const;
+
+/** Renderiza las filas de Alias y CVU reutilizadas por el banner y el modal de colaboración. */
+export function renderSupportCredentialsHtml(): string {
+  const items = [
+    { key: 'alias', label: 'Alias', value: SUPPORT_INFO.alias, isCvu: false },
+    { key: 'cvu', label: 'CVU', value: SUPPORT_INFO.cvu, isCvu: true }
+  ] as const;
+  return `
+  <div class="support-creds">
+    ${items
+      .map(
+        (item) => `
+      <div class="support-cred-item">
+        <div class="support-cred-meta">
+          <span class="support-cred-label">${item.label}</span>
+          <span class="support-cred-val ${item.isCvu ? 'is-cvu' : ''}">${item.value}</span>
+        </div>
+        <button type="button" class="support-copy-btn" data-copy-support="${item.key}" aria-label="Copiar ${item.label} ${item.value}">
+          ${ICONS.copy}
+          <span>Copiar</span>
+        </button>
+      </div>`
+      )
+      .join('')}
+  </div>`;
+}
+
+/** Renderiza el banner de colaboración visible en todas las páginas de la app. */
+export function renderSupportBanner(): string {
+  return `
+  <section class="support-banner no-print" aria-label="Colaborar con el desarrollo">
+    <div class="support-banner-hdr">
+      <div class="support-banner-ico">${ICONS.heart}</div>
+      <div class="support-banner-copy">
+        <span class="support-banner-kicker">Apoyá el desarrollo</span>
+        <p class="support-banner-msg">${SUPPORT_INFO.message}</p>
+      </div>
+    </div>
+    ${renderSupportCredentialsHtml()}
+  </section>`;
+}
+
+export function renderSupportButton(extraClass = ''): string {
+  const cls = extraClass ? ` ${extraClass}` : '';
+  return `<button type="button" class="btn sm support-hdr-btn no-print${cls}" data-act="open-support-modal" title="${SUPPORT_INFO.message}">${ICONS.heart}<span>Colaborar</span></button>`;
+}
+
+export function renderSupportModal(): string {
+  return `
+  <div class="scrim" data-close-support="1" style="z-index:127">
+    <div class="sheet" style="max-width:460px;text-align:center">
+      <div class="sheet-hdr">
+        <div class="support-modal-badge">${ICONS.heart}</div>
+        <div>
+          <h2 style="margin:0;font-size:21px;white-space:nowrap">Colaborar con la App</h2>
+          <small style="color:var(--tx2);display:block;text-align:center">By Sairaf Engel</small>
+        </div>
+        <button type="button" class="icon-btn" data-act="close-support-modal" style="width:36px;height:36px;border-radius:12px" title="Cerrar">✕</button>
+      </div>
+
+      <div class="support-modal-box">
+        <p class="support-modal-msg">${SUPPORT_INFO.message}</p>
+        ${renderSupportCredentialsHtml()}
+        <p class="support-modal-thanks">¡Gracias por usar Pádel Control SÉ y apoyar el desarrollo!</p>
+      </div>
+
+      <div style="margin-top:14px">
+        <button type="button" class="btn primary block" data-act="close-support-modal">Cerrar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 export function renderSignatureFooter(): string {
-  return `<div class="sig-footer no-print"><span class="sig-name">Sairaf Engel</span>${SIGNATURE_PEN_SVG}</div>`;
+  return `
+  <footer class="app-footer no-print">
+    ${renderSupportBanner()}
+    <div class="sig-footer"><span class="sig-name">Sairaf Engel</span>${SIGNATURE_PEN_SVG}</div>
+  </footer>`;
 }

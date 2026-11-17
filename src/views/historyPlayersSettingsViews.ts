@@ -6,7 +6,7 @@ import { getCurrentRankingContext } from '../services/liveBroadcast';
 import { getCompById, getSyncServerBaseUrl, loadJSON, store } from '../state/store';
 import type { SharedRanking } from '../types';
 import { renderSortBarHtml, renderStandingsSectionHtml } from './competitionsViews';
-import { renderMatchCard, renderTabbar } from './sharedUi';
+import { renderMatchCard, renderSupportButton, renderTabbar } from './sharedUi';
 
 export function renderHistory(): string {
   const { ui, historyList } = store;
@@ -32,6 +32,7 @@ export function renderHistory(): string {
           ${ICONS.up} Importar
           <input type="file" accept=".json,application/json" style="display:none" id="imp-json-file">
         </label>
+        ${renderSupportButton()}
         <button class="icon-btn" data-nav="settings" title="Ajustes">${ICONS.gear}</button>
       </div>
     </div>
@@ -192,6 +193,7 @@ export function renderPlayers(): string {
       <div class="page-h-acts">
         <button class="btn primary sm" data-act="share-ranking" title="Compartir Ranking por WhatsApp o enlace">${ICONS.share} Compartir</button>
         <button class="btn sm" data-act="export-ranking-img" title="Descargar imagen oficial del Ranking">${ICONS.img} Imagen</button>
+        ${renderSupportButton()}
         <button class="icon-btn" data-nav="settings" title="Ajustes">${ICONS.gear}</button>
       </div>
     </div>
@@ -268,6 +270,9 @@ export function renderSettings(): string {
       <div class="page-h-top">
         <button class="icon-btn" data-nav="home" title="Inicio">${ICONS.back}</button>
         <h1>Ajustes y Controles</h1>
+      </div>
+      <div class="page-h-acts">
+        ${renderSupportButton()}
       </div>
     </div>
 

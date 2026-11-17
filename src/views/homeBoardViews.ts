@@ -1,5 +1,5 @@
 import { refreshPlayerCardPreview } from '../cards/playerCardStudio';
-import { COLORS, ICONS, LOGO_SVG, renderSignatureBadge, renderSignatureFooter } from '../core/constants';
+import { COLORS, ICONS, LOGO_SVG, renderSignatureBadge, renderSignatureFooter, SUPPORT_INFO } from '../core/constants';
 import {
   esc,
   fgFor,
@@ -27,7 +27,7 @@ import {
 } from '../state/store';
 import type { ComputedMatchState, Match } from '../types';
 import { QRious, renderQRToCanvas } from '../vendor/qrious';
-import { getMatchContextBadgeHtml, renderMatchCard, renderTabbar } from './sharedUi';
+import { getMatchContextBadgeHtml, renderMatchCard, renderSupportButton, renderTabbar } from './sharedUi';
 
 export function getAppShareUrl(): string {
   return typeof location !== 'undefined' ? location.href.split('#')[0] : '';
@@ -304,9 +304,15 @@ export function renderHome(): string {
       </div>
     </div>
 
+    <button type="button" class="support-top-strip no-print" data-act="open-support-modal">
+      <span class="support-top-strip-ico">${ICONS.heart}</span>
+      <span class="support-top-strip-txt">${esc(SUPPORT_INFO.message)}</span>
+      <span class="support-top-strip-cta">Alias / CVU →</span>
+    </button>
+
     ${appHooks.renderHomeSystemBanners()}
 
-    <div class="card" style="margin-top:-6px;margin-bottom:20px;background:linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(16,16,22,0.96) 60%, rgba(245,208,97,0.08) 100%);border:1px solid rgba(212,175,55,0.38);text-align:center">
+    <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg, rgba(212,175,55,0.18) 0%, rgba(16,16,22,0.96) 60%, rgba(245,208,97,0.08) 100%);border:1px solid rgba(212,175,55,0.38);text-align:center">
       <h3 style="justify-content:center;margin-bottom:12px;font-size:15px;letter-spacing:1.4px">${ICONS.qr} Código QR para Compartir la App</h3>
       <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
         <div style="background:#ffffff;padding:12px;border-radius:18px;box-shadow:0 12px 30px rgba(0,0,0,0.65), 0 0 22px rgba(212,175,55,0.25);display:inline-block">
@@ -523,6 +529,7 @@ export function renderNewMatch(): string {
       </div>
       <div class="page-h-acts">
         <button class="btn sm" data-act="swap-preset-teams" title="Intercambiar parejas">${ICONS.swap} Invertir Parejas</button>
+        ${renderSupportButton()}
       </div>
     </div>
 
@@ -1122,6 +1129,7 @@ export function renderBoardOverlays(m: Match, st: ComputedMatchState): string {
         <h2>Opciones del marcador</h2>
         <div class="menu-list">
           <button data-act="open-qr-modal">${ICONS.qr}<div><b>Compartir App (Código QR)</b><small>Mostrá el código para que otra persona escanee y abra la app en su teléfono</small></div></button>
+          <button data-act="open-support-modal">${ICONS.heart}<div><b>Colaborar con el desarrollo</b><small>Alias: ${esc(SUPPORT_INFO.alias)} · CVU disponible para copiar</small></div></button>
           <button data-act="share-live">${ICONS.live}<div><b>Compartir partido EN VIVO (Link)</b><small>Enviá un enlace por WhatsApp para que sigan el marcador en tiempo real desde cualquier lugar</small></div></button>
           <button data-act="toggle-shot-prompt">${ICONS.edit}<div><b>${m.shotPrompt ? 'Desactivar' : 'Activar'} pregunta de golpe</b><small>${m.shotPrompt ? 'Actualmente pregunta Winner / Error al anotar' : 'Actualmente anota punto directo con un toque'}</small></div></button>
           <button data-act="open-obs-modal">${ICONS.tv}<div><b>Superposición para OBS (Overlay)</b><small>Marcador broadcast transparente para streamings en vivo (YouTube, Twitch, OBS)</small></div></button>
@@ -1181,11 +1189,26 @@ export function renderBoard(isDisplayOnly = false): string {
           ${ICONS.live}<br>
           <b>Conectando con la cancha en vivo...</b><br>
           <span class="muted">Esperando señal en tiempo real del partido.</span><br><br>
-          <button class="btn" data-act="exit-live">Salir al inicio</button>
+          <div class="btn-row" style="justify-content:center">
+            <button class="btn" data-act="exit-live">Salir al inicio</button>
+            ${renderSupportButton()}
+          </div>
         </div>
+        ${renderSignatureFooter()}
       </div>`;
     }
-    return `<div class="page"><div class="empty">No hay ningún partido activo.<br><br><button class="btn primary" data-nav="new">Crear Partido</button></div></div>`;
+    return `
+    <div class="page">
+      <div class="empty">
+        No hay ningún partido activo.<br><br>
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn primary" data-nav="new">Crear Partido</button>
+          ${renderSupportButton()}
+        </div>
+      </div>
+      ${renderSignatureFooter()}
+    </div>
+    ${renderTabbar('home')}`;
   }
   const st = computeMatch(m);
   const order = m.flipped ? [1, 0] : [0, 1];
@@ -1276,6 +1299,7 @@ export function renderBoard(isDisplayOnly = false): string {
         </div>
         <button class="icon-btn ${prefs.voice ? 'on' : ''}" data-act="toggle-voice-tts" title="Activar voz de árbitro en vivo">${prefs.voice ? ICONS.vol : ICONS.mute}</button>
         <button class="icon-btn" data-open-stats="live" title="Estadísticas en tiempo real">${ICONS.chart}</button>
+        <button class="icon-btn" data-act="open-support-modal" title="Colaborar con el desarrollo">${ICONS.heart}</button>
         <button class="icon-btn" data-act="fullscreen" title="Pantalla completa">${ICONS.full}</button>
       `
           : isDisplayOnly

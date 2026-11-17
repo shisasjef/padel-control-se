@@ -28,7 +28,7 @@ import {
   DEFAULT_SYNC_SERVER,
   normalizeSyncServerUrl
 } from './codecs/shareCodec';
-import { COLORS } from './core/constants';
+import { COLORS, ICONS, SUPPORT_INFO } from './core/constants';
 import { clone, esc, formatPairLabel, getMatchCompId, playerLabel } from './core/utils';
 import {
   assignPlayerRanks,
@@ -156,7 +156,7 @@ import {
   renderQRModal,
   shareAppViaWhatsApp
 } from './views/homeBoardViews';
-import { applyTheme, navigate } from './views/sharedUi';
+import { applyTheme, navigate, renderSupportModal } from './views/sharedUi';
 import { getStatsTargetMatch, renderStats } from './views/statsViews';
 
 function guardCompMutable(comp: Competition | null): comp is Competition {
@@ -166,6 +166,59 @@ function guardCompMutable(comp: Competition | null): comp is Competition {
     return false;
   }
   return true;
+}
+
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {}
+  }
+  if (typeof document !== 'undefined') {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '0';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy');
+      ta.remove();
+      if (ok) return true;
+    } catch {}
+  }
+  return false;
+}
+
+const supportCopyTimers = new WeakMap<HTMLElement, number>();
+
+async function handleCopySupport(kind: string): Promise<void> {
+  const isCvu = kind === 'cvu';
+  const label = isCvu ? 'CVU' : 'Alias';
+  const value = isCvu ? SUPPORT_INFO.cvu : SUPPORT_INFO.alias;
+  const copied = await copyTextToClipboard(value);
+  if (!copied) {
+    prompt(`Copiá este ${label}:`, value);
+    return;
+  }
+  showToast(`${label} copiado: ${value}`);
+  document.querySelectorAll<HTMLElement>(`[data-copy-support="${kind}"]`).forEach((btn) => {
+    const prevTimer = supportCopyTimers.get(btn);
+    if (prevTimer) window.clearTimeout(prevTimer);
+    btn.classList.add('copied');
+    btn.innerHTML = `${ICONS.check}<span>Copiado</span>`;
+    const timer = window.setTimeout(() => {
+      if (!btn.isConnected) return;
+      btn.classList.remove('copied');
+      btn.innerHTML = `${ICONS.copy}<span>Copiar</span>`;
+    }, 1800);
+    supportCopyTimers.set(btn, timer);
+  });
 }
 
 function addSingleParticipantFromDom(comp: Competition): void {
@@ -437,6 +490,9 @@ export function render(): void {
   }
   if (ui.obsModalOpen) {
     html += renderOBSModal();
+  }
+  if (ui.supportModalOpen) {
+    html += renderSupportModal();
   }
   if (ui.compModal) {
     html += renderCompetitionModals();
@@ -1171,6 +1227,17 @@ document.addEventListener('click', (ev) => {
     }
     return;
   }
+  const copySupportEl = t.closest<HTMLElement>('[data-copy-support]');
+  if (copySupportEl) {
+    void handleCopySupport(copySupportEl.getAttribute('data-copy-support') || 'alias');
+    return;
+  }
+  const closeSupportEl = t.closest<HTMLElement>('[data-close-support]');
+  if (closeSupportEl && (closeSupportEl.tagName === 'BUTTON' || !t.closest('.sheet'))) {
+    ui.supportModalOpen = false;
+    render();
+    return;
+  }
   const closeQrEl = t.closest<HTMLElement>('[data-close-qr]');
   if (closeQrEl && (closeQrEl.tagName === 'BUTTON' || !t.closest('.sheet'))) {
     ui.qrModalOpen = false;
@@ -1301,6 +1368,15 @@ document.addEventListener('click', (ev) => {
         break;
       case 'close-qr-modal':
         ui.qrModalOpen = false;
+        render();
+        break;
+      case 'open-support-modal':
+        ui.menuOpen = false;
+        ui.supportModalOpen = true;
+        render();
+        break;
+      case 'close-support-modal':
+        ui.supportModalOpen = false;
         render();
         break;
       case 'share-app-wa':
@@ -2447,6 +2523,13 @@ document.addEventListener('keydown', (ev) => {
       scorePoint(w, 'fe', [l, 1]);
       return;
     }
+    return;
+  }
+
+  if (ui.supportModalOpen && ev.key === 'Escape') {
+    ev.preventDefault();
+    ui.supportModalOpen = false;
+    render();
     return;
   }
 

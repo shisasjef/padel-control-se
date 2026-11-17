@@ -267,6 +267,7 @@ const initUi: UiState = {
   route: 'home',
   qrModalOpen: false,
   obsModalOpen: false,
+  supportModalOpen: false,
   obsSelectedPos: 'tl',
   statsId: null,
   sharedMatch: null,

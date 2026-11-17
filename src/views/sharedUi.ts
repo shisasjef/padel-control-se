@@ -1,4 +1,5 @@
-import { ICONS } from '../core/constants';
+import { ICONS, renderSupportButton, renderSupportModal } from '../core/constants';
+export { renderSupportButton, renderSupportModal };
 import { esc, fmtDurationLong, fmtDateLong, getMatchCompId, getMatchKind, teamLabel } from '../core/utils';
 import { computeMatch } from '../engines/matchEngine';
 import { updateWakeLock } from '../services/audioVoice';
@@ -11,6 +12,7 @@ export function navigate(route: string, extra: Record<string, unknown> = {}): vo
   Object.assign(ui, extra);
   ui.route = route;
   ui.menuOpen = false;
+  ui.supportModalOpen = false;
   ui.shotSheet = null;
   ui.playerCardTouchDrag = false;
   try {

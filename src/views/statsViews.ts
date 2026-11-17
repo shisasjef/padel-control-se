@@ -9,7 +9,7 @@ import {
   store
 } from '../state/store';
 import type { Match } from '../types';
-import { getMatchContextBadgeHtml, renderTabbar } from './sharedUi';
+import { getMatchContextBadgeHtml, renderSupportButton, renderTabbar } from './sharedUi';
 
 export function getStatsTargetMatch(): Match | null {
   const { ui, activeMatch, historyList } = store;
@@ -118,7 +118,7 @@ export function renderStats(): string {
   const { ui, activeMatch } = store;
   const m = getStatsTargetMatch();
   if (!m) {
-    return `<div class="page"><div class="empty">Partido no encontrado.<br><br><button class="btn" data-nav="home">Volver</button></div></div>`;
+    return `<div class="page"><div class="empty">Partido no encontrado.<br><br><button class="btn" data-nav="home">Volver</button></div>${renderSignatureFooter()}</div>${renderTabbar('history')}`;
   }
   const f = ui.statsSetFilter || 'all';
   const S = computeStats(m, f);
@@ -319,6 +319,7 @@ export function renderStats(): string {
         <button class="icon-btn" data-act="print-pdf" title="Imprimir / Guardar PDF">${ICONS.pdf}</button>
         <button class="icon-btn" data-act="export-png" title="Descargar imagen">${ICONS.img}</button>
         <button class="icon-btn" data-act="share-link" title="Compartir enlace">${ICONS.share}</button>
+        ${renderSupportButton()}
       </div>
     </div>
 

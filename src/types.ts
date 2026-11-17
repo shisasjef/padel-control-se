@@ -516,6 +516,7 @@ export interface UiState {
   route: string;
   qrModalOpen: boolean;
   obsModalOpen: boolean;
+  supportModalOpen: boolean;
   obsSelectedPos: string;
   statsId: string | null;
   sharedMatch: Match | null;
